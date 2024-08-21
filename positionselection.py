@@ -1,17 +1,13 @@
-import gspread
 import pandas as pd
 import streamlit as st
 
-# Authenticate using gspread with public sheets
-gc = gspread.public()
+# Updated URLs for your Google Sheets
+positions_url = 'https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/export?format=csv'
+students_url = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw/export?format=csv'
 
-# Open your Google Sheets by URL
-sheet_students = gc.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw/edit?usp=drive_link').sheet1
-sheet_positions = gc.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/edit?usp=drive_link').sheet1
-
-# Convert to pandas DataFrames
-students_df = pd.DataFrame(sheet_students.get_all_records())
-positions_df = pd.DataFrame(sheet_positions.get_all_records())
+# Read the data into pandas DataFrames
+positions_df = pd.read_csv(positions_url)
+students_df = pd.read_csv(students_url)
 
 # Streamlit UI
 st.title("Army Staff Officer Position Selection System")
@@ -37,8 +33,6 @@ if st.button("Assign Position"):
     # Assign the position
     positions_df.at[position_index, 'Status'] = 'ไม่ว่าง'
     positions_df.at[position_index, 'SelectedByStudentID'] = selected_student_id
-
-    # Since this is a local operation, you would need to implement saving back to Google Sheets or update the DataFrame only.
 
     st.success(f"Position {selected_position_id} assigned to student {selected_student_id}")
 
