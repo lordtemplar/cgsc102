@@ -1,18 +1,15 @@
 import gspread
 import pandas as pd
 import streamlit as st
-from oauth2client.service_account import ServiceAccountCredentials
 
-# Set up the Google Sheets API
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name('path_to_your_credentials.json', scope)
-client = gspread.authorize(creds)
+# Authenticate using gspread with public sheets
+gc = gspread.public()
 
-# Fetch data from the Google Sheets
-sheet_students = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw/edit?usp=drive_link').sheet1
-sheet_positions = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/edit?usp=drive_link').sheet1
+# Open your Google Sheets by URL
+sheet_students = gc.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw/edit?usp=drive_link').sheet1
+sheet_positions = gc.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/edit?usp=drive_link').sheet1
 
-# Convert the data to pandas DataFrames
+# Convert to pandas DataFrames
 students_df = pd.DataFrame(sheet_students.get_all_records())
 positions_df = pd.DataFrame(sheet_positions.get_all_records())
 
@@ -41,13 +38,10 @@ if st.button("Assign Position"):
     positions_df.at[position_index, 'Status'] = 'ไม่ว่าง'
     positions_df.at[position_index, 'SelectedByStudentID'] = selected_student_id
 
-    # Update the Google Sheet
-    sheet_positions.update_cell(position_index + 2, 6, 'ไม่ว่าง')  # Status
-    sheet_positions.update_cell(position_index + 2, 7, selected_student_id)  # SelectedByStudentID
+    # Since this is a local operation, you would need to implement saving back to Google Sheets or update the DataFrame only.
 
     st.success(f"Position {selected_position_id} assigned to student {selected_student_id}")
 
 # Display the updated positions
 if st.button("Refresh Positions Data"):
-    positions_df = pd.DataFrame(sheet_positions.get_all_records())
     st.dataframe(positions_df)
