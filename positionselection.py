@@ -1,7 +1,6 @@
 import pandas as pd
 import streamlit as st
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+import requests
 
 # URLs for your Google Sheets (CSV format)
 positions_url = 'https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/export?format=csv'
@@ -67,7 +66,6 @@ elif section == "Edit Student Information":
     if st.button("Search Student"):
         student_data = students_df[students_df['StudentID'] == student_id]
         if not student_data.empty:
-            # Display fields for editing within a form to prevent reruns
             with st.form(key="edit_student_form"):
                 student_record = student_data.iloc[0]  # Get the first row as a Series
                 
@@ -78,39 +76,25 @@ elif section == "Edit Student Information":
                 rank = st.text_input("Rank", value=student_record.get('Rank', ''))
                 other = st.text_input("Other", value=student_record.get('Other', 'ไม่มี'))
                 
-                # Submit button for the form
                 submitted = st.form_submit_button("Update")
                 
                 if submitted:
-                    # Update the DataFrame
-                    students_df.loc[students_df['StudentID'] == student_id, ['RankName', 'Branch', 'OfficerType', 'Rank', 'Other']] = [rank_name, branch, officer_type, rank, other]
+                    # Send the data to the Google Apps Script
+                    apps_script_url = "https://script.google.com/macros/s/AKfycbx2G2IrhP3OJONqQxJNbvuYaB3aU45fPR6pC27WPfrFkmRJLNMxshacYRB89HbwXApZIg/exec"
+                    data = {
+                        "StudentID": student_id,
+                        "RankName": rank_name,
+                        "Branch": branch,
+                        "OfficerType": officer_type,
+                        "Rank": rank,
+                        "Other": other
+                    }
+                    response = requests.post(apps_script_url, json=data)
                     
-                    # Update the Google Sheet
-                    try:
-                        # Define the scope and credentials
-                        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-                        creds = ServiceAccountCredentials.from_json_keyfile_name('path_to_your_credentials.json', scope)
-                        client = gspread.authorize(creds)
-                        
-                        # Open the Google Sheet
-                        sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw').sheet1
-                        
-                        # Find the row number where StudentID matches
-                        cell = sheet.find(student_id)
-                        if cell:
-                            row = cell.row
-                            # Update the row with new data
-                            sheet.update_cell(row, 2, rank_name)
-                            sheet.update_cell(row, 3, branch)
-                            sheet.update_cell(row, 4, officer_type)
-                            sheet.update_cell(row, 5, rank)
-                            sheet.update_cell(row, 6, other)
-                            
-                            st.success("Student information updated successfully in Google Sheets!")
-                        else:
-                            st.error("Student ID not found in Google Sheets.")
-                    except Exception as e:
-                        st.error(f"An error occurred while updating Google Sheets: {e}")
+                    if response.status_code == 200:
+                        st.success("Student information updated successfully in Google Sheets!")
+                    else:
+                        st.error("Failed to update Google Sheets. Please check the Apps Script or network connection.")
         else:
             st.warning("Student ID not found.")
 
