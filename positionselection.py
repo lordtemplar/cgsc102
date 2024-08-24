@@ -1,9 +1,14 @@
 import pandas as pd
 import streamlit as st
+import requests
 
-# URLs for your Google Sheets
+# URLs for your Google Sheets (CSV format)
 positions_url = 'https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/export?format=csv'
 students_url = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw/export?format=csv'
+
+# URLs for your Google Sheets (Edit format)
+positions_edit_url = 'https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ'
+students_edit_url = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw'
 
 # Read the data into pandas DataFrames
 positions_df = pd.read_csv(positions_url, dtype={'PositionID': str, 'SelectedByStudentID': str})
@@ -60,19 +65,41 @@ elif section == "Position Information":
 elif section == "Edit Student Information":
     st.header("Edit Student Information")
     
-    student_id = st.selectbox("Select Student ID to Edit", students_df['StudentID'])
-    student_data = students_df[students_df['StudentID'] == student_id].iloc[0]
+    student_id = st.text_input("Enter Student ID to Edit")
     
-    # Editing fields
-    rank_name = st.text_input("Rank Name", student_data['RankName'])
-    branch = st.selectbox("Branch", ["ร.", "ม.", "ป."], index=["ร.", "ม.", "ป."].index(student_data['Branch']))
-    officer_type = st.selectbox("Officer Type", ["นร.", "นป.", "ปริญญา", "พิเศษ"], index=["นร.", "นป.", "ปริญญา", "พิเศษ"].index(student_data['OfficerType']))
-    score = st.number_input("Score", value=student_data['Score'], step=1)
-    other = st.text_input("Other", value=student_data['Other'])  # "Other" condition
-    
-    if st.button("Update Student Information"):
-        students_df.loc[students_df['StudentID'] == student_id, ['RankName', 'Branch', 'OfficerType', 'Score', 'Other']] = [rank_name, branch, officer_type, score, other]
-        st.success("Student information updated!")
+    if st.button("Search Student"):
+        student_data = students_df[students_df['StudentID'] == student_id]
+        if not student_data.empty:
+            # Display fields for editing
+            student_data = student_data.iloc[0]  # Get the first row as a Series
+            rank_name = st.text_input("Rank Name", student_data['RankName'])
+            branch = st.selectbox("Branch", ["ร.", "ม.", "ป."], index=["ร.", "ม.", "ป."].index(student_data['Branch']))
+            officer_type = st.selectbox("Officer Type", ["นร.", "นป.", "ปริญญา", "พิเศษ"], index=["นร.", "นป.", "ปริญญา", "พิเศษ"].index(student_data['OfficerType']))
+            score = st.number_input("Score", value=student_data['Score'], step=1)
+            other = st.text_input("Other", value=student_data['Other'])  # "Other" condition
+            
+            if st.button("Update"):
+                # Update the DataFrame
+                students_df.loc[students_df['StudentID'] == student_id, ['RankName', 'Branch', 'OfficerType', 'Score', 'Other']] = [rank_name, branch, officer_type, score, other]
+                
+                # Convert DataFrame back to CSV and post to Google Sheets
+                students_df.to_csv('updated_students.csv', index=False)
+                
+                # Read the updated CSV file
+                with open('updated_students.csv', 'r') as file:
+                    updated_data = file.read()
+                
+                # Update Google Sheets by uploading the CSV
+                url = f'{students_edit_url}/gviz/tq?tqx=out:csv'
+                headers = {"Content-Type": "text/csv"}
+                response = requests.post(url, data=updated_data, headers=headers)
+                
+                if response.status_code == 200:
+                    st.success("Student information updated successfully!")
+                else:
+                    st.error(f"Failed to update Google Sheets. Status code: {response.status_code}")
+        else:
+            st.warning("Student ID not found.")
 
 # Section 4: Assign Position
 elif section == "Assign Position":
@@ -89,6 +116,7 @@ elif section == "Assign Position":
         students_df.loc[students_df['StudentID'] == student_id, ['Position1', 'Position2', 'Position3']] = [position1, position2, position3]
         positions_df.loc[positions_df['PositionID'].isin([position1, position2, position3]), 'Status'] = 'ไม่ว่าง'
         positions_df.loc[positions_df['PositionID'].isin([position1, position2, position3]), 'SelectedByStudentID'] = student_id
+        
         st.success(f"Positions assigned to student {student_id}")
 
 # Section 5: Edit Assigned Position
