@@ -6,8 +6,8 @@ positions_url = 'https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7
 students_url = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw/export?format=csv'
 
 # Read the data into pandas DataFrames
-positions_df = pd.read_csv(positions_url)
-students_df = pd.read_csv(students_url)
+positions_df = pd.read_csv(positions_url, dtype={'PositionID': str})
+students_df = pd.read_csv(students_url, dtype={'StudentID': str})
 
 # Streamlit UI
 st.title("Army Staff Officer Position Selection System")
@@ -19,12 +19,12 @@ section = st.sidebar.radio("Go to", ["Show Student Information", "Show Position 
 # Section 1: Show Student Information
 if section == "Show Student Information":
     st.header("Student Information")
-    st.dataframe(students_df)
+    st.table(students_df.set_index('StudentID'))
 
 # Section 2: Show Position Information
 elif section == "Show Position Information":
     st.header("Position Information")
-    st.dataframe(positions_df)
+    st.table(positions_df.set_index('PositionID'))
 
 # Section 3: Edit Student Information
 elif section == "Edit Student Information":
@@ -76,6 +76,6 @@ elif section == "Edit Assigned Position":
 
 # Optional: Refresh the data if needed
 if st.sidebar.button("Refresh Data"):
-    positions_df = pd.read_csv(positions_url)
-    students_df = pd.read_csv(students_url)
+    positions_df = pd.read_csv(positions_url, dtype={'PositionID': str})
+    students_df = pd.read_csv(students_url, dtype={'StudentID': str})
     st.experimental_rerun()
