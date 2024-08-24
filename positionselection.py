@@ -9,35 +9,29 @@ students_url = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS
 positions_df = pd.read_csv(positions_url)
 students_df = pd.read_csv(students_url)
 
-# Debugging: Show column names to verify they match
-st.write("Positions DataFrame Columns:", positions_df.columns.tolist())
-st.write("Students DataFrame Columns:", students_df.columns.tolist())
-
 # Streamlit UI
 st.title("Army Staff Officer Position Selection System")
 
 # Navigation Sidebar
 st.sidebar.title("Navigation")
-section = st.sidebar.radio("Go to", ["Show Information", "Edit Student Information", "Assign Position", "Edit Assigned Position"])
+section = st.sidebar.radio("Go to", ["Show Student Information", "Show Position Information", "Edit Student Information", "Assign Position", "Edit Assigned Position"])
 
-# Section 1: Show Information
-if section == "Show Information":
-    st.header("Show Information")
-    st.subheader("Student Information")
+# Section 1: Show Student Information
+if section == "Show Student Information":
+    st.header("Student Information")
     st.dataframe(students_df)
 
-    st.subheader("Position Information")
+# Section 2: Show Position Information
+elif section == "Show Position Information":
+    st.header("Position Information")
     st.dataframe(positions_df)
 
-# Section 2: Edit Student Information
+# Section 3: Edit Student Information
 elif section == "Edit Student Information":
     st.header("Edit Student Information")
     
     student_id = st.selectbox("Select Student ID to Edit", students_df['StudentID'])
     student_data = students_df[students_df['StudentID'] == student_id].iloc[0]
-    
-    # Check the student_data content
-    st.write("Selected Student Data:", student_data)
     
     # Editing fields
     rank_name = st.text_input("Rank Name", student_data['RankName'])
@@ -49,7 +43,7 @@ elif section == "Edit Student Information":
         students_df.loc[students_df['StudentID'] == student_id, ['RankName', 'Branch', 'OfficerType', 'Score']] = [rank_name, branch, officer_type, score]
         st.success("Student information updated!")
 
-# Section 3: Assign Position
+# Section 4: Assign Position
 elif section == "Assign Position":
     st.header("Assign Position to Student")
 
@@ -65,7 +59,7 @@ elif section == "Assign Position":
         positions_df.loc[positions_df['PositionID'].isin([position1, position2, position3]), 'Status'] = 'ไม่ว่าง'
         st.success(f"Positions assigned to student {student_id}")
 
-# Section 4: Edit Assigned Position
+# Section 5: Edit Assigned Position
 elif section == "Edit Assigned Position":
     st.header("Edit Assigned Position")
     
