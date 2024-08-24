@@ -6,8 +6,11 @@ positions_url = 'https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7
 students_url = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw/export?format=csv'
 
 # Read the data into pandas DataFrames
-positions_df = pd.read_csv(positions_url, dtype={'PositionID': str})
+positions_df = pd.read_csv(positions_url, dtype={'PositionID': str, 'SelectedByStudentID': str})
 students_df = pd.read_csv(students_url, dtype={'StudentID': str})
+
+# Replace any NaN values in SelectedByStudentID with "ไม่มี"
+positions_df['SelectedByStudentID'] = positions_df['SelectedByStudentID'].fillna("ไม่มี")
 
 # Streamlit UI
 st.title("Army Staff Officer Position Selection System")
@@ -57,6 +60,7 @@ elif section == "Assign Position":
     if st.button("Assign Positions"):
         students_df.loc[students_df['StudentID'] == student_id, ['Position1', 'Position2', 'Position3']] = [position1, position2, position3]
         positions_df.loc[positions_df['PositionID'].isin([position1, position2, position3]), 'Status'] = 'ไม่ว่าง'
+        positions_df.loc[positions_df['PositionID'].isin([position1, position2, position3]), 'SelectedByStudentID'] = student_id
         st.success(f"Positions assigned to student {student_id}")
 
 # Section 5: Edit Assigned Position
@@ -72,10 +76,12 @@ elif section == "Edit Assigned Position":
     
     if st.button("Update Assigned Positions"):
         students_df.loc[students_df['StudentID'] == student_id, ['Position1', 'Position2', 'Position3']] = [position1, position2, position3]
+        positions_df.loc[positions_df['PositionID'].isin([position1, position2, position3]), 'SelectedByStudentID'] = student_id
         st.success(f"Assigned positions updated for student {student_id}")
 
 # Optional: Refresh the data if needed
 if st.sidebar.button("Refresh Data"):
-    positions_df = pd.read_csv(positions_url, dtype={'PositionID': str})
+    positions_df = pd.read_csv(positions_url, dtype={'PositionID': str, 'SelectedByStudentID': str})
     students_df = pd.read_csv(students_url, dtype={'StudentID': str})
+    positions_df['SelectedByStudentID'] = positions_df['SelectedByStudentID'].fillna("ไม่มี")
     st.experimental_rerun()
