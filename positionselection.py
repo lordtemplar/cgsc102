@@ -18,17 +18,43 @@ st.title("Army Staff Officer Position Selection System")
 
 # Navigation Sidebar
 st.sidebar.title("Navigation")
-section = st.sidebar.radio("Go to", ["Show Student Information", "Show Position Information", "Edit Student Information", "Assign Position", "Edit Assigned Position"])
+section = st.sidebar.radio("Go to", ["Student Information", "Position Information", "Edit Student Information", "Assign Position", "Edit Assigned Position"])
 
-# Section 1: Show Student Information
-if section == "Show Student Information":
+# Section 1: Student Information
+if section == "Student Information":
     st.header("Student Information")
-    st.table(students_df.set_index('StudentID'))
+    student_id = st.text_input("Enter Student ID")
+    
+    if st.button("Search"):
+        if student_id:
+            student_data = students_df[students_df['StudentID'] == student_id]
+            if not student_data.empty:
+                st.table(student_data.set_index('StudentID'))
+            else:
+                st.warning("Student ID not found.")
+        else:
+            st.warning("Please enter a Student ID.")
+    
+    if st.button("Show All"):
+        st.table(students_df.set_index('StudentID'))
 
-# Section 2: Show Position Information
-elif section == "Show Position Information":
+# Section 2: Position Information
+elif section == "Position Information":
     st.header("Position Information")
-    st.table(positions_df.set_index('PositionID'))
+    position_id = st.text_input("Enter Position ID")
+    
+    if st.button("Search"):
+        if position_id:
+            position_data = positions_df[positions_df['PositionID'] == position_id]
+            if not position_data.empty:
+                st.table(position_data.set_index('PositionID'))
+            else:
+                st.warning("Position ID not found.")
+        else:
+            st.warning("Please enter a Position ID.")
+    
+    if st.button("Show All"):
+        st.table(positions_df.set_index('PositionID'))
 
 # Section 3: Edit Student Information
 elif section == "Edit Student Information":
