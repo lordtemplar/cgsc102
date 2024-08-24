@@ -9,18 +9,9 @@ students_url = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS
 positions_df = pd.read_csv(positions_url, dtype={'PositionID': str, 'SelectedByStudentID': str})
 students_df = pd.read_csv(students_url, dtype={'StudentID': str})
 
-# Initialize the "Other" column in students_df based on "OtherCondition" in positions_df
-def generate_other_info(student):
-    conditions = []
-    for pos in ['Position1', 'Position2', 'Position3']:
-        position_id = student[pos]
-        if pd.notna(position_id) and position_id in positions_df['PositionID'].values:
-            other_condition = positions_df[positions_df['PositionID'] == position_id]['OtherCondition'].values[0]
-            if other_condition and other_condition != 'ไม่มี':
-                conditions.append(other_condition)
-    return ', '.join(conditions) if conditions else 'ไม่มี'
-
-students_df['Other'] = students_df.apply(generate_other_info, axis=1)
+# Replace any NaN values in SelectedByStudentID and Other columns with "ไม่มี"
+positions_df['SelectedByStudentID'] = positions_df['SelectedByStudentID'].fillna("ไม่มี")
+students_df['Other'] = students_df['Other'].fillna("ไม่มี")
 
 # Streamlit UI
 st.title("Army Staff Officer Position Selection System")
@@ -51,7 +42,7 @@ elif section == "Edit Student Information":
     branch = st.selectbox("Branch", ["ร.", "ม.", "ป."], index=["ร.", "ม.", "ป."].index(student_data['Branch']))
     officer_type = st.selectbox("Officer Type", ["นร.", "นป.", "ปริญญา", "พิเศษ"], index=["นร.", "นป.", "ปริญญา", "พิเศษ"].index(student_data['OfficerType']))
     score = st.number_input("Score", value=student_data['Score'], step=1)
-    other = st.text_input("Other", value=student_data['Other'])  # Allow editing of "Other" condition
+    other = st.text_input("Other", value=student_data['Other'])  # "Other" condition
     
     if st.button("Update Student Information"):
         students_df.loc[students_df['StudentID'] == student_id, ['RankName', 'Branch', 'OfficerType', 'Score', 'Other']] = [rank_name, branch, officer_type, score, other]
@@ -70,7 +61,6 @@ elif section == "Assign Position":
     
     if st.button("Assign Positions"):
         students_df.loc[students_df['StudentID'] == student_id, ['Position1', 'Position2', 'Position3']] = [position1, position2, position3]
-        students_df.loc[students_df['StudentID'] == student_id, 'Other'] = generate_other_info(students_df[students_df['StudentID'] == student_id].iloc[0])
         positions_df.loc[positions_df['PositionID'].isin([position1, position2, position3]), 'Status'] = 'ไม่ว่าง'
         positions_df.loc[positions_df['PositionID'].isin([position1, position2, position3]), 'SelectedByStudentID'] = student_id
         st.success(f"Positions assigned to student {student_id}")
@@ -88,7 +78,6 @@ elif section == "Edit Assigned Position":
     
     if st.button("Update Assigned Positions"):
         students_df.loc[students_df['StudentID'] == student_id, ['Position1', 'Position2', 'Position3']] = [position1, position2, position3]
-        students_df.loc[students_df['StudentID'] == student_id, 'Other'] = generate_other_info(students_df[students_df['StudentID'] == student_id].iloc[0])
         positions_df.loc[positions_df['PositionID'].isin([position1, position2, position3]), 'SelectedByStudentID'] = student_id
         st.success(f"Assigned positions updated for student {student_id}")
 
@@ -97,5 +86,5 @@ if st.sidebar.button("Refresh Data"):
     positions_df = pd.read_csv(positions_url, dtype={'PositionID': str, 'SelectedByStudentID': str})
     students_df = pd.read_csv(students_url, dtype={'StudentID': str})
     positions_df['SelectedByStudentID'] = positions_df['SelectedByStudentID'].fillna("ไม่มี")
-    students_df['Other'] = students_df.apply(generate_other_info, axis=1)
+    students_df['Other'] = students_df['Other'].fillna("ไม่มี")
     st.experimental_rerun()
