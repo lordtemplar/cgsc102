@@ -27,8 +27,9 @@ if student_id:
 
     if not student_data.empty:
         st.write("### Student Information")
-        # Use st.write() to display the table without index
-        st.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
+        # Placeholder to update the table in place
+        table_placeholder = st.empty()
+        table_placeholder.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
 
         # Display Edit and Next buttons
         col1, col2, _ = st.columns([1, 1, 3])
@@ -79,13 +80,13 @@ if student_id:
                         student_sheet.update(f'A{row_number}:E{row_number}', [updated_data])
                         st.success(f"Successfully updated Student ID {student_id}.")
                         
-                        # Reload and display updated data
+                        # Reload and update the same table with the refreshed data
                         df_students = pd.DataFrame(student_sheet.get_all_records())
                         df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
                         updated_student_data = df_students[df_students['StudentID'] == student_id.strip()]
                         
-                        st.write("### Updated Student Information")
-                        st.write(updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
+                        # Refresh the existing table with the updated data
+                        table_placeholder.write(updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
 
                         # Clear the edit mode
                         st.session_state.clear()
