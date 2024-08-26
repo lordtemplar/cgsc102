@@ -27,6 +27,13 @@ if student_id:
 
     if not student_data.empty:
         st.write("### ข้อมูลนายทหารนักเรียน")
+        
+        # แสดงรูปภาพจากลิงค์ในคอลัมน์ Photo
+        photo_url = student_data.iloc[0]['Photo']
+        if photo_url:
+            st.image(photo_url, caption=f"รูปของ {student_data.iloc[0]['RankName']}", use_column_width=True)
+        
+        # ใช้ st.write() เพื่อแสดงตารางโดยไม่มี index
         table_placeholder = st.empty()
         table_placeholder.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
 
