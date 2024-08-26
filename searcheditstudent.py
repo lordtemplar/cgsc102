@@ -30,6 +30,7 @@ if student_id:
         
         # แสดงรูปภาพจากลิงค์ในคอลัมน์ Photo
         photo_url = student_data.iloc[0]['Photo']
+        st.write(photo_url)  # ตรวจสอบลิงค์ URL
         if photo_url:
             st.image(photo_url, caption=f"รูปของ {student_data.iloc[0]['RankName']}", use_column_width=True)
         
