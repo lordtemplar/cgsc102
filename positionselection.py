@@ -27,7 +27,7 @@ if student_id:
 
     if not student_data.empty:
         st.write("### Student Information")
-        st.table(student_data)
+        st.table(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']])
 
         # Display Edit and Next buttons
         col1, col2, _ = st.columns([1, 1, 3])
@@ -51,24 +51,12 @@ if student_id:
                 st.session_state.officer_type = student_data.iloc[0]['OfficerType']
             if "other" not in st.session_state:
                 st.session_state.other = student_data.iloc[0]['Other']
-            if "rank" not in st.session_state:
-                st.session_state.rank = student_data.iloc[0]['Rank']
-            if "position1" not in st.session_state:
-                st.session_state.position1 = student_data.iloc[0]['Position1']
-            if "position2" not in st.session_state:
-                st.session_state.position2 = student_data.iloc[0]['Position2']
-            if "position3" not in st.session_state:
-                st.session_state.position3 = student_data.iloc[0]['Position3']
 
             st.write("### Edit Student Information")
             st.session_state.rank_name = st.text_input("Rank Name", st.session_state.rank_name)
             st.session_state.branch = st.text_input("Branch", st.session_state.branch)
             st.session_state.officer_type = st.text_input("Officer Type", st.session_state.officer_type)
             st.session_state.other = st.text_input("Other", st.session_state.other)
-            st.session_state.rank = st.text_input("Rank", st.session_state.rank)
-            st.session_state.position1 = st.text_input("Position 1", st.session_state.position1)
-            st.session_state.position2 = st.text_input("Position 2", st.session_state.position2)
-            st.session_state.position3 = st.text_input("Position 3", st.session_state.position3)
 
             # Update button
             if st.button("Update Information", key="update_button"):
@@ -77,11 +65,7 @@ if student_id:
                     st.session_state.rank_name, 
                     st.session_state.branch, 
                     st.session_state.officer_type, 
-                    st.session_state.other, 
-                    st.session_state.rank, 
-                    st.session_state.position1, 
-                    st.session_state.position2, 
-                    st.session_state.position3
+                    st.session_state.other
                 ]
                 
                 # Find the row number in the Google Sheet
@@ -89,9 +73,9 @@ if student_id:
                 if cell:
                     row_number = cell.row
                     
-                    # Update the Google Sheet row
+                    # Update the Google Sheet row (only update the columns we are interested in)
                     try:
-                        student_sheet.update(f'A{row_number}:I{row_number}', [updated_data])
+                        student_sheet.update(f'A{row_number}:E{row_number}', [updated_data])
                         st.success(f"Successfully updated Student ID {student_id}.")
                         
                         # Reload and display updated data
@@ -100,7 +84,7 @@ if student_id:
                         updated_student_data = df_students[df_students['StudentID'] == student_id.strip()]
                         
                         st.write("### Updated Student Information")
-                        st.table(updated_student_data)
+                        st.table(updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']])
 
                         # Clear the edit mode
                         st.session_state.clear()
