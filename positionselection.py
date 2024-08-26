@@ -21,25 +21,15 @@ def load_position_data():
     records = position_sheet.get_all_records()
     return pd.DataFrame(records)
 
-# Function to update a specific row in the Google Sheet
-def update_student_row(student_id, updated_data):
-    cell = student_sheet.find(student_id)
-    if cell:
-        row = cell.row
-        # Ensure all values are passed correctly to the right columns
-        student_sheet.update(f'A{row}:G{row}', [[
-            student_id, 
-            updated_data['RankName'], 
-            updated_data['Branch'], 
-            updated_data['OfficerType'], 
-            updated_data['Other'], 
-            updated_data['Rank'], 
-            updated_data['Position1'], 
-            updated_data['Position2'], 
-            updated_data['Position3']
-        ]])
-        return True
-    return False
+# Corrected Function to map Position IDs to Position Names
+def map_position_ids_to_names(student_data, df_positions):
+    position_columns = ['Position1', 'Position2', 'Position3']
+    position_map = dict(zip(df_positions['PositionID'], df_positions['PositionName']))
+    
+    for col in position_columns:
+        student_data[col] = student_data[col].map(position_map)
+    
+    return student_data
 
 # Streamlit App Layout
 st.title("Student Position Selection System")
