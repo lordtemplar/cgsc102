@@ -106,16 +106,16 @@ if student_id:
 
             # Initialize session state for positions if not already set
             if "position1" not in st.session_state:
-                st.session_state.position1 = df_positions['PositionName'].tolist()[0]
+                st.session_state.position1 = ""
             if "position2" not in st.session_state:
-                st.session_state.position2 = df_positions['PositionName'].tolist()[0]
+                st.session_state.position2 = ""
             if "position3" not in st.session_state:
-                st.session_state.position3 = df_positions['PositionName'].tolist()[0]
+                st.session_state.position3 = ""
 
-            # Input boxes for selecting positions
-            st.session_state.position1 = st.selectbox("ตำแหน่งที่ 1", df_positions['PositionName'].tolist(), key="position1", index=df_positions['PositionName'].tolist().index(st.session_state.position1))
-            st.session_state.position2 = st.selectbox("ตำแหน่งที่ 2", df_positions['PositionName'].tolist(), key="position2", index=df_positions['PositionName'].tolist().index(st.session_state.position2))
-            st.session_state.position3 = st.selectbox("ตำแหน่งที่ 3", df_positions['PositionName'].tolist(), key="position3", index=df_positions['PositionName'].tolist().index(st.session_state.position3))
+            # Input boxes for entering Position IDs
+            st.session_state.position1 = st.text_input("ตำแหน่งที่ 1 (ใส่รหัสตำแหน่ง)", st.session_state.position1)
+            st.session_state.position2 = st.text_input("ตำแหน่งที่ 2 (ใส่รหัสตำแหน่ง)", st.session_state.position2)
+            st.session_state.position3 = st.text_input("ตำแหน่งที่ 3 (ใส่รหัสตำแหน่ง)", st.session_state.position3)
 
             # Button to submit selections
             if st.button("เลือกที่ลง"):
