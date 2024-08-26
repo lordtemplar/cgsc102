@@ -102,6 +102,7 @@ if student_id:
             # Show all Positions
             st.write("### ตารางตำแหน่งทั้งหมด")
             df_positions = pd.DataFrame(position_sheet.get_all_records())
+            df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)  # Ensure PositionID is a 3-digit string
             st.write(df_positions.to_html(index=False), unsafe_allow_html=True)
 
             # Initialize session state for positions if not already set
@@ -113,9 +114,9 @@ if student_id:
                 st.session_state.position3 = ""
 
             # Input boxes for entering Position IDs
-            st.session_state.position1 = st.text_input("ตำแหน่งที่ 1 (ใส่รหัสตำแหน่ง)", st.session_state.position1)
-            st.session_state.position2 = st.text_input("ตำแหน่งที่ 2 (ใส่รหัสตำแหน่ง)", st.session_state.position2)
-            st.session_state.position3 = st.text_input("ตำแหน่งที่ 3 (ใส่รหัสตำแหน่ง)", st.session_state.position3)
+            st.session_state.position1 = st.text_input("ตำแหน่งที่ 1 (ใส่รหัสตำแหน่ง 3 หลัก)", st.session_state.position1).zfill(3)
+            st.session_state.position2 = st.text_input("ตำแหน่งที่ 2 (ใส่รหัสตำแหน่ง 3 หลัก)", st.session_state.position2).zfill(3)
+            st.session_state.position3 = st.text_input("ตำแหน่งที่ 3 (ใส่รหัสตำแหน่ง 3 หลัก)", st.session_state.position3).zfill(3)
 
             # Button to submit selections
             if st.button("เลือกที่ลง"):
