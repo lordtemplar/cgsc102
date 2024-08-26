@@ -8,143 +8,60 @@ scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/au
 creds = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-87525a85b092.json', scope)
 client = gspread.authorize(creds)
 
-# Open the updated Google Sheets
+# Open the Google Sheets
 student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw').sheet1
-position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1
-
-# Function to load data into a DataFrame
-def load_student_data():
-    records = student_sheet.get_all_records()
-    return pd.DataFrame(records)
-
-def load_position_data():
-    records = position_sheet.get_all_records()
-    return pd.DataFrame(records)
-
-# Function to map Position IDs to Position Names
-def map_position_ids_to_names(student_data, df_positions):
-    position_columns = ['Position1', 'Position2', 'Position3']
-    position_map = dict(zip(df_positions['PositionID'], df_positions['PositionName']))
-    
-    for col in position_columns:
-        student_data[col] = student_data[col].map(position_map)
-    
-    return student_data
-
-# Function to update a specific row in the Google Sheet with debugging
-def update_student_row(student_id, updated_data):
-    cell = student_sheet.find(student_id)
-    if cell:
-        row = cell.row
-        print(f"Updating row {row} with data: {updated_data}")  # Debugging output
-        try:
-            student_sheet.update(f'A{row}:I{row}', [[
-                student_id,
-                updated_data['RankName'],
-                updated_data['Branch'],
-                updated_data['OfficerType'],
-                updated_data['Other'],
-                updated_data['Rank'],
-                updated_data['Position1'],
-                updated_data['Position2'],
-                updated_data['Position3']
-            ]])
-            print("Update successful")
-            return True
-        except Exception as e:
-            print(f"Update failed: {e}")
-            return False
-    return False
 
 # Streamlit App Layout
-st.title("Student Position Selection System")
+st.title("Google Sheets Data Management")
 
-# Step 1: Input Student ID
-student_id = st.text_input("Enter Student ID:")
+# Load and display student data
+df_students = pd.DataFrame(student_sheet.get_all_records())
+st.write("### Current Data in Google Sheets")
+st.table(df_students)
+
+# Input for Student ID to Update
+student_id = st.text_input("Enter Student ID to Update:")
 
 if student_id:
-    # Load student and position data
-    df_students = load_student_data()
-    df_positions = load_position_data()
-
-    # Ensure that StudentID is treated as a string for comparison
-    df_students['StudentID'] = df_students['StudentID'].astype(str)
-
+    # Find the student data by Student ID
     student_data = df_students[df_students['StudentID'] == student_id]
-
+    
     if not student_data.empty:
-        # Map Position IDs to Position Names
-        student_data = map_position_ids_to_names(student_data, df_positions)
-
-        st.write("### Student Information")
+        st.write("### Student Information to Update")
         st.table(student_data)
 
-        # Center the buttons
-        col1, col2, col3 = st.columns([2, 1, 2])
-        
-        with col2:
-            edit_clicked = st.button("EDIT")
-            next_clicked = st.button("NEXT")
-        
-        # Handle button clicks
-        if edit_clicked:
-            # Step 3: Edit mode
-            st.write("### Edit Student Information")
-            rank_name = st.text_input("Rank Name", student_data.iloc[0]['RankName'])
-            branch = st.selectbox("Branch", ["ร.", "ม.", "ป."], index=["ร.", "ม.", "ป."].index(student_data.iloc[0]['Branch']))
-            officer_type = st.selectbox("Officer Type", ["นร.", "นป.", "ปริญญา", "พิเศษ"], index=["นร.", "นป.", "ปริญญา", "พิเศษ"].index(student_data.iloc[0]['OfficerType']))
-            rank = st.text_input("Rank", student_data.iloc[0]['Rank'])
-            other = st.text_input("Other", student_data.iloc[0]['Other'])
-            
-            updated_data = {
-                'RankName': rank_name,
-                'Branch': branch,
-                'OfficerType': officer_type,
-                'Rank': rank,
-                'Other': other,
-                'Position1': student_data.iloc[0]['Position1'],  # Keep current positions unless they are edited
-                'Position2': student_data.iloc[0]['Position2'],
-                'Position3': student_data.iloc[0]['Position3']
-            }
-            
-            if st.button("SAVE"):
-                if update_student_row(student_id, updated_data):
-                    st.success("Student information updated successfully!")
-                else:
-                    st.error("Failed to update student information.")
+        # Input fields to update information
+        rank_name = st.text_input("Rank Name", student_data.iloc[0]['RankName'])
+        branch = st.text_input("Branch", student_data.iloc[0]['Branch'])
+        officer_type = st.text_input("Officer Type", student_data.iloc[0]['OfficerType'])
+        other = st.text_input("Other", student_data.iloc[0]['Other'])
+        rank = st.text_input("Rank", student_data.iloc[0]['Rank'])
+        position1 = st.text_input("Position 1", student_data.iloc[0]['Position1'])
+        position2 = st.text_input("Position 2", student_data.iloc[0]['Position2'])
+        position3 = st.text_input("Position 3", student_data.iloc[0]['Position3'])
 
-        if next_clicked:
-            # Step 4: Position Selection Step
-            st.write("### Position Selection")
+        # Update button
+        if st.button("Update Google Sheet"):
+            # Prepare updated data
+            updated_data = [student_id, rank_name, branch, officer_type, other, rank, position1, position2, position3]
             
-            # Filter positions based on the student's branch, officer type, and other condition
-            filtered_positions = df_positions[(df_positions['BranchCondition'] == student_data.iloc[0]['Branch']) &
-                                              (df_positions['OfficerTypeCondition'] == student_data.iloc[0]['OfficerType']) &
-                                              (df_positions['OtherCondition'] == student_data.iloc[0]['Other'])]
-            
-            if not filtered_positions.empty:
-                st.write("#### Available Positions")
-                st.table(filtered_positions)
+            # Find the row number in the Google Sheet
+            cell = student_sheet.find(student_id)
+            if cell:
+                row_number = cell.row
                 
-                position1 = st.selectbox("1st Choice", filtered_positions['PositionID'].tolist())
-                position2 = st.selectbox("2nd Choice", filtered_positions['PositionID'].tolist())
-                position3 = st.selectbox("3rd Choice", filtered_positions['PositionID'].tolist())
-                
-                if st.button("SUBMIT"):
-                    # Save the selected positions
-                    updated_data['Position1'] = position1
-                    updated_data['Position2'] = position2
-                    updated_data['Position3'] = position3
-
-                    if update_student_row(student_id, updated_data):
-                        st.write("### Review Selected Positions")
-                        st.table(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Position1', 'Position2', 'Position3']])
-                        
-                        if st.button("CONFIRM"):
-                            st.success("Student positions confirmed and saved!")
-                        else:
-                            st.error("Failed to save positions.")
+                # Update the Google Sheet row
+                try:
+                    student_sheet.update(f'A{row_number}:I{row_number}', [updated_data])
+                    st.success(f"Successfully updated Student ID {student_id} in Google Sheets.")
+                    
+                    # Reload and display updated data
+                    df_students = pd.DataFrame(student_sheet.get_all_records())
+                    st.write("### Updated Data in Google Sheets")
+                    st.table(df_students)
+                except Exception as e:
+                    st.error(f"Failed to update: {e}")
             else:
-                st.warning("No positions available that match your criteria.")
+                st.error("Student ID not found in Google Sheet.")
     else:
         st.error("Student ID not found.")
