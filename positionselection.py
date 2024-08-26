@@ -9,22 +9,25 @@ creds = ServiceAccountCredentials.from_json_keyfile_name(
     'client_secret_832036772434-ei5ks7v45scnpu4fjhuemsctv3uv4uj8.apps.googleusercontent.com.json', scope)
 client = gspread.authorize(creds)
 
-# Open the Google Sheet
-sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw')  # Replace with your Google Sheets URL
-worksheet = sheet.sheet1  # or replace with the name of your sheet
+# Open the Google Sheets
+student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw').sheet1
+position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1
 
 # Function to load data into a DataFrame
-def load_data():
-    records = worksheet.get_all_records()
-    df = pd.DataFrame(records)
-    return df
+def load_student_data():
+    records = student_sheet.get_all_records()
+    return pd.DataFrame(records)
+
+def load_position_data():
+    records = position_sheet.get_all_records()
+    return pd.DataFrame(records)
 
 # Function to update a specific row in the Google Sheet
-def update_row(student_id, updated_data):
-    cell = worksheet.find(student_id)
+def update_student_row(student_id, updated_data):
+    cell = student_sheet.find(student_id)
     if cell:
         row = cell.row
-        worksheet.update(f'B{row}:F{row}', [updated_data])  # Update columns B to F
+        student_sheet.update(f'B{row}:G{row}', [updated_data])  # Update columns B to G
         return True
     return False
 
@@ -41,7 +44,7 @@ student_id = st.text_input("Enter Student ID:")
 
 if student_id:
     # Step 2: Show Student Information with "EDIT" and "NEXT" buttons
-    df_students = load_data()
+    df_students = load_student_data()
     student_data = df_students[df_students['StudentID'] == student_id]
     
     if not student_data.empty:
@@ -58,14 +61,14 @@ if student_id:
             other = st.text_input("Other", student_data.iloc[0]['Other'])
             
             if st.button("SAVE"):
-                if update_row(student_id, [rank_name, branch, officer_type, rank, other]):
+                if update_student_row(student_id, [rank_name, branch, officer_type, rank, other]):
                     st.success("Student information updated successfully!")
                 else:
                     st.error("Failed to update student information.")
         
         if st.button("NEXT"):
             # Step 4: Position Selection Step
-            df_positions = pd.read_csv('positions.csv')  # Assume positions data is loaded from a CSV file
+            df_positions = load_position_data()
             st.write("### Position Selection")
             
             # Filter positions based on the student's branch, officer type, and other condition
@@ -89,7 +92,7 @@ if student_id:
                     
                     if st.button("CONFIRM"):
                         # Update Google Sheets with selected positions
-                        if update_row(student_id, [rank_name, branch, officer_type, rank, other]):
+                        if update_student_row(student_id, [rank_name, branch, officer_type, rank, other]):
                             st.success("Student positions confirmed and saved!")
                         else:
                             st.error("Failed to save positions.")
