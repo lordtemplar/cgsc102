@@ -96,9 +96,12 @@ if student_id:
                         
                         # Reload and display updated data
                         df_students = pd.DataFrame(student_sheet.get_all_records())
-                        st.write("### Updated Student Information")
-                        st.table(df_students[df_students['StudentID'] == student_id.strip()])
+                        df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
+                        updated_student_data = df_students[df_students['StudentID'] == student_id.strip()]
                         
+                        st.write("### Updated Student Information")
+                        st.table(updated_student_data)
+
                         # Clear the edit mode
                         st.session_state.clear()
                     except Exception as e:
