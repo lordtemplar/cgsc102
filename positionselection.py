@@ -26,19 +26,20 @@ def update_student_row(student_id, updated_data):
     cell = student_sheet.find(student_id)
     if cell:
         row = cell.row
-        student_sheet.update(f'B{row}:G{row}', [updated_data])  # Update columns B to G
+        # Ensure all values are passed correctly to the right columns
+        student_sheet.update(f'A{row}:G{row}', [[
+            student_id, 
+            updated_data['RankName'], 
+            updated_data['Branch'], 
+            updated_data['OfficerType'], 
+            updated_data['Other'], 
+            updated_data['Rank'], 
+            updated_data['Position1'], 
+            updated_data['Position2'], 
+            updated_data['Position3']
+        ]])
         return True
     return False
-
-# Function to map Position IDs to Position Names
-def map_position_ids_to_names(student_data, df_positions):
-    position_columns = ['Position1', 'Position2', 'Position3']
-    position_map = dict(zip(df_positions['PositionID'], df_positions['PositionName']))
-    
-    for col in position_columns:
-        student_data[col] = student_data[col].map(position_map)
-    
-    return student_data
 
 # Streamlit App Layout
 st.title("Student Position Selection System")
@@ -85,8 +86,19 @@ if student_id:
             rank = st.text_input("Rank", student_data.iloc[0]['Rank'])
             other = st.text_input("Other", student_data.iloc[0]['Other'])
             
+            updated_data = {
+                'RankName': rank_name,
+                'Branch': branch,
+                'OfficerType': officer_type,
+                'Rank': rank,
+                'Other': other,
+                'Position1': student_data.iloc[0]['Position1'],  # Keep current positions unless they are edited
+                'Position2': student_data.iloc[0]['Position2'],
+                'Position3': student_data.iloc[0]['Position3']
+            }
+            
             if st.button("SAVE"):
-                if update_student_row(student_id, [rank_name, branch, officer_type, rank, other]):
+                if update_student_row(student_id, updated_data):
                     st.success("Student information updated successfully!")
                 else:
                     st.error("Failed to update student information.")
@@ -116,7 +128,10 @@ if student_id:
                     
                     if st.button("CONFIRM"):
                         # Update Google Sheets with selected positions
-                        if update_student_row(student_id, [rank_name, branch, officer_type, rank, other]):
+                        updated_data['Position1'] = position1
+                        updated_data['Position2'] = position2
+                        updated_data['Position3'] = position3
+                        if update_student_row(student_id, updated_data):
                             st.success("Student positions confirmed and saved!")
                         else:
                             st.error("Failed to save positions.")
