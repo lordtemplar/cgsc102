@@ -10,6 +10,7 @@ client = gspread.authorize(creds)
 
 # เปิดไฟล์ Google Sheets
 student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw').sheet1
+position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/edit?usp=drive_link').sheet1
 
 # Layout ของแอพ Streamlit
 st.title("ระบบเลือกที่ลง CGSC102")
@@ -27,8 +28,8 @@ if student_id:
 
     if not student_data.empty:
         st.write("### ข้อมูลนายทหารนักเรียน")
-        # ใช้ st.write() เพื่อแสดงตารางโดยไม่มี index
-        st.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
+        table_placeholder = st.empty()
+        table_placeholder.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
 
         # แสดงปุ่มแก้ไขและถัดไป
         col1, col2, _ = st.columns([1, 1, 3])
@@ -85,7 +86,7 @@ if student_id:
                         updated_student_data = df_students[df_students['StudentID'] == student_id.strip()]
                         
                         # รีเฟรชตารางที่มีอยู่ด้วยข้อมูลที่อัปเดตแล้ว
-                        st.write(updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
+                        table_placeholder.write(updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
 
                         # ล้างสถานะแก้ไข
                         st.session_state.clear()
@@ -93,5 +94,40 @@ if student_id:
                         st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
                 else:
                     st.error("ไม่พบรหัสนายทหารนักเรียนใน Google Sheet")
+        
+        # Handle Next button click
+        if next_clicked:
+            st.write("### ข้อมูลนายทหารนักเรียน")
+            st.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
+            
+            # Show all Positions
+            st.write("### ตารางตำแหน่งทั้งหมด")
+            df_positions = pd.DataFrame(position_sheet.get_all_records())
+            st.write(df_positions.to_html(index=False), unsafe_allow_html=True)
+
+            # Input boxes for selecting positions
+            st.write("### เลือกที่ลง")
+            position1 = st.selectbox("ตำแหน่งที่ 1", df_positions['PositionName'].tolist(), key="position1")
+            position2 = st.selectbox("ตำแหน่งที่ 2", df_positions['PositionName'].tolist(), key="position2")
+            position3 = st.selectbox("ตำแหน่งที่ 3", df_positions['PositionName'].tolist(), key="position3")
+
+            # Button to submit selections
+            if st.button("เลือกที่ลง"):
+                try:
+                    # Find the row number in the Google Sheet for the student
+                    cell = student_sheet.find(student_id)
+                    if cell:
+                        row_number = cell.row
+                        
+                        # Update the Google Sheet row with the selected positions
+                        student_sheet.update(f'F{row_number}', position1)
+                        student_sheet.update(f'G{row_number}', position2)
+                        student_sheet.update(f'H{row_number}', position3)
+                        
+                        st.success("บันทึกข้อมูลที่ลงเรียบร้อยแล้ว")
+                    else:
+                        st.error("ไม่พบรหัสนายทหารนักเรียนใน Google Sheet")
+                except Exception as e:
+                    st.error(f"ไม่สามารถบันทึกข้อมูลได้: {e}")
     else:
         st.error("ไม่พบรหัสนายทหารนักเรียน")
