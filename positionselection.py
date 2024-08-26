@@ -12,21 +12,21 @@ client = gspread.authorize(creds)
 student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw').sheet1
 
 # Layout ของแอพ Streamlit
-st.title("การจัดการข้อมูลนักศึกษา")
+st.title("ระบบเลือกที่ลง CGSC102")
 
-# ขั้นตอนที่ 1: กล่องค้นหาเพื่อรับรหัสนักศึกษา
-student_id = st.text_input("กรุณาใส่รหัสนักศึกษา:")
+# ขั้นตอนที่ 1: กล่องค้นหาเพื่อรับรหัสนายทหารนักเรียน
+student_id = st.text_input("กรุณาใส่รหัสนายทหารนักเรียน:")
 
 if student_id:
-    # โหลดข้อมูลนักศึกษา
+    # โหลดข้อมูลนายทหารนักเรียน
     df_students = pd.DataFrame(student_sheet.get_all_records())
     df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
 
-    # ค้นหาข้อมูลนักศึกษาด้วยรหัสนักศึกษา
+    # ค้นหาข้อมูลนายทหารนักเรียนด้วยรหัสนายทหารนักเรียน
     student_data = df_students[df_students['StudentID'] == student_id.strip()]
 
     if not student_data.empty:
-        st.write("### ข้อมูลนักศึกษา")
+        st.write("### ข้อมูลนายทหารนักเรียน")
         # ใช้ st.write() เพื่อแสดงตารางโดยไม่มี index
         st.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
 
@@ -53,7 +53,7 @@ if student_id:
             if "other" not in st.session_state:
                 st.session_state.other = student_data.iloc[0]['Other']
 
-            st.write("### แก้ไขข้อมูลนักศึกษา")
+            st.write("### แก้ไขข้อมูลนายทหารนักเรียน")
             st.session_state.rank_name = st.text_input("ยศและชื่อ", st.session_state.rank_name)
             st.session_state.branch = st.text_input("เหล่า", st.session_state.branch)
             st.session_state.officer_type = st.text_input("ประเภทนายทหาร", st.session_state.officer_type)
@@ -77,7 +77,7 @@ if student_id:
                     # อัปเดตแถวใน Google Sheet (อัปเดตเฉพาะคอลัมน์ที่เราสนใจ)
                     try:
                         student_sheet.update(f'A{row_number}:E{row_number}', [updated_data])
-                        st.success(f"อัปเดตข้อมูลรหัสนักศึกษา {student_id} สำเร็จแล้ว")
+                        st.success(f"อัปเดตข้อมูลรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
                         
                         # โหลดใหม่และอัปเดตตารางเดิมด้วยข้อมูลที่รีเฟรช
                         df_students = pd.DataFrame(student_sheet.get_all_records())
@@ -92,6 +92,6 @@ if student_id:
                     except Exception as e:
                         st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
                 else:
-                    st.error("ไม่พบรหัสนักศึกษาใน Google Sheet")
+                    st.error("ไม่พบรหัสนายทหารนักเรียนใน Google Sheet")
     else:
-        st.error("ไม่พบรหัสนักศึกษา")
+        st.error("ไม่พบรหัสนายทหารนักเรียน")
