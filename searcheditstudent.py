@@ -27,8 +27,8 @@ if student_id:
 
     if not student_data.empty:
         st.write("### ข้อมูลนายทหารนักเรียน")
-        # ใช้ st.write() เพื่อแสดงตารางโดยไม่มี index
-        st.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
+        table_placeholder = st.empty()
+        table_placeholder.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
 
         # แสดงปุ่มแก้ไขและถัดไป
         col1, col2, _ = st.columns([1, 1, 3])
@@ -79,15 +79,15 @@ if student_id:
                         student_sheet.update(f'A{row_number}:E{row_number}', [updated_data])
                         st.success(f"อัปเดตข้อมูลรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
                         
-                        # โหลดใหม่และอัปเดตตารางเดิมด้วยข้อมูลที่รีเฟรช
+                        # โหลดข้อมูลใหม่และรีเฟรชตารางที่มีอยู่
                         df_students = pd.DataFrame(student_sheet.get_all_records())
                         df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
                         updated_student_data = df_students[df_students['StudentID'] == student_id.strip()]
                         
-                        # รีเฟรชตารางที่มีอยู่ด้วยข้อมูลที่อัปเดตแล้ว
-                        st.write(updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
-
-                        # ล้างสถานะแก้ไข
+                        # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
+                        table_placeholder.write(updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
+                        
+                        # ล้างสถานะแก้ไขหลังจากอัปเดต
                         st.session_state.clear()
                     except Exception as e:
                         st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
