@@ -96,9 +96,8 @@ if student_id:
                     st.error("ไม่พบรหัสนายทหารนักเรียนใน Google Sheet")
         
         # Handle Next button click
-        if next_clicked:
-            st.write("### ข้อมูลนายทหารนักเรียน")
-            st.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
+        if next_clicked or "next_mode" in st.session_state:
+            st.session_state.next_mode = True
             
             # Show all Positions
             st.write("### ตารางตำแหน่งทั้งหมด")
@@ -107,9 +106,9 @@ if student_id:
 
             # Input boxes for selecting positions
             st.write("### เลือกที่ลง")
-            position1 = st.selectbox("ตำแหน่งที่ 1", df_positions['PositionName'].tolist(), key="position1")
-            position2 = st.selectbox("ตำแหน่งที่ 2", df_positions['PositionName'].tolist(), key="position2")
-            position3 = st.selectbox("ตำแหน่งที่ 3", df_positions['PositionName'].tolist(), key="position3")
+            st.session_state.position1 = st.selectbox("ตำแหน่งที่ 1", df_positions['PositionName'].tolist(), key="position1", index=df_positions['PositionName'].tolist().index(st.session_state.get("position1", df_positions['PositionName'].tolist()[0])))
+            st.session_state.position2 = st.selectbox("ตำแหน่งที่ 2", df_positions['PositionName'].tolist(), key="position2", index=df_positions['PositionName'].tolist().index(st.session_state.get("position2", df_positions['PositionName'].tolist()[0])))
+            st.session_state.position3 = st.selectbox("ตำแหน่งที่ 3", df_positions['PositionName'].tolist(), key="position3", index=df_positions['PositionName'].tolist().index(st.session_state.get("position3", df_positions['PositionName'].tolist()[0])))
 
             # Button to submit selections
             if st.button("เลือกที่ลง"):
@@ -120,9 +119,9 @@ if student_id:
                         row_number = cell.row
                         
                         # Update the Google Sheet row with the selected positions
-                        student_sheet.update(f'F{row_number}', position1)
-                        student_sheet.update(f'G{row_number}', position2)
-                        student_sheet.update(f'H{row_number}', position3)
+                        student_sheet.update(f'F{row_number}', st.session_state.position1)
+                        student_sheet.update(f'G{row_number}', st.session_state.position2)
+                        student_sheet.update(f'H{row_number}', st.session_state.position3)
                         
                         st.success("บันทึกข้อมูลที่ลงเรียบร้อยแล้ว")
                     else:
