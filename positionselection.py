@@ -126,10 +126,26 @@ if student_id:
                     if cell:
                         row_number = cell.row
                         
-                        # Update the Google Sheet row with the selected positions
+                        # Update the Google Sheet row with the selected positions for the student
                         student_sheet.update(f'F{row_number}', st.session_state.position1)
                         student_sheet.update(f'G{row_number}', st.session_state.position2)
                         student_sheet.update(f'H{row_number}', st.session_state.position3)
+                        
+                        # Now update the PositionDB to reflect that these positions were chosen by this student
+                        def update_position_db(position_id, student_id):
+                            position_row = position_sheet.find(position_id)
+                            if position_row:
+                                position_row_number = position_row.row
+                                current_value = position_sheet.cell(position_row_number, 5).value  # Assuming column 5 is for storing student IDs
+                                if current_value:
+                                    updated_value = current_value + f", {student_id}"
+                                else:
+                                    updated_value = student_id
+                                position_sheet.update_cell(position_row_number, 5, updated_value)
+                        
+                        update_position_db(st.session_state.position1, student_id)
+                        update_position_db(st.session_state.position2, student_id)
+                        update_position_db(st.session_state.position3, student_id)
                         
                         st.success("บันทึกข้อมูลที่ลงเรียบร้อยแล้ว")
                     else:
