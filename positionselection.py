@@ -27,7 +27,7 @@ if student_id:
 
     if not student_data.empty:
         st.write("### Student Information")
-        st.table(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']])
+        st.table(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].style.hide_index())
 
         # Display Edit and Next buttons
         col1, col2, _ = st.columns([1, 1, 3])
@@ -84,7 +84,7 @@ if student_id:
                         updated_student_data = df_students[df_students['StudentID'] == student_id.strip()]
                         
                         st.write("### Updated Student Information")
-                        st.table(updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']])
+                        st.table(updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].style.hide_index())
 
                         # Clear the edit mode
                         st.session_state.clear()
