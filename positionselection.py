@@ -43,70 +43,75 @@ st.title("Student Position Selection System")
 student_id = st.text_input("Enter Student ID:")
 
 if student_id:
-    # Step 2: Show Student Information with "EDIT", "NEXT", and "SHOW ALL" buttons
+    # Load student data
     df_students = load_student_data()
     student_data = df_students[df_students['StudentID'] == student_id]
-    
+
     if not student_data.empty:
         st.write("### Student Information")
         st.table(student_data)
-        
+
+        # Display the buttons in columns
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            if st.button("EDIT"):
-                # Step 3: Edit mode
-                st.write("### Edit Student Information")
-                rank_name = st.text_input("Rank Name", student_data.iloc[0]['RankName'])
-                branch = st.selectbox("Branch", ["ร.", "ม.", "ป."], index=["ร.", "ม.", "ป."].index(student_data.iloc[0]['Branch']))
-                officer_type = st.selectbox("Officer Type", ["นร.", "นป.", "ปริญญา", "พิเศษ"], index=["นร.", "นป.", "ปริญญา", "พิเศษ"].index(student_data.iloc[0]['OfficerType']))
-                rank = st.text_input("Rank", student_data.iloc[0]['Rank'])
-                other = st.text_input("Other", student_data.iloc[0]['Other'])
-                
-                if st.button("SAVE"):
-                    if update_student_row(student_id, [rank_name, branch, officer_type, rank, other]):
-                        st.success("Student information updated successfully!")
-                    else:
-                        st.error("Failed to update student information.")
-
+            edit_clicked = st.button("EDIT")
+        
         with col2:
-            if st.button("NEXT"):
-                # Step 4: Position Selection Step
-                df_positions = load_position_data()
-                st.write("### Position Selection")
-                
-                # Filter positions based on the student's branch, officer type, and other condition
-                filtered_positions = filter_positions(df_positions, student_data.iloc[0]['Branch'], 
-                                                      student_data.iloc[0]['OfficerType'], 
-                                                      student_data.iloc[0]['Other'])
-                
-                if not filtered_positions.empty:
-                    st.write("#### Available Positions")
-                    st.table(filtered_positions)
-                    
-                    position1 = st.selectbox("1st Choice", filtered_positions['PositionID'].tolist())
-                    position2 = st.selectbox("2nd Choice", filtered_positions['PositionID'].tolist())
-                    position3 = st.selectbox("3rd Choice", filtered_positions['PositionID'].tolist())
-                    
-                    if st.button("SUBMIT"):
-                        # Save the selected positions
-                        df_students.loc[df_students['StudentID'] == student_id, ['Position1', 'Position2', 'Position3']] = [position1, position2, position3]
-                        st.write("### Review Selected Positions")
-                        st.table(df_students[df_students['StudentID'] == student_id][['StudentID', 'RankName', 'Branch', 'OfficerType', 'Position1', 'Position2', 'Position3']])
-                        
-                        if st.button("CONFIRM"):
-                            # Update Google Sheets with selected positions
-                            if update_student_row(student_id, [rank_name, branch, officer_type, rank, other]):
-                                st.success("Student positions confirmed and saved!")
-                            else:
-                                st.error("Failed to save positions.")
-                else:
-                    st.warning("No positions available that match your criteria.")
-
+            next_clicked = st.button("NEXT")
+        
         with col3:
-            if st.button("SHOW ALL"):
-                st.write("### All Student Information")
-                st.table(df_students)
+            show_all_clicked = st.button("SHOW ALL")
+        
+        # Handle button clicks
+        if edit_clicked:
+            # Step 3: Edit mode
+            st.write("### Edit Student Information")
+            rank_name = st.text_input("Rank Name", student_data.iloc[0]['RankName'])
+            branch = st.selectbox("Branch", ["ร.", "ม.", "ป."], index=["ร.", "ม.", "ป."].index(student_data.iloc[0]['Branch']))
+            officer_type = st.selectbox("Officer Type", ["นร.", "นป.", "ปริญญา", "พิเศษ"], index=["นร.", "นป.", "ปริญญา", "พิเศษ"].index(student_data.iloc[0]['OfficerType']))
+            rank = st.text_input("Rank", student_data.iloc[0]['Rank'])
+            other = st.text_input("Other", student_data.iloc[0]['Other'])
+            
+            if st.button("SAVE"):
+                if update_student_row(student_id, [rank_name, branch, officer_type, rank, other]):
+                    st.success("Student information updated successfully!")
+                else:
+                    st.error("Failed to update student information.")
 
+        if next_clicked:
+            # Step 4: Position Selection Step
+            df_positions = load_position_data()
+            st.write("### Position Selection")
+            
+            # Filter positions based on the student's branch, officer type, and other condition
+            filtered_positions = filter_positions(df_positions, student_data.iloc[0]['Branch'], 
+                                                  student_data.iloc[0]['OfficerType'], 
+                                                  student_data.iloc[0]['Other'])
+            
+            if not filtered_positions.empty:
+                st.write("#### Available Positions")
+                st.table(filtered_positions)
+                
+                position1 = st.selectbox("1st Choice", filtered_positions['PositionID'].tolist())
+                position2 = st.selectbox("2nd Choice", filtered_positions['PositionID'].tolist())
+                position3 = st.selectbox("3rd Choice", filtered_positions['PositionID'].tolist())
+                
+                if st.button("SUBMIT"):
+                    # Save the selected positions
+                    df_students.loc[df_students['StudentID'] == student_id, ['Position1', 'Position2', 'Position3']] = [position1, position2, position3]
+                    st.write("### Review Selected Positions")
+                    st.table(df_students[df_students['StudentID'] == student_id][['StudentID', 'RankName', 'Branch', 'OfficerType', 'Position1', 'Position2', 'Position3']])
+                    
+                    if st.button("CONFIRM"):
+                        # Update Google Sheets with selected positions
+                        if update_student_row(student_id, [rank_name, branch, officer_type, rank, other]):
+                            st.success("Student positions confirmed and saved!")
+                        else:
+                            st.error("Failed to save positions.")
+
+        if show_all_clicked:
+            st.write("### All Student Information")
+            st.table(df_students)
     else:
         st.error("Student ID not found.")
