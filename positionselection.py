@@ -21,7 +21,7 @@ def load_position_data():
     records = position_sheet.get_all_records()
     return pd.DataFrame(records)
 
-# Corrected Function to map Position IDs to Position Names
+# Function to map Position IDs to Position Names
 def map_position_ids_to_names(student_data, df_positions):
     position_columns = ['Position1', 'Position2', 'Position3']
     position_map = dict(zip(df_positions['PositionID'], df_positions['PositionName']))
@@ -30,6 +30,25 @@ def map_position_ids_to_names(student_data, df_positions):
         student_data[col] = student_data[col].map(position_map)
     
     return student_data
+
+# Function to update a specific row in the Google Sheet
+def update_student_row(student_id, updated_data):
+    cell = student_sheet.find(student_id)
+    if cell:
+        row = cell.row
+        student_sheet.update(f'A{row}:H{row}', [[
+            student_id,
+            updated_data['RankName'],
+            updated_data['Branch'],
+            updated_data['OfficerType'],
+            updated_data['Other'],
+            updated_data['Rank'],
+            updated_data['Position1'],
+            updated_data['Position2'],
+            updated_data['Position3']
+        ]])
+        return True
+    return False
 
 # Streamlit App Layout
 st.title("Student Position Selection System")
@@ -54,17 +73,12 @@ if student_id:
         st.write("### Student Information")
         st.table(student_data)
 
-        # Display the buttons in columns
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            edit_clicked = st.button("EDIT")
+        # Center the buttons
+        col1, col2, col3 = st.columns([2, 1, 2])
         
         with col2:
+            edit_clicked = st.button("EDIT")
             next_clicked = st.button("NEXT")
-        
-        with col3:
-            show_all_clicked = st.button("SHOW ALL")
         
         # Handle button clicks
         if edit_clicked:
@@ -112,22 +126,19 @@ if student_id:
                 
                 if st.button("SUBMIT"):
                     # Save the selected positions
-                    df_students.loc[df_students['StudentID'] == student_id, ['Position1', 'Position2', 'Position3']] = [position1, position2, position3]
-                    st.write("### Review Selected Positions")
-                    st.table(df_students[df_students['StudentID'] == student_id][['StudentID', 'RankName', 'Branch', 'OfficerType', 'Position1', 'Position2', 'Position3']])
-                    
-                    if st.button("CONFIRM"):
-                        # Update Google Sheets with selected positions
-                        updated_data['Position1'] = position1
-                        updated_data['Position2'] = position2
-                        updated_data['Position3'] = position3
-                        if update_student_row(student_id, updated_data):
+                    updated_data['Position1'] = position1
+                    updated_data['Position2'] = position2
+                    updated_data['Position3'] = position3
+
+                    if update_student_row(student_id, updated_data):
+                        st.write("### Review Selected Positions")
+                        st.table(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Position1', 'Position2', 'Position3']])
+                        
+                        if st.button("CONFIRM"):
                             st.success("Student positions confirmed and saved!")
                         else:
                             st.error("Failed to save positions.")
-
-        if show_all_clicked:
-            st.write("### All Student Information")
-            st.table(df_students)
+            else:
+                st.warning("No positions available that match your criteria.")
     else:
         st.error("Student ID not found.")
