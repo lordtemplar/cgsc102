@@ -104,11 +104,18 @@ if student_id:
             df_positions = pd.DataFrame(position_sheet.get_all_records())
             st.write(df_positions.to_html(index=False), unsafe_allow_html=True)
 
+            # Initialize session state for positions if not already set
+            if "position1" not in st.session_state:
+                st.session_state.position1 = df_positions['PositionName'].tolist()[0]
+            if "position2" not in st.session_state:
+                st.session_state.position2 = df_positions['PositionName'].tolist()[0]
+            if "position3" not in st.session_state:
+                st.session_state.position3 = df_positions['PositionName'].tolist()[0]
+
             # Input boxes for selecting positions
-            st.write("### เลือกที่ลง")
-            st.session_state.position1 = st.selectbox("ตำแหน่งที่ 1", df_positions['PositionName'].tolist(), key="position1", index=df_positions['PositionName'].tolist().index(st.session_state.get("position1", df_positions['PositionName'].tolist()[0])))
-            st.session_state.position2 = st.selectbox("ตำแหน่งที่ 2", df_positions['PositionName'].tolist(), key="position2", index=df_positions['PositionName'].tolist().index(st.session_state.get("position2", df_positions['PositionName'].tolist()[0])))
-            st.session_state.position3 = st.selectbox("ตำแหน่งที่ 3", df_positions['PositionName'].tolist(), key="position3", index=df_positions['PositionName'].tolist().index(st.session_state.get("position3", df_positions['PositionName'].tolist()[0])))
+            st.session_state.position1 = st.selectbox("ตำแหน่งที่ 1", df_positions['PositionName'].tolist(), key="position1", index=df_positions['PositionName'].tolist().index(st.session_state.position1))
+            st.session_state.position2 = st.selectbox("ตำแหน่งที่ 2", df_positions['PositionName'].tolist(), key="position2", index=df_positions['PositionName'].tolist().index(st.session_state.position2))
+            st.session_state.position3 = st.selectbox("ตำแหน่งที่ 3", df_positions['PositionName'].tolist(), key="position3", index=df_positions['PositionName'].tolist().index(st.session_state.position3))
 
             # Button to submit selections
             if st.button("เลือกที่ลง"):
