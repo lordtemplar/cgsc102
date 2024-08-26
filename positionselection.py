@@ -12,7 +12,7 @@ students_df = pd.read_csv(students_url, dtype={'StudentID': str})
 
 # Replace any NaN values in SelectedByStudentID and Other columns with "ไม่มี"
 positions_df['SelectedByStudentID'] = positions_df['SelectedByStudentID'].fillna("ไม่มี")
-students_df['Other'] = students_df['Other'].fillna("ไimport gspread
+students_df['Other'] = students_df['Other'].fillna("import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 import streamlit as st
