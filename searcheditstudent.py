@@ -28,12 +28,15 @@ if student_id:
     if not student_data.empty:
         st.write("### ข้อมูลนายทหารนักเรียน")
         
-        # แสดงรูปภาพจากลิงค์ในคอลัมน์ Photo
+        # ตรวจสอบและแปลงลิงค์ Google Drive เป็นรูปแบบที่ใช้ได้
         photo_url = student_data.iloc[0]['Photo']
-        st.write(photo_url)  # ตรวจสอบลิงค์ URL
-        if photo_url:
-            st.image(photo_url, caption=f"รูปของ {student_data.iloc[0]['RankName']}", use_column_width=True)
-        
+        if "drive.google.com" in photo_url:
+            file_id = photo_url.split('/d/')[1].split('/')[0]
+            photo_url = f"https://drive.google.com/uc?id={file_id}"
+
+        # แสดงรูปภาพจากลิงค์ในคอลัมน์ Photo
+        st.image(photo_url, caption=f"รูปของ {student_data.iloc[0]['RankName']}", use_column_width=True)
+
         # ใช้ st.write() เพื่อแสดงตารางโดยไม่มี index
         table_placeholder = st.empty()
         table_placeholder.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
