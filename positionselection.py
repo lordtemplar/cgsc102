@@ -3,21 +3,116 @@ from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 import streamlit as st
 
-st.title("Google Sheets Connection Test")
-
 # Set up the Google Sheets API credentials
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-87525a85b092.json', scope)
 client = gspread.authorize(creds)
 
-st.write("Credentials loaded and client authorized...")
+# Open the Google Sheets
+student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw').sheet1
+position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1
 
-# Open the Google Sheet
-sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw').sheet1
+# Function to load data into a DataFrame
+def load_student_data():
+    records = student_sheet.get_all_records()
+    return pd.DataFrame(records)
 
-st.write("Google Sheet opened...")
+def load_position_data():
+    records = position_sheet.get_all_records()
+    return pd.DataFrame(records)
 
-# Read and display all data from the sheet
-data = sheet.get_all_records()
-st.write("Data read from sheet:")
-st.write(data)
+# Function to update a specific row in the Google Sheet
+def update_student_row(student_id, updated_data):
+    cell = student_sheet.find(student_id)
+    if cell:
+        row = cell.row
+        student_sheet.update(f'B{row}:G{row}', [updated_data])  # Update columns B to G
+        return True
+    return False
+
+# Function to filter positions based on student data
+def filter_positions(df_positions, branch, officer_type, other_condition):
+    filtered_positions = df_positions[(df_positions['BranchCondition'] == branch) &
+                                      (df_positions['OfficerTypeCondition'] == officer_type) &
+                                      (df_positions['OtherCondition'] == other_condition)]
+    return filtered_positions
+
+# Streamlit App Layout
+st.title("Student Position Selection System")
+
+# Step 1: Input Student ID
+student_id = st.text_input("Enter Student ID:")
+
+if student_id:
+    # Load student data
+    df_students = load_student_data()
+    student_data = df_students[df_students['StudentID'] == student_id]
+
+    if not student_data.empty:
+        st.write("### Student Information")
+        st.table(student_data)
+
+        # Display the buttons in columns
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            edit_clicked = st.button("EDIT")
+        
+        with col2:
+            next_clicked = st.button("NEXT")
+        
+        with col3:
+            show_all_clicked = st.button("SHOW ALL")
+        
+        # Handle button clicks
+        if edit_clicked:
+            # Step 3: Edit mode
+            st.write("### Edit Student Information")
+            rank_name = st.text_input("Rank Name", student_data.iloc[0]['RankName'])
+            branch = st.selectbox("Branch", ["ร.", "ม.", "ป."], index=["ร.", "ม.", "ป."].index(student_data.iloc[0]['Branch']))
+            officer_type = st.selectbox("Officer Type", ["นร.", "นป.", "ปริญญา", "พิเศษ"], index=["นร.", "นป.", "ปริญญา", "พิเศษ"].index(student_data.iloc[0]['OfficerType']))
+            rank = st.text_input("Rank", student_data.iloc[0]['Rank'])
+            other = st.text_input("Other", student_data.iloc[0]['Other'])
+            
+            if st.button("SAVE"):
+                if update_student_row(student_id, [rank_name, branch, officer_type, rank, other]):
+                    st.success("Student information updated successfully!")
+                else:
+                    st.error("Failed to update student information.")
+
+        if next_clicked:
+            # Step 4: Position Selection Step
+            df_positions = load_position_data()
+            st.write("### Position Selection")
+            
+            # Filter positions based on the student's branch, officer type, and other condition
+            filtered_positions = filter_positions(df_positions, student_data.iloc[0]['Branch'], 
+                                                  student_data.iloc[0]['OfficerType'], 
+                                                  student_data.iloc[0]['Other'])
+            
+            if not filtered_positions.empty:
+                st.write("#### Available Positions")
+                st.table(filtered_positions)
+                
+                position1 = st.selectbox("1st Choice", filtered_positions['PositionID'].tolist())
+                position2 = st.selectbox("2nd Choice", filtered_positions['PositionID'].tolist())
+                position3 = st.selectbox("3rd Choice", filtered_positions['PositionID'].tolist())
+                
+                if st.button("SUBMIT"):
+                    # Save the selected positions
+                    df_students.loc[df_students['StudentID'] == student_id, ['Position1', 'Position2', 'Position3']] = [position1, position2, position3]
+                    st.write("### Review Selected Positions")
+                    st.table(df_students[df_students['StudentID'] == student_id][['StudentID', 'RankName', 'Branch', 'OfficerType', 'Position1', 'Position2', 'Position3']])
+                    
+                    if st.button("CONFIRM"):
+                        # Update Google Sheets with selected positions
+                        if update_student_row(student_id, [rank_name, branch, officer_type, rank, other]):
+                            st.success("Student positions confirmed and saved!")
+                        else:
+                            st.error("Failed to save positions.")
+
+        if show_all_clicked:
+            st.write("### All Student Information")
+            st.table(df_students)
+    else:
+        st.error("Student ID not found.")
