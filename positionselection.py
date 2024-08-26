@@ -16,11 +16,15 @@ st.title("Google Sheets Data Management")
 
 # Load and display student data
 df_students = pd.DataFrame(student_sheet.get_all_records())
+
+# Ensure all IDs are treated as strings and strip any whitespace
+df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
+
 st.write("### Current Data in Google Sheets")
 st.table(df_students)
 
 # Input for Student ID to Update
-student_id = st.text_input("Enter Student ID to Update:")
+student_id = st.text_input("Enter Student ID to Update:").strip()
 
 if student_id:
     # Find the student data by Student ID
