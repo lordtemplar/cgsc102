@@ -31,23 +31,29 @@ def map_position_ids_to_names(student_data, df_positions):
     
     return student_data
 
-# Function to update a specific row in the Google Sheet
+# Function to update a specific row in the Google Sheet with debugging
 def update_student_row(student_id, updated_data):
     cell = student_sheet.find(student_id)
     if cell:
         row = cell.row
-        student_sheet.update(f'A{row}:H{row}', [[
-            student_id,
-            updated_data['RankName'],
-            updated_data['Branch'],
-            updated_data['OfficerType'],
-            updated_data['Other'],
-            updated_data['Rank'],
-            updated_data['Position1'],
-            updated_data['Position2'],
-            updated_data['Position3']
-        ]])
-        return True
+        print(f"Updating row {row} with data: {updated_data}")  # Debugging output
+        try:
+            student_sheet.update(f'A{row}:I{row}', [[
+                student_id,
+                updated_data['RankName'],
+                updated_data['Branch'],
+                updated_data['OfficerType'],
+                updated_data['Other'],
+                updated_data['Rank'],
+                updated_data['Position1'],
+                updated_data['Position2'],
+                updated_data['Position3']
+            ]])
+            print("Update successful")
+            return True
+        except Exception as e:
+            print(f"Update failed: {e}")
+            return False
     return False
 
 # Streamlit App Layout
