@@ -31,7 +31,10 @@ if student_id:
         # แสดงรูปภาพจากลิงค์ในคอลัมน์ Photo
         photo_url = student_data.iloc[0]['Photo']
         if photo_url:
-            st.image(photo_url, caption=f"รูปของ {student_data.iloc[0]['RankName']}", use_column_width=True)
+            st.markdown(
+                f"<div style='text-align:center'><img src='{photo_url}' alt='รูปของ {student_data.iloc[0]['RankName']}' style='height:500px;'></div>",
+                unsafe_allow_html=True
+            )
         
         # ใช้ st.write() เพื่อแสดงตารางโดยไม่มี index
         table_placeholder = st.empty()
