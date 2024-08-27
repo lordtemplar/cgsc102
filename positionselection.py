@@ -14,7 +14,7 @@ student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfc
 # Layout ของแอพ Streamlit
 st.title("ระบบเลือกที่ลง CGSC102")
 
-# ขั้นตอนที่ 1: กล่องค้นหาเพื่อรับรหัสนายทหารนักเรียน
+# กล่องค้นหาเพื่อรับรหัสนายทหารนักเรียน
 student_id = st.text_input("กรุณาใส่รหัสนายทหารนักเรียน:")
 
 if student_id:
@@ -27,103 +27,38 @@ if student_id:
 
     if not student_data.empty:
         st.write("### ข้อมูลนายทหารนักเรียน")
-        
-        # Centering the image
-        photo_url = student_data.iloc[0]['Photo']
-        if photo_url:
-            st.image(photo_url, caption=f"รูปของ {student_data.iloc[0]['RankName']}", use_column_width=True)
+        table_placeholder = st.empty()
+        table_placeholder.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
 
-        # Centering the table using Streamlit's native layout controls
-        st.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].style.set_table_styles([
-            {
-                'selector': 'thead th',
-                'props': [('text-align', 'center')]
-            },
-            {
-                'selector': 'tbody th',
-                'props': [('text-align', 'center')]
-            },
-            {
-                'selector': 'tbody td',
-                'props': [('text-align', 'center')]
-            }
-        ]), unsafe_allow_html=True)
-
-        # แสดงปุ่มแก้ไขและถัดไป
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            edit_clicked = st.button("แก้ไข", key="edit_button")
-        
-        with col2:
-            next_clicked = st.button("ถัดไป", key="next_button")
-        
-        # จัดการการคลิกปุ่มแก้ไข
-        if edit_clicked or "edit_mode" in st.session_state:
-            st.session_state.edit_mode = True
-
+        # ปุ่มแก้ไข
+        if st.button("แก้ไข"):
             # เก็บค่าของฟิลด์ input ไว้ใน session state
-            if "rank_name" not in st.session_state:
-                st.session_state.rank_name = student_data.iloc[0]['RankName']
-            if "branch" not in st.session_state:
-                st.session_state.branch = student_data.iloc[0]['Branch']
-            if "officer_type" not in st.session_state:
-                st.session_state.officer_type = student_data.iloc[0]['OfficerType']
-            if "other" not in st.session_state:
-                st.session_state.other = student_data.iloc[0]['Other']
-
-            st.write("### แก้ไขข้อมูลนายทหารนักเรียน")
-            st.session_state.rank_name = st.text_input("ยศและชื่อ", st.session_state.rank_name)
-            st.session_state.branch = st.text_input("เหล่า", st.session_state.branch)
-            st.session_state.officer_type = st.text_input("ประเภทนายทหาร", st.session_state.officer_type)
-            st.session_state.other = st.text_input("อื่นๆ", st.session_state.other)
+            st.session_state['rank_name'] = st.text_input("ยศและชื่อ", student_data.iloc[0]['RankName'])
+            st.session_state['branch'] = st.text_input("เหล่า", student_data.iloc[0]['Branch'])
+            st.session_state['officer_type'] = st.text_input("ประเภทนายทหาร", student_data.iloc[0]['OfficerType'])
+            st.session_state['other'] = st.text_input("อื่นๆ", student_data.iloc[0]['Other'])
 
             # ปุ่มอัปเดตข้อมูล
-            if st.button("อัปเดตข้อมูล", key="update_button"):
+            if st.button("อัปเดตข้อมูล"):
                 updated_data = [
                     student_id, 
-                    st.session_state.rank_name, 
-                    st.session_state.branch, 
-                    st.session_state.officer_type, 
-                    st.session_state.other
+                    st.session_state['rank_name'], 
+                    st.session_state['branch'], 
+                    st.session_state['officer_type'], 
+                    st.session_state['other']
                 ]
                 
-                # ค้นหาหมายเลขแถวใน Google Sheet
-                cell = student_sheet.find(student_id)
-                if cell:
-                    row_number = cell.row
-                    
-                    # อัปเดตแถวใน Google Sheet (อัปเดตเฉพาะคอลัมน์ที่เราสนใจ)
-                    try:
-                        student_sheet.update(f'A{row_number}:E{row_number}', [updated_data])
-                        st.success(f"อัปเดตข้อมูลรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
-                        
-                        # โหลดข้อมูลใหม่และรีเฟรชตารางที่มีอยู่
-                        df_students = pd.DataFrame(student_sheet.get_all_records())
-                        df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
-                        updated_student_data = df_students[df_students['StudentID'] == student_id.strip()]
-                        
-                        # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
-                        st.write(updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].style.set_table_styles([
-                            {
-                                'selector': 'thead th',
-                                'props': [('text-align', 'center')]
-                            },
-                            {
-                                'selector': 'tbody th',
-                                'props': [('text-align', 'center')]
-                            },
-                            {
-                                'selector': 'tbody td',
-                                'props': [('text-align', 'center')]
-                            }
-                        ]), unsafe_allow_html=True)
-                        
-                        # ล้างสถานะแก้ไขหลังจากอัปเดต
-                        st.session_state.clear()
-                    except Exception as e:
-                        st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
-                else:
-                    st.error("ไม่พบรหัสนายทหารนักเรียนใน Google Sheet")
+                # ค้นหาและอัปเดตแถวใน Google Sheet
+                try:
+                    row_number = student_sheet.find(student_id).row
+                    student_sheet.update(f'A{row_number}:E{row_number}', [updated_data])
+                    st.success(f"อัปเดตข้อมูลรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
+
+                    # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
+                    updated_student_data = pd.DataFrame(student_sheet.get_all_records())
+                    updated_student_data = updated_student_data[updated_student_data['StudentID'] == student_id.strip()]
+                    table_placeholder.write(updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
     else:
         st.error("ไม่พบรหัสนายทหารนักเรียน")
