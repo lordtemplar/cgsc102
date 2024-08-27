@@ -28,10 +28,10 @@ if student_id:
     if not student_data.empty:
         st.write("### ข้อมูลนายทหารนักเรียน")
         
-        # แสดงรูปภาพจากลิงค์ในคอลัมน์ Photo
+        # แสดงรูปภาพจากลิงค์ในคอลัมน์ Photo และปรับขนาดกว้าง 300px
         photo_url = student_data.iloc[0]['Photo']
         if photo_url:
-            st.image(photo_url, caption=f"รูปของ {student_data.iloc[0]['RankName']}", width=300)  # ปรับขนาดรูปภาพเป็น 660px
+            st.image(photo_url, caption=f"รูปของ {student_data.iloc[0]['RankName']}", width=300)
         
         # ใช้ st.write() เพื่อแสดงตารางโดยไม่มี index
         table_placeholder = st.empty()
