@@ -31,18 +31,26 @@ if student_id:
         # Centering the image
         photo_url = student_data.iloc[0]['Photo']
         if photo_url:
-            col1, col2, col3 = st.columns([1, 2, 1])
-            with col2:
-                st.image(photo_url, caption=f"รูปของ {student_data.iloc[0]['RankName']}", use_column_width=True)
+            st.image(photo_url, caption=f"รูปของ {student_data.iloc[0]['RankName']}", use_column_width=True)
 
-        # Centering the table
-        st.write("### ข้อมูลการศึกษา")
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']])
+        # Centering the table using Streamlit's native layout controls
+        st.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].style.set_table_styles([
+            {
+                'selector': 'thead th',
+                'props': [('text-align', 'center')]
+            },
+            {
+                'selector': 'tbody th',
+                'props': [('text-align', 'center')]
+            },
+            {
+                'selector': 'tbody td',
+                'props': [('text-align', 'center')]
+            }
+        ]), unsafe_allow_html=True)
 
         # แสดงปุ่มแก้ไขและถัดไป
-        col1, col2, _ = st.columns([1, 1, 3])
+        col1, col2 = st.columns(2)
         
         with col1:
             edit_clicked = st.button("แก้ไข", key="edit_button")
@@ -96,9 +104,20 @@ if student_id:
                         updated_student_data = df_students[df_students['StudentID'] == student_id.strip()]
                         
                         # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
-                        col1, col2, col3 = st.columns([1, 2, 1])
-                        with col2:
-                            st.write(updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']])
+                        st.write(updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].style.set_table_styles([
+                            {
+                                'selector': 'thead th',
+                                'props': [('text-align', 'center')]
+                            },
+                            {
+                                'selector': 'tbody th',
+                                'props': [('text-align', 'center')]
+                            },
+                            {
+                                'selector': 'tbody td',
+                                'props': [('text-align', 'center')]
+                            }
+                        ]), unsafe_allow_html=True)
                         
                         # ล้างสถานะแก้ไขหลังจากอัปเดต
                         st.session_state.clear()
