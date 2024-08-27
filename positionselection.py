@@ -28,21 +28,36 @@ if student_id:
     if not student_data.empty:
         st.write("### ข้อมูลนายทหารนักเรียน")
         
-        # แสดงรูปภาพในตาราง HTML
+        # แสดงรูปภาพในตาราง
         photo_url = student_data.iloc[0]['Photo']
         if photo_url:
-            html_code = f"""
-            <table style="width: 300px;">
-                <tr>
-                    <td><img src="{photo_url}" width="300"></td>
-                </tr>
-            </table>
-            """
-            st.markdown(html_code, unsafe_allow_html=True)
+            st.image(photo_url, caption=f"รูปของ {student_data.iloc[0]['RankName']}", width=300)
         
-        # ใช้ st.write() เพื่อแสดงตารางข้อมูลอื่นๆ โดยไม่มี index
+        # สร้าง HTML ตารางที่รวมรูปภาพ
+        html_table = f"""
+        <table>
+            <tr>
+                <th>StudentID</th>
+                <th>RankName</th>
+                <th>Branch</th>
+                <th>OfficerType</th>
+                <th>Other</th>
+                <th>Photo</th>
+            </tr>
+            <tr>
+                <td>{student_data.iloc[0]['StudentID']}</td>
+                <td>{student_data.iloc[0]['RankName']}</td>
+                <td>{student_data.iloc[0]['Branch']}</td>
+                <td>{student_data.iloc[0]['OfficerType']}</td>
+                <td>{student_data.iloc[0]['Other']}</td>
+                <td><img src="{photo_url}" width="300px"></td>
+            </tr>
+        </table>
+        """
+        
+        # ใช้ st.write() เพื่อแสดงตาราง
         table_placeholder = st.empty()
-        table_placeholder.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
+        table_placeholder.markdown(html_table, unsafe_allow_html=True)
 
         # แสดงปุ่มแก้ไขและถัดไป
         col1, col2, _ = st.columns([1, 1, 3])
@@ -98,8 +113,30 @@ if student_id:
                         df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
                         updated_student_data = df_students[df_students['StudentID'] == student_id.strip()]
                         
+                        # สร้าง HTML ตารางใหม่ที่รวมรูปภาพ
+                        updated_photo_url = updated_student_data.iloc[0]['Photo']
+                        updated_html_table = f"""
+                        <table>
+                            <tr>
+                                <th>StudentID</th>
+                                <th>RankName</th>
+                                <th>Branch</th>
+                                <th>OfficerType</th>
+                                <th>Other</th>
+                                <th>Photo</th>
+                            </tr>
+                            <tr>
+                                <td>{updated_student_data.iloc[0]['StudentID']}</td>
+                                <td>{updated_student_data.iloc[0]['RankName']}</td>
+                                <td>{updated_student_data.iloc[0]['Branch']}</td>
+                                <td>{updated_student_data.iloc[0]['OfficerType']}</td>
+                                <td>{updated_student_data.iloc[0]['Other']}</td>
+                                <td><img src="{updated_photo_url}" width="300px"></td>
+                            </tr>
+                        </table>
+                        """
                         # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
-                        table_placeholder.write(updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
+                        table_placeholder.markdown(updated_html_table, unsafe_allow_html=True)
                         
                         # ล้างสถานะแก้ไขหลังจากอัปเดต
                         st.session_state.clear()
