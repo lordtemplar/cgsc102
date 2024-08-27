@@ -28,12 +28,19 @@ if student_id:
     if not student_data.empty:
         st.write("### ข้อมูลนายทหารนักเรียน")
         
-        # แสดงรูปภาพจากลิงค์ในคอลัมน์ Photo และปรับขนาดกว้าง 300px
+        # แสดงรูปภาพในตาราง HTML
         photo_url = student_data.iloc[0]['Photo']
         if photo_url:
-            st.image(photo_url, caption=f"รูปของ {student_data.iloc[0]['RankName']}", width=300)
+            html_code = f"""
+            <table style="width: 300px;">
+                <tr>
+                    <td><img src="{photo_url}" width="300"></td>
+                </tr>
+            </table>
+            """
+            st.markdown(html_code, unsafe_allow_html=True)
         
-        # ใช้ st.write() เพื่อแสดงตารางโดยไม่มี index
+        # ใช้ st.write() เพื่อแสดงตารางข้อมูลอื่นๆ โดยไม่มี index
         table_placeholder = st.empty()
         table_placeholder.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
 
