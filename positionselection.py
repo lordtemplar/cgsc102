@@ -31,14 +31,25 @@ if student_id:
         # แสดงรูปภาพจากลิงค์ในคอลัมน์ Photo
         photo_url = student_data.iloc[0]['Photo']
         if photo_url:
+            # Use HTML to center the image and display it with its original size
             st.markdown(
-                f"<div style='text-align:center'><img src='{photo_url}' alt='รูปของ {student_data.iloc[0]['RankName']}' style='height:500px;'></div>",
+                f"""
+                <div style="display: flex; justify-content: center;">
+                    <img src="{photo_url}" alt="รูปของ {student_data.iloc[0]['RankName']}" style="max-height: 500px;">
+                </div>
+                """,
                 unsafe_allow_html=True
             )
         
-        # ใช้ st.write() เพื่อแสดงตารางโดยไม่มี index
-        table_placeholder = st.empty()
-        table_placeholder.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
+        # Center the table using HTML and CSS
+        st.markdown(
+            f"""
+            <div style="display: flex; justify-content: center;">
+                {student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False)}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
         # แสดงปุ่มแก้ไขและถัดไป
         col1, col2, _ = st.columns([1, 1, 3])
@@ -95,7 +106,14 @@ if student_id:
                         updated_student_data = df_students[df_students['StudentID'] == student_id.strip()]
                         
                         # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
-                        table_placeholder.write(updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
+                        st.markdown(
+                            f"""
+                            <div style="display: flex; justify-content: center;">
+                                {updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False)}
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
                         
                         # ล้างสถานะแก้ไขหลังจากอัปเดต
                         st.session_state.clear()
