@@ -14,6 +14,27 @@ student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfc
 # Layout ของแอพ Streamlit
 st.title("ระบบเลือกที่ลง CGSC102")
 
+# Add custom CSS to center elements
+st.markdown("""
+    <style>
+    .center-image {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: auto;
+        max-height: 500px;
+    }
+    .center-table {
+        display: flex;
+        justify-content: center;
+    }
+    .center-table table {
+        margin-left: auto;
+        margin-right: auto;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 # ขั้นตอนที่ 1: กล่องค้นหาเพื่อรับรหัสนายทหารนักเรียน
 student_id = st.text_input("กรุณาใส่รหัสนายทหารนักเรียน:")
 
@@ -31,20 +52,12 @@ if student_id:
         # แสดงรูปภาพจากลิงค์ในคอลัมน์ Photo
         photo_url = student_data.iloc[0]['Photo']
         if photo_url:
-            # Use HTML to center the image and display it with its original size
-            st.markdown(
-                f"""
-                <div style="display: flex; justify-content: center;">
-                    <img src="{photo_url}" alt="รูปของ {student_data.iloc[0]['RankName']}" style="max-height: 500px;">
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-        
-        # Center the table using HTML and CSS
+            st.image(photo_url, caption=f"รูปของ {student_data.iloc[0]['RankName']}", use_column_width=False, output_format="auto", clamp=True, width=None, height=None, channels="RGB")
+
+        # Center the table using CSS
         st.markdown(
             f"""
-            <div style="display: flex; justify-content: center;">
+            <div class="center-table">
                 {student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False)}
             </div>
             """,
@@ -108,7 +121,7 @@ if student_id:
                         # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
                         st.markdown(
                             f"""
-                            <div style="display: flex; justify-content: center;">
+                            <div class="center-table">
                                 {updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False)}
                             </div>
                             """,
