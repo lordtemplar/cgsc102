@@ -28,34 +28,25 @@ if student_id:
     if not student_data.empty:
         st.write("### ข้อมูลนายทหารนักเรียน")
         
-        # ดึงลิงค์รูปภาพจากคอลัมน์ Photo
-        photo_url = student_data.iloc[0]['Photo']
+        # แสดงข้อมูลและรูปภาพในคอลัมน์
+        col1, col2 = st.columns([1, 3])
         
-        # สร้างตาราง HTML ที่รวมรูปภาพ
-        html_table = f"""
-        <table border="1" style="width:100%">
-            <tr>
-                <th>StudentID</th>
-                <th>RankName</th>
-                <th>Branch</th>
-                <th>OfficerType</th>
-                <th>Other</th>
-                <th>Photo</th>
-            </tr>
-            <tr>
-                <td>{student_data.iloc[0]['StudentID']}</td>
-                <td>{student_data.iloc[0]['RankName']}</td>
-                <td>{student_data.iloc[0]['Branch']}</td>
-                <td>{student_data.iloc[0]['OfficerType']}</td>
-                <td>{student_data.iloc[0]['Other']}</td>
-                <td><img src="{photo_url}" width="300"></td>
-            </tr>
-        </table>
-        """
+        with col1:
+            # แสดงรูปภาพ
+            photo_url = student_data.iloc[0]['Photo']
+            if photo_url:
+                st.image(photo_url, width=300)
         
-        # ใช้ st.markdown() เพื่อแสดงตารางที่มีรูปภาพ
-        st.markdown(html_table, unsafe_allow_html=True)
-
+        with col2:
+            # แสดงข้อมูลในตาราง
+            st.markdown(f"""
+            **รหัสนายทหารนักเรียน:** {student_data.iloc[0]['StudentID']}  
+            **ยศและชื่อ:** {student_data.iloc[0]['RankName']}  
+            **เหล่า:** {student_data.iloc[0]['Branch']}  
+            **ประเภทนายทหาร:** {student_data.iloc[0]['OfficerType']}  
+            **อื่นๆ:** {student_data.iloc[0]['Other']}  
+            """)
+        
         # แสดงปุ่มแก้ไขและถัดไป
         col1, col2, _ = st.columns([1, 1, 3])
         
@@ -110,30 +101,22 @@ if student_id:
                         df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
                         updated_student_data = df_students[df_students['StudentID'] == student_id.strip()]
                         
-                        # สร้างตาราง HTML ใหม่ที่รวมรูปภาพ
-                        updated_photo_url = updated_student_data.iloc[0]['Photo']
-                        updated_html_table = f"""
-                        <table border="1" style="width:100%">
-                            <tr>
-                                <th>StudentID</th>
-                                <th>RankName</th>
-                                <th>Branch</th>
-                                <th>OfficerType</th>
-                                <th>Other</th>
-                                <th>Photo</th>
-                            </tr>
-                            <tr>
-                                <td>{updated_student_data.iloc[0]['StudentID']}</td>
-                                <td>{updated_student_data.iloc[0]['RankName']}</td>
-                                <td>{updated_student_data.iloc[0]['Branch']}</td>
-                                <td>{updated_student_data.iloc[0]['OfficerType']}</td>
-                                <td>{updated_student_data.iloc[0]['Other']}</td>
-                                <td><img src="{updated_photo_url}" width="300"></td>
-                            </tr>
-                        </table>
-                        """
-                        # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
-                        st.markdown(updated_html_table, unsafe_allow_html=True)
+                        # รีเฟรชข้อมูลและรูปภาพ
+                        col1, col2 = st.columns([1, 3])
+                        
+                        with col1:
+                            updated_photo_url = updated_student_data.iloc[0]['Photo']
+                            if updated_photo_url:
+                                st.image(updated_photo_url, width=300)
+                        
+                        with col2:
+                            st.markdown(f"""
+                            **รหัสนายทหารนักเรียน:** {updated_student_data.iloc[0]['StudentID']}  
+                            **ยศและชื่อ:** {updated_student_data.iloc[0]['RankName']}  
+                            **เหล่า:** {updated_student_data.iloc[0]['Branch']}  
+                            **ประเภทนายทหาร:** {updated_student_data.iloc[0]['OfficerType']}  
+                            **อื่นๆ:** {updated_student_data.iloc[0]['Other']}  
+                            """)
                         
                         # ล้างสถานะแก้ไขหลังจากอัปเดต
                         st.session_state.clear()
