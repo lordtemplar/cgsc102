@@ -28,14 +28,12 @@ if student_id:
     if not student_data.empty:
         st.write("### ข้อมูลนายทหารนักเรียน")
         
-        # แสดงรูปภาพในตาราง
+        # ดึงลิงค์รูปภาพจากคอลัมน์ Photo
         photo_url = student_data.iloc[0]['Photo']
-        if photo_url:
-            st.image(photo_url, caption=f"รูปของ {student_data.iloc[0]['RankName']}", width=300)
         
-        # สร้าง HTML ตารางที่รวมรูปภาพ
+        # สร้างตาราง HTML ที่รวมรูปภาพ
         html_table = f"""
-        <table>
+        <table border="1" style="width:100%">
             <tr>
                 <th>StudentID</th>
                 <th>RankName</th>
@@ -50,14 +48,13 @@ if student_id:
                 <td>{student_data.iloc[0]['Branch']}</td>
                 <td>{student_data.iloc[0]['OfficerType']}</td>
                 <td>{student_data.iloc[0]['Other']}</td>
-                <td><img src="{photo_url}" width="300px"></td>
+                <td><img src="{photo_url}" width="300"></td>
             </tr>
         </table>
         """
         
-        # ใช้ st.write() เพื่อแสดงตาราง
-        table_placeholder = st.empty()
-        table_placeholder.markdown(html_table, unsafe_allow_html=True)
+        # ใช้ st.markdown() เพื่อแสดงตารางที่มีรูปภาพ
+        st.markdown(html_table, unsafe_allow_html=True)
 
         # แสดงปุ่มแก้ไขและถัดไป
         col1, col2, _ = st.columns([1, 1, 3])
@@ -113,10 +110,10 @@ if student_id:
                         df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
                         updated_student_data = df_students[df_students['StudentID'] == student_id.strip()]
                         
-                        # สร้าง HTML ตารางใหม่ที่รวมรูปภาพ
+                        # สร้างตาราง HTML ใหม่ที่รวมรูปภาพ
                         updated_photo_url = updated_student_data.iloc[0]['Photo']
                         updated_html_table = f"""
-                        <table>
+                        <table border="1" style="width:100%">
                             <tr>
                                 <th>StudentID</th>
                                 <th>RankName</th>
@@ -131,12 +128,12 @@ if student_id:
                                 <td>{updated_student_data.iloc[0]['Branch']}</td>
                                 <td>{updated_student_data.iloc[0]['OfficerType']}</td>
                                 <td>{updated_student_data.iloc[0]['Other']}</td>
-                                <td><img src="{updated_photo_url}" width="300px"></td>
+                                <td><img src="{updated_photo_url}" width="300"></td>
                             </tr>
                         </table>
                         """
                         # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
-                        table_placeholder.markdown(updated_html_table, unsafe_allow_html=True)
+                        st.markdown(updated_html_table, unsafe_allow_html=True)
                         
                         # ล้างสถานะแก้ไขหลังจากอัปเดต
                         st.session_state.clear()
