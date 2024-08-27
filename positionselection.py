@@ -10,7 +10,6 @@ client = gspread.authorize(creds)
 
 # เปิดไฟล์ Google Sheets
 student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw').sheet1
-position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/edit?usp=drive_link').sheet1
 
 # Layout ของแอพ Streamlit
 st.title("ระบบเลือกที่ลง CGSC102")
@@ -28,6 +27,13 @@ if student_id:
 
     if not student_data.empty:
         st.write("### ข้อมูลนายทหารนักเรียน")
+        
+        # แสดงรูปภาพจากลิงค์ในคอลัมน์ Photo
+        photo_url = student_data.iloc[0]['Photo']
+        if photo_url:
+            st.image(photo_url, caption=f"รูปของ {student_data.iloc[0]['RankName']}", width=660)  # ปรับขนาดรูปภาพเป็น 660px
+        
+        # ใช้ st.write() เพื่อแสดงตารางโดยไม่มี index
         table_placeholder = st.empty()
         table_placeholder.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
 
@@ -80,77 +86,19 @@ if student_id:
                         student_sheet.update(f'A{row_number}:E{row_number}', [updated_data])
                         st.success(f"อัปเดตข้อมูลรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
                         
-                        # โหลดใหม่และอัปเดตตารางเดิมด้วยข้อมูลที่รีเฟรช
+                        # โหลดข้อมูลใหม่และรีเฟรชตารางที่มีอยู่
                         df_students = pd.DataFrame(student_sheet.get_all_records())
                         df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
                         updated_student_data = df_students[df_students['StudentID'] == student_id.strip()]
                         
-                        # รีเฟรชตารางที่มีอยู่ด้วยข้อมูลที่อัปเดตแล้ว
+                        # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
                         table_placeholder.write(updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
-
-                        # ล้างสถานะแก้ไข
+                        
+                        # ล้างสถานะแก้ไขหลังจากอัปเดต
                         st.session_state.clear()
                     except Exception as e:
                         st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
                 else:
                     st.error("ไม่พบรหัสนายทหารนักเรียนใน Google Sheet")
-        
-        # Handle Next button click
-        if next_clicked or "next_mode" in st.session_state:
-            st.session_state.next_mode = True
-            
-            # Show all Positions
-            st.write("### ตารางตำแหน่งทั้งหมด")
-            df_positions = pd.DataFrame(position_sheet.get_all_records())
-            df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)  # Ensure PositionID is a 3-digit string
-            st.write(df_positions.to_html(index=False), unsafe_allow_html=True)
-
-            # Initialize session state for positions if not already set
-            if "position1" not in st.session_state:
-                st.session_state.position1 = ""
-            if "position2" not in st.session_state:
-                st.session_state.position2 = ""
-            if "position3" not in st.session_state:
-                st.session_state.position3 = ""
-
-            # Input boxes for entering Position IDs
-            st.session_state.position1 = st.text_input("ตำแหน่งที่ 1 (ใส่รหัสตำแหน่ง 3 หลัก)", st.session_state.position1).zfill(3)
-            st.session_state.position2 = st.text_input("ตำแหน่งที่ 2 (ใส่รหัสตำแหน่ง 3 หลัก)", st.session_state.position2).zfill(3)
-            st.session_state.position3 = st.text_input("ตำแหน่งที่ 3 (ใส่รหัสตำแหน่ง 3 หลัก)", st.session_state.position3).zfill(3)
-
-            # Button to submit selections
-            if st.button("เลือกที่ลง"):
-                try:
-                    # Find the row number in the Google Sheet for the student
-                    cell = student_sheet.find(student_id)
-                    if cell:
-                        row_number = cell.row
-                        
-                        # Update the Google Sheet row with the selected positions for the student
-                        student_sheet.update(f'F{row_number}', st.session_state.position1)
-                        student_sheet.update(f'G{row_number}', st.session_state.position2)
-                        student_sheet.update(f'H{row_number}', st.session_state.position3)
-                        
-                        # Now update the PositionDB to reflect that these positions were chosen by this student
-                        def update_position_db(position_id, student_id):
-                            position_row = position_sheet.find(position_id)
-                            if position_row:
-                                position_row_number = position_row.row
-                                current_value = position_sheet.cell(position_row_number, 5).value  # Assuming column 5 is for storing student IDs
-                                if current_value:
-                                    updated_value = current_value + f", {student_id}"
-                                else:
-                                    updated_value = student_id
-                                position_sheet.update_cell(position_row_number, 5, updated_value)
-                        
-                        update_position_db(st.session_state.position1, student_id)
-                        update_position_db(st.session_state.position2, student_id)
-                        update_position_db(st.session_state.position3, student_id)
-                        
-                        st.success("บันทึกข้อมูลที่ลงเรียบร้อยแล้ว")
-                    else:
-                        st.error("ไม่พบรหัสนายทหารนักเรียนใน Google Sheet")
-                except Exception as e:
-                    st.error(f"ไม่สามารถบันทึกข้อมูลได้: {e}")
     else:
         st.error("ไม่พบรหัสนายทหารนักเรียน")
