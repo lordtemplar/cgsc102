@@ -28,25 +28,15 @@ if student_id:
     if not student_data.empty:
         st.write("### ข้อมูลนายทหารนักเรียน")
         
-        # แสดงข้อมูลและรูปภาพในคอลัมน์
-        col1, col2 = st.columns([1, 3])
+        # แสดงรูปภาพจากลิงค์ในคอลัมน์ Photo
+        photo_url = student_data.iloc[0]['Photo']
+        if photo_url:
+            st.image(photo_url, caption=f"รูปของ {student_data.iloc[0]['RankName']}", use_column_width=True)
         
-        with col1:
-            # แสดงรูปภาพ
-            photo_url = student_data.iloc[0]['Photo']
-            if photo_url:
-                st.image(photo_url, width=300)
-        
-        with col2:
-            # แสดงข้อมูลในตาราง
-            st.markdown(f"""
-            **รหัสนายทหารนักเรียน:** {student_data.iloc[0]['StudentID']}  
-            **ยศและชื่อ:** {student_data.iloc[0]['RankName']}  
-            **เหล่า:** {student_data.iloc[0]['Branch']}  
-            **ประเภทนายทหาร:** {student_data.iloc[0]['OfficerType']}  
-            **อื่นๆ:** {student_data.iloc[0]['Other']}  
-            """)
-        
+        # ใช้ st.write() เพื่อแสดงตารางโดยไม่มี index
+        table_placeholder = st.empty()
+        table_placeholder.write(student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
+
         # แสดงปุ่มแก้ไขและถัดไป
         col1, col2, _ = st.columns([1, 1, 3])
         
@@ -101,22 +91,8 @@ if student_id:
                         df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
                         updated_student_data = df_students[df_students['StudentID'] == student_id.strip()]
                         
-                        # รีเฟรชข้อมูลและรูปภาพ
-                        col1, col2 = st.columns([1, 3])
-                        
-                        with col1:
-                            updated_photo_url = updated_student_data.iloc[0]['Photo']
-                            if updated_photo_url:
-                                st.image(updated_photo_url, width=300)
-                        
-                        with col2:
-                            st.markdown(f"""
-                            **รหัสนายทหารนักเรียน:** {updated_student_data.iloc[0]['StudentID']}  
-                            **ยศและชื่อ:** {updated_student_data.iloc[0]['RankName']}  
-                            **เหล่า:** {updated_student_data.iloc[0]['Branch']}  
-                            **ประเภทนายทหาร:** {updated_student_data.iloc[0]['OfficerType']}  
-                            **อื่นๆ:** {updated_student_data.iloc[0]['Other']}  
-                            """)
+                        # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
+                        table_placeholder.write(updated_student_data[['StudentID', 'RankName', 'Branch', 'OfficerType', 'Other']].to_html(index=False), unsafe_allow_html=True)
                         
                         # ล้างสถานะแก้ไขหลังจากอัปเดต
                         st.session_state.clear()
