@@ -60,24 +60,31 @@ if student_id:
         </table>
         """, unsafe_allow_html=True)
 
-        # ปุ่มแสดงหรือซ่อนตำแหน่งทั้งหมด
-        show_positions = st.checkbox("แสดงตำแหน่งทั้งหมด")
-
-        if show_positions:
+        # กล่องค้นหาเพื่อค้นหาตำแหน่ง
+        search_term = st.text_input("ค้นหาตำแหน่ง:")
+        
+        if search_term:
             df_positions = pd.DataFrame(position_sheet.get_all_records())
             df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)
-            st.write("### ตำแหน่งทั้งหมด")
-            for index, row in df_positions.iterrows():
-                st.write(f"""
-                <table>
-                    <tr><th>รหัสตำแหน่ง</th><td>{row['PositionID']}</td></tr>
-                    <tr><th>ชื่อตำแหน่ง</th><td>{row['PositionName']}</td></tr>
-                    <tr><th>เงื่อนไขเหล่า</th><td>{row['BranchCondition']}</td></tr>
-                    <tr><th>เงื่อนไขประเภทนายทหาร</th><td>{row['OfficerTypeCondition']}</td></tr>
-                    <tr><th>เงื่อนไขอื่นๆ</th><td>{row['OtherCondition']}</td></tr>
-                    <tr><th>สถานะ</th><td>{row['Status']}</td></tr>
-                </table>
-                """, unsafe_allow_html=True)
+
+            # การจับคู่ข้อความกับทุก column
+            filtered_positions = df_positions[df_positions.apply(lambda row: row.astype(str).str.contains(search_term, case=False, na=False).any(), axis=1)]
+
+            if not filtered_positions.empty:
+                st.write(f"### ผลการค้นหาสำหรับ \"{search_term}\"")
+                for index, row in filtered_positions.iterrows():
+                    st.write(f"""
+                    <table>
+                        <tr><th>รหัสตำแหน่ง</th><td>{row['PositionID']}</td></tr>
+                        <tr><th>ชื่อตำแหน่ง</th><td>{row['PositionName']}</td></tr>
+                        <tr><th>เงื่อนไขเหล่า</th><td>{row['BranchCondition']}</td></tr>
+                        <tr><th>เงื่อนไขประเภทนายทหาร</th><td>{row['OfficerTypeCondition']}</td></tr>
+                        <tr><th>เงื่อนไขอื่นๆ</th><td>{row['OtherCondition']}</td></tr>
+                        <tr><th>สถานะ</th><td>{row['Status']}</td></tr>
+                    </table>
+                    """, unsafe_allow_html=True)
+            else:
+                st.write("ไม่พบตำแหน่งที่ตรงกับการค้นหา")
 
         # ส่วนกรอกข้อมูลตำแหน่งลำดับ 1, 2, 3
         st.write("### กรอกข้อมูลตำแหน่งที่เลือก")
