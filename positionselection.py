@@ -31,6 +31,11 @@ st.title("ระบบเลือกที่ลง CGSC102")
 # กล่องค้นหาเพื่อรับรหัสนายทหารนักเรียน
 student_id = st.text_input("กรุณาใส่รหัสนายทหารนักเรียน:")
 
+if "last_searched_id" not in st.session_state or st.session_state.last_searched_id != student_id:
+    # เคลียร์ session_state เมื่อมีการใส่รหัสใหม่
+    st.session_state.clear()
+    st.session_state.last_searched_id = student_id
+
 if student_id:
     # โหลดข้อมูลนายทหารนักเรียน
     df_students = pd.DataFrame(student_sheet.get_all_records())
