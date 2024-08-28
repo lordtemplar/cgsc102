@@ -47,11 +47,18 @@ if student_id:
         if "position3" not in st.session_state:
             st.session_state['position3'] = student_data.iloc[0]['Position3']
 
-        # แสดงข้อมูลในตาราง
+        # แสดงข้อมูลในตารางแนวตั้ง
         table_placeholder.write(f"""
         <table>
-            <tr><th>รหัสนักเรียน</th><th>ยศ ชื่อ สกุล</th><th>ลำดับ</th><th>เหล่า</th><th>กำเนิด</th><th>อื่นๆ</th><th>ตำแหน่งลำดับ 1</th><th>ตำแหน่งลำดับ 2</th><th>ตำแหน่งลำดับ 3</th></tr>
-            <tr><td>{student_id}</td><td>{st.session_state['rank_name']}</td><td>{st.session_state['rank']}</td><td>{st.session_state['branch']}</td><td>{st.session_state['officer_type']}</td><td>{st.session_state['other']}</td><td>{st.session_state['position1']}</td><td>{st.session_state['position2']}</td><td>{st.session_state['position3']}</td></tr>
+            <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
+            <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
+            <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
+            <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
+            <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
+            <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 1</th><td>{st.session_state['position1']}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 2</th><td>{st.session_state['position2']}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 3</th><td>{st.session_state['position3']}</td></tr>
         </table>
         """, unsafe_allow_html=True)
 
@@ -91,8 +98,15 @@ if student_id:
                 updated_student_data = updated_student_data[updated_student_data['StudentID'] == student_id.strip()]
                 table_placeholder.write(f"""
                 <table>
-                    <tr><th>รหัสนักเรียน</th><th>ยศ ชื่อ สกุล</th><th>ลำดับ</th><th>เหล่า</th><th>กำเนิด</th><th>อื่นๆ</th><th>ตำแหน่งลำดับ 1</th><th>ตำแหน่งลำดับ 2</th><th>ตำแหน่งลำดับ 3</th></tr>
-                    <tr><td>{student_id}</td><td>{st.session_state['rank_name']}</td><td>{st.session_state['rank']}</td><td>{st.session_state['branch']}</td><td>{st.session_state['officer_type']}</td><td>{st.session_state['other']}</td><td>{st.session_state['position1']}</td><td>{st.session_state['position2']}</td><td>{st.session_state['position3']}</td></tr>
+                    <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
+                    <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
+                    <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
+                    <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
+                    <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
+                    <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
+                    <tr><th>ตำแหน่งลำดับ 1</th><td>{st.session_state['position1']}</td></tr>
+                    <tr><th>ตำแหน่งลำดับ 2</th><td>{st.session_state['position2']}</td></tr>
+                    <tr><th>ตำแหน่งลำดับ 3</th><td>{st.session_state['position3']}</td></tr>
                 </table>
                 """, unsafe_allow_html=True)
             except Exception as e:
