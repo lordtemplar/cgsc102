@@ -56,4 +56,4 @@ while True:
         st.write("### สถานะตำแหน่ง")
         st.write(df_positions.to_html(index=False, escape=False), unsafe_allow_html=True)
 
-    time.sleep(5)
+    time.sleep(30)
