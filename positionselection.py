@@ -15,11 +15,29 @@ position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mfl
 # Layout ของแอพ Streamlit
 st.title("ระบบเลือกที่ลง CGSC102")
 
+# ตั้งค่าเริ่มต้นของ session state เพื่อเก็บข้อมูลที่ใช้ในการแก้ไข
+if 'rank_name' not in st.session_state:
+    st.session_state['rank_name'] = ""
+if 'branch' not in st.session_state:
+    st.session_state['branch'] = ""
+if 'officer_type' not in st.session_state:
+    st.session_state['officer_type'] = ""
+if 'other' not in st.session_state:
+    st.session_state['other'] = ""
+if 'rank' not in st.session_state:
+    st.session_state['rank'] = ""
+if 'position1' not in st.session_state:
+    st.session_state['position1'] = ""
+if 'position2' not in st.session_state:
+    st.session_state['position2'] = ""
+if 'position3' not in st.session_state:
+    st.session_state['position3'] = ""
+
 # กล่องค้นหาเพื่อรับรหัสนายทหารนักเรียน
 student_id = st.text_input("กรุณาใส่รหัสนายทหารนักเรียน:")
 
 if student_id:
-    # โหลดข้อมูลนายทหารนักเรียน
+    # โหลดข้อมูลนายทหารนักเรียนใหม่ทุกครั้งที่มีการค้นหา
     df_students = pd.DataFrame(student_sheet.get_all_records())
     df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
 
@@ -27,29 +45,22 @@ if student_id:
     student_data = df_students[df_students['StudentID'] == student_id.strip()]
 
     if not student_data.empty:
-        st.write("### ข้อมูลนายทหารนักเรียน")
-        table_placeholder = st.empty()
-
-        # เก็บค่าของฟิลด์ input ไว้ใน session state
-        if "rank_name" not in st.session_state:
-            st.session_state['rank_name'] = student_data.iloc[0]['RankName']
-        if "branch" not in st.session_state:
-            st.session_state['branch'] = student_data.iloc[0]['Branch']
-        if "officer_type" not in st.session_state:
-            st.session_state['officer_type'] = student_data.iloc[0]['OfficerType']
-        if "other" not in st.session_state:
-            st.session_state['other'] = student_data.iloc[0]['Other']
-        if "rank" not in st.session_state:
-            st.session_state['rank'] = str(student_data.iloc[0]['Rank'])
-        if "position1" not in st.session_state:
-            st.session_state['position1'] = str(student_data.iloc[0]['Position1'])
-        if "position2" not in st.session_state:
-            st.session_state['position2'] = str(student_data.iloc[0]['Position2'])
-        if "position3" not in st.session_state:
-            st.session_state['position3'] = str(student_data.iloc[0]['Position3'])
+        # เก็บค่าของฟิลด์ input ไว้ใน session state และดึงชื่อหน่วยตาม Position ID
+        student_info = student_data.iloc[0]
+        st.session_state.update({
+            'rank_name': student_info['RankName'],
+            'branch': student_info['Branch'],
+            'officer_type': student_info['OfficerType'],
+            'other': student_info['Other'],
+            'rank': str(student_info['Rank']),
+            'position1': str(student_info['Position1']).zfill(3),
+            'position2': str(student_info['Position2']).zfill(3),
+            'position3': str(student_info['Position3']).zfill(3)
+        })
 
         # แสดงข้อมูลในตารางแนวตั้งรวมถึงตำแหน่งที่เลือก
-        table_placeholder.write(f"""
+        st.write("### ข้อมูลนายทหารนักเรียน")
+        st.write(f"""
         <table>
             <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
             <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
@@ -91,39 +102,51 @@ if student_id:
 
         # ส่วนกรอกข้อมูลตำแหน่งลำดับ 1, 2, 3
         st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
-        st.session_state['position1'] = st.text_input("ตำแหน่งลำดับ 1", st.session_state['position1'])
-        st.session_state['position2'] = st.text_input("ตำแหน่งลำดับ 2", st.session_state['position2'])
-        st.session_state['position3'] = st.text_input("ตำแหน่งลำดับ 3", st.session_state['position3'])
+        position1_input = st.text_input("ตำแหน่งลำดับ 1", st.session_state['position1'])
+        position2_input = st.text_input("ตำแหน่งลำดับ 2", st.session_state['position2'])
+        position3_input = st.text_input("ตำแหน่งลำดับ 3", st.session_state['position3'])
 
-        # ปุ่ม Submit เพื่ออัพเดทข้อมูล
-        if st.button("Submit"):
-            try:
-                row_number = student_sheet.find(student_id).row
+        # ตรวจสอบรหัสหน่วยที่กรอกเข้ามาว่ามี 3 หลักและเป็นตัวเลขหรือไม่
+        valid_positions = all(len(pos) == 3 and pos.isdigit() for pos in [position1_input, position2_input, position3_input])
 
-                # อัปเดตเฉพาะข้อมูล Position1, Position2, Position3 ใน Google Sheets
-                student_sheet.update_cell(row_number, df_students.columns.get_loc('Position1') + 1, st.session_state['position1'])
-                student_sheet.update_cell(row_number, df_students.columns.get_loc('Position2') + 1, st.session_state['position2'])
-                student_sheet.update_cell(row_number, df_students.columns.get_loc('Position3') + 1, st.session_state['position3'])
-                
-                st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
-                
-                # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
-                updated_student_data = pd.DataFrame(student_sheet.get_all_records())
-                updated_student_data = updated_student_data[updated_student_data['StudentID'] == student_id.strip()]
-                table_placeholder.write(f"""
-                <table>
-                    <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
-                    <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
-                    <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
-                    <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
-                    <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
-                    <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-                    <tr><th>ตำแหน่งลำดับ 1</th><td>{st.session_state['position1']}</td></tr>
-                    <tr><th>ตำแหน่งลำดับ 2</th><td>{st.session_state['position2']}</td></tr>
-                    <tr><th>ตำแหน่งลำดับ 3</th><td>{st.session_state['position3']}</td></tr>
-                </table>
-                """, unsafe_allow_html=True)
-            except Exception as e:
-                st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
+        if not valid_positions:
+            st.error("กรุณากรอกรหัสด้วยเลข 3 หลักสำหรับตำแหน่งที่เลือกทั้งหมด")
+        else:
+            st.session_state.update({
+                'position1': position1_input.zfill(3),
+                'position2': position2_input.zfill(3),
+                'position3': position3_input.zfill(3)
+            })
+
+            # ปุ่ม Submit เพื่ออัพเดทข้อมูล
+            if st.button("Submit"):
+                try:
+                    row_number = student_sheet.find(student_id).row
+
+                    # อัปเดตเฉพาะข้อมูล Position1, Position2, Position3 ใน Google Sheets
+                    student_sheet.update_cell(row_number, df_students.columns.get_loc('Position1') + 1, st.session_state['position1'])
+                    student_sheet.update_cell(row_number, df_students.columns.get_loc('Position2') + 1, st.session_state['position2'])
+                    student_sheet.update_cell(row_number, df_students.columns.get_loc('Position3') + 1, st.session_state['position3'])
+                    
+                    st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
+                    
+                    # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
+                    updated_student_data = pd.DataFrame(student_sheet.get_all_records())
+                    updated_student_data = updated_student_data[updated_student_data['StudentID'] == student_id.strip()]
+                    st.write(f"""
+                    <table>
+                        <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
+                        <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
+                        <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
+                        <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
+                        <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
+                        <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 1</th><td>{st.session_state['position1']}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 2</th><td>{st.session_state['position2']}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 3</th><td>{st.session_state['position3']}</td></tr>
+                    </table>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
     else:
         st.error("ไม่พบรหัสนายทหารนักเรียน")
