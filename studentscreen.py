@@ -38,20 +38,12 @@ def fetch_data_with_retry(sheet, max_retries=3, delay=2):
     st.error("ไม่สามารถดึงข้อมูลจาก Google Sheets ได้ในขณะนี้ กรุณาลองใหม่ภายหลัง")
     st.stop()
 
-def format_row(row):
-    """ฟังก์ชันในการจัดรูปแบบข้อมูลแต่ละแถว"""
-    return f"""
-        <td>{row['PositionID']}</td>
-        <td>{row['PositionName']}</td>
-        <td>{row['Indicator']}</td>
-    """
-
 while True:
     # ดึงข้อมูลจาก Google Sheets
     df_positions = fetch_data_with_retry(position_sheet)
 
     # การจัดเรียงข้อมูลตามที่ต้องการ
-    df_positions = df_positions[['PositionID', 'PositionName', 'Status']]
+    df_positions = df_positions[['PositionID', 'PositionName', 'Unit', 'Specialist', 'Rank', 'Branch', 'Other', 'Status']]
 
     # เพิ่มคอลัมน์ Indicator
     df_positions['Indicator'] = df_positions['Status'].apply(get_indicator)
@@ -59,26 +51,9 @@ while True:
     # รีเซ็ต index ของ DataFrame เพื่อให้เอาคอลัมน์แรกออก
     df_positions.reset_index(drop=True, inplace=True)
 
-    # จัดการแสดงผลข้อมูลเป็น 9 คอลัมน์ (row ละ 3 ID)
-    rows_html = ""
-    for i in range(0, len(df_positions), 3):
-        row_data = df_positions.iloc[i:i+3].apply(format_row, axis=1)
-        rows_html += f"<tr>{''.join(row_data)}</tr>"
-
-    table_html = f"""
-    <table>
-        <tr>
-            <th>ID</th><th>Name</th><th>Indicator</th>
-            <th>ID</th><th>Name</th><th>Indicator</th>
-            <th>ID</th><th>Name</th><th>Indicator</th>
-        </tr>
-        {rows_html}
-    </table>
-    """
-
     # ใช้ placeholder เพื่อแสดงข้อมูลใหม่ในทุกการรีเฟรช
     with placeholder.container():
-        st.markdown("### สถานะตำแหน่ง")
-        st.markdown(table_html, unsafe_allow_html=True)
+        st.write("### สถานะตำแหน่ง")
+        st.write(df_positions.to_html(index=False, escape=False), unsafe_allow_html=True)
 
     time.sleep(5)
