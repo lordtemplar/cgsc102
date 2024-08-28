@@ -1,10 +1,35 @@
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import pandas as pd
+import streamlit as st
+
+# ตั้งค่าข้อมูลรับรองของ Google Sheets API
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-87525a85b092.json', scope)
+client = gspread.authorize(creds)
+
+# เปิดไฟล์ Google Sheets
+student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw').sheet1
+position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1
+
+# โหลดข้อมูลจาก PositionDB
+df_positions = pd.DataFrame(position_sheet.get_all_records())
+df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)
+
+# Function เพื่อดึงชื่อหน่วยจาก PositionDB
+def get_position_name(position_id):
+    if pd.isna(position_id) or position_id.strip() == "":
+        return "ยังไม่ได้เลือก"
+    position = df_positions[df_positions['PositionID'] == position_id]
+    if not position.empty:
+        return position.iloc[0]['PositionName']
+    return "ยังไม่ได้เลือก"
+
+# Layout ของแอพ Streamlit
+st.title("ระบบเลือกที่ลง CGSC102")
+
 # กล่องค้นหาเพื่อรับรหัสนายทหารนักเรียน
 student_id = st.text_input("กรุณาใส่รหัสนายทหารนักเรียน:")
-
-if "last_searched_id" not in st.session_state or st.session_state.last_searched_id != student_id:
-    # เคลียร์ session_state เมื่อมีการใส่รหัสใหม่
-    st.session_state.clear()
-    st.session_state.last_searched_id = student_id
 
 if student_id:
     # โหลดข้อมูลนายทหารนักเรียน
@@ -51,4 +76,75 @@ if student_id:
         </table>
         """, unsafe_allow_html=True)
 
-        # ส่วนที่เหลือของโค้ดสามารถคงเดิมได้
+        # กล่องค้นหาเพื่อค้นหาตำแหน่ง
+        search_term = st.text_input("ค้นหาตำแหน่ง:")
+        
+        if search_term:
+            filtered_positions = df_positions[df_positions.apply(lambda row: row.astype(str).str.contains(search_term, case=False, na=False).any(), axis=1)]
+
+            if not filtered_positions.empty:
+                st.write(f"### ผลการค้นหาสำหรับ \"{search_term}\"")
+                for index, row in filtered_positions.iterrows():
+                    st.write(f"""
+                    <table>
+                        <tr><th>รหัสตำแหน่ง</th><td>{row['PositionID']}</td></tr>
+                        <tr><th>ตำแหน่ง</th><td>{row['PositionName']}</td></tr>
+                        <tr><th>ชกท.</th><td>{row['Unit']}</td></tr>
+                        <tr><th>อัตรา</th><td>{row['Specialist']}</td></tr>
+                        <tr><th>เหล่า</th><td>{row['Branch']}</td></tr>
+                        <tr><th>อื่นๆ</th><td>{row['Other']}</td></tr>
+                    </table>
+                    """, unsafe_allow_html=True)
+            else:
+                st.write("ไม่พบตำแหน่งที่ตรงกับการค้นหา")
+
+        # ส่วนกรอกข้อมูลตำแหน่งลำดับ 1, 2, 3
+        st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
+        position1_input = st.text_input("ตำแหน่งลำดับ 1", st.session_state['position1'])
+        position2_input = st.text_input("ตำแหน่งลำดับ 2", st.session_state['position2'])
+        position3_input = st.text_input("ตำแหน่งลำดับ 3", st.session_state['position3'])
+
+        # ตรวจสอบรหัสหน่วยที่กรอกเข้ามาว่ามี 3 หลักหรือไม่
+        if len(position1_input) != 3 or not position1_input.isdigit():
+            st.error("กรุณากรอกรหัสด้วยเลข 3 หลักสำหรับตำแหน่งลำดับ 1")
+        elif len(position2_input) != 3 or not position2_input.isdigit():
+            st.error("กรุณากรอกรหัสด้วยเลข 3 หลักสำหรับตำแหน่งลำดับ 2")
+        elif len(position3_input) != 3 or not position3_input.isdigit():
+            st.error("กรุณากรอกรหัสด้วยเลข 3 หลักสำหรับตำแหน่งลำดับ 3")
+        else:
+            st.session_state['position1'] = position1_input
+            st.session_state['position2'] = position2_input
+            st.session_state['position3'] = position3_input
+
+            # ปุ่ม Submit เพื่ออัพเดทข้อมูล
+            if st.button("Submit"):
+                try:
+                    row_number = student_sheet.find(student_id).row
+
+                    # อัปเดตเฉพาะข้อมูล Position1, Position2, Position3 ใน Google Sheets
+                    student_sheet.update_cell(row_number, df_students.columns.get_loc('Position1') + 1, st.session_state['position1'])
+                    student_sheet.update_cell(row_number, df_students.columns.get_loc('Position2') + 1, st.session_state['position2'])
+                    student_sheet.update_cell(row_number, df_students.columns.get_loc('Position3') + 1, st.session_state['position3'])
+                    
+                    st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
+                    
+                    # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
+                    updated_student_data = pd.DataFrame(student_sheet.get_all_records())
+                    updated_student_data = updated_student_data[updated_student_data['StudentID'] == student_id.strip()]
+                    table_placeholder.write(f"""
+                    <table>
+                        <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
+                        <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
+                        <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
+                        <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
+                        <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
+                        <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 1</th><td>{get_position_name(st.session_state['position1'])}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 2</th><td>{get_position_name(st.session_state['position2'])}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 3</th><td>{get_position_name(st.session_state['position3'])}</td></tr>
+                    </table>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
+    else:
+        st.error("ไม่พบรหัสนายทหารนักเรียน")
