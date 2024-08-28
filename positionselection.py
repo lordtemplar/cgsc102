@@ -18,6 +18,8 @@ df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)
 
 # Function เพื่อดึงชื่อหน่วยจาก PositionDB
 def get_position_name(position_id):
+    if pd.isna(position_id) or position_id.strip() == "":
+        return "ยังไม่ได้เลือก"
     position = df_positions[df_positions['PositionID'] == position_id]
     if not position.empty:
         return position.iloc[0]['PositionName']
