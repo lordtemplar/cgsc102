@@ -12,6 +12,18 @@ client = gspread.authorize(creds)
 student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw').sheet1
 position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1
 
+# โหลดข้อมูลจาก PositionDB
+df_positions = pd.DataFrame(position_sheet.get_all_records())
+df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)
+
+# Function เพื่อดึงชื่อหน่วยจาก PositionDB โดยอ้างอิงจาก PositionID
+def get_position_name(position_id):
+    if position_id.isdigit() and len(position_id) == 3:
+        position = df_positions[df_positions['PositionID'] == position_id]
+        if not position.empty:
+            return position.iloc[0]['PositionName']
+    return position_id
+
 # Layout ของแอพ Streamlit
 st.title("ระบบเลือกที่ลง CGSC102")
 
@@ -58,6 +70,10 @@ if student_id:
             'position3': str(student_info['Position3']).zfill(3)
         })
 
+        position1_name = get_position_name(st.session_state['position1'])
+        position2_name = get_position_name(st.session_state['position2'])
+        position3_name = get_position_name(st.session_state['position3'])
+
         # แสดงข้อมูลในตารางแนวตั้งรวมถึงตำแหน่งที่เลือก
         st.write("### ข้อมูลนายทหารนักเรียน")
         st.write(f"""
@@ -68,9 +84,9 @@ if student_id:
             <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
             <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
             <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-            <tr><th>ตำแหน่งลำดับ 1</th><td>{st.session_state['position1']}</td></tr>
-            <tr><th>ตำแหน่งลำดับ 2</th><td>{st.session_state['position2']}</td></tr>
-            <tr><th>ตำแหน่งลำดับ 3</th><td>{st.session_state['position3']}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 1</th><td>{position1_name}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 2</th><td>{position2_name}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 3</th><td>{position3_name}</td></tr>
         </table>
         """, unsafe_allow_html=True)
 
@@ -141,9 +157,9 @@ if student_id:
                         <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
                         <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
                         <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 1</th><td>{st.session_state['position1']}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 2</th><td>{st.session_state['position2']}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 3</th><td>{st.session_state['position3']}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 1</th><td>{get_position_name(st.session_state['position1'])}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 2</th><td>{get_position_name(st.session_state['position2'])}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 3</th><td>{get_position_name(st.session_state['position3'])}</td></tr>
                     </table>
                     """, unsafe_allow_html=True)
                 except Exception as e:
