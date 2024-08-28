@@ -79,11 +79,11 @@ if student_id:
                     st.write(f"""
                     <table>
                         <tr><th>รหัสตำแหน่ง</th><td>{row['PositionID']}</td></tr>
-                        <tr><th>ชื่อตำแหน่ง</th><td>{row['PositionName']}</td></tr>
-                        <tr><th>เงื่อนไขเหล่า</th><td>{row['BranchCondition']}</td></tr>
-                        <tr><th>เงื่อนไขประเภทนายทหาร</th><td>{row['OfficerTypeCondition']}</td></tr>
-                        <tr><th>เงื่อนไขอื่นๆ</th><td>{row['OtherCondition']}</td></tr>
-                        <tr><th>สถานะ</th><td>{row['Status']}</td></tr>
+                        <tr><th>ตำแหน่ง</th><td>{row['PositionName']}</td></tr>
+                        <tr><th>ชกท.</th><td>{row['Unit']}</td></tr>
+                        <tr><th>อัตรา</th><td>{row['Specialist']}</td></tr>
+                        <tr><th>เหล่า</th><td>{row['Branch']}</td></tr>
+                        <tr><th>อื่นๆ</th><td>{row['Other']}</td></tr>
                     </table>
                     """, unsafe_allow_html=True)
             else:
