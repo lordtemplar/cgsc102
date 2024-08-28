@@ -51,9 +51,27 @@ while True:
     # รีเซ็ต index ของ DataFrame เพื่อให้เอาคอลัมน์แรกออก
     df_positions.reset_index(drop=True, inplace=True)
 
+    # สร้าง HTML สำหรับตาราง
+    html_table = '<table style="width:100%;">'
+    rows = 0
+    for i in range(0, len(df_positions), 9):  # 9 columns
+        if rows >= 20:  # Limit to 20 rows
+            break
+        html_table += '<tr>'
+        for j in range(9):  # 9 columns
+            if i + j < len(df_positions):
+                cell = df_positions.iloc[i + j]
+                cell_content = f"<b>{cell['PositionID']}</b><br>{cell['PositionName']}<br>{cell['Indicator']}"
+                html_table += f'<td style="border: 1px solid black; padding: 10px;">{cell_content}</td>'
+            else:
+                html_table += '<td></td>'  # Empty cell if no data
+        html_table += '</tr>'
+        rows += 1
+    html_table += '</table>'
+
     # ใช้ placeholder เพื่อแสดงข้อมูลใหม่ในทุกการรีเฟรช
     with placeholder.container():
         st.write("### สถานะตำแหน่ง")
-        st.write(df_positions.to_html(index=False, escape=False), unsafe_allow_html=True)
+        st.write(html_table, unsafe_allow_html=True)
 
     time.sleep(30)
