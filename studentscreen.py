@@ -22,9 +22,9 @@ placeholder = st.empty()
 def get_indicator(status):
     """ฟังก์ชันเพื่อคืนค่าสีตามสถานะ"""
     if status == "ว่าง":
-        return '🟢'
+        return '<span style="color:green">🟢</span>'
     else:
-        return '🔴'
+        return '<span style="color:red">🔴</span>'
 
 def fetch_data_with_retry(sheet, max_retries=3, delay=2):
     """ฟังก์ชันในการดึงข้อมูลด้วยการ retry เมื่อเกิดข้อผิดพลาด"""
@@ -48,9 +48,12 @@ while True:
     # เพิ่มคอลัมน์ Indicator
     df_positions['Indicator'] = df_positions['Status'].apply(get_indicator)
 
+    # รีเซ็ต index ของ DataFrame เพื่อให้เอาคอลัมน์แรกออก
+    df_positions.reset_index(drop=True, inplace=True)
+
     # ใช้ placeholder เพื่อแสดงข้อมูลใหม่ในทุกการรีเฟรช
     with placeholder.container():
         st.write("### สถานะตำแหน่ง")
-        st.dataframe(df_positions)
+        st.write(df_positions.to_html(index=False, escape=False), unsafe_allow_html=True)
 
     time.sleep(5)
