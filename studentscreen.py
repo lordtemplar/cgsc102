@@ -22,9 +22,9 @@ placeholder = st.empty()
 def get_indicator(status):
     """ฟังก์ชันเพื่อคืนค่าสีตามสถานะ"""
     if status == "ว่าง":
-        return '<span style="color:green">🟢</span>'
+        return '<span style="color:green">🟢 ว่าง</span>'
     else:
-        return '<span style="color:red">🔴</span>'
+        return '<span style="color:red">🔴 ไม่ว่าง</span>'
 
 def fetch_data_with_retry(sheet, max_retries=3, delay=2):
     """ฟังก์ชันในการดึงข้อมูลด้วยการ retry เมื่อเกิดข้อผิดพลาด"""
@@ -43,7 +43,7 @@ while True:
     df_positions = fetch_data_with_retry(position_sheet)
 
     # การจัดเรียงข้อมูลตามที่ต้องการ
-    df_positions = df_positions[['PositionID', 'PositionName', 'Unit', 'Specialist', 'Rank', 'Branch', 'Other', 'Status']]
+    df_positions = df_positions[['PositionID', 'PositionName', 'Status']]
 
     # เพิ่มคอลัมน์ Indicator
     df_positions['Indicator'] = df_positions['Status'].apply(get_indicator)
@@ -53,7 +53,11 @@ while True:
 
     # ใช้ placeholder เพื่อแสดงข้อมูลใหม่ในทุกการรีเฟรช
     with placeholder.container():
-        st.write("### สถานะตำแหน่ง")
-        st.write(df_positions.to_html(index=False, escape=False), unsafe_allow_html=True)
+        # ใช้ Streamlit columns เพื่อจัดให้แต่ละคอลัมน์แสดงในแนวนอน
+        for index, row in df_positions.iterrows():
+            col1, col2, col3 = st.columns([1, 3, 2])  # กำหนดสัดส่วนความกว้างของคอลัมน์
+            col1.write(row['PositionID'])
+            col2.write(row['PositionName'])
+            col3.markdown(row['Indicator'], unsafe_allow_html=True)
 
     time.sleep(5)
