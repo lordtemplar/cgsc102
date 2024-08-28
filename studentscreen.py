@@ -19,12 +19,12 @@ st.title("Live Positions")
 # ใช้ st.empty() เพื่อแสดงผลข้อมูลในช่องว่างที่สามารถอัปเดตได้
 placeholder = st.empty()
 
-def get_bg_color(status):
-    """ฟังก์ชันเพื่อคืนค่าสีพื้นหลังตามสถานะ"""
+def get_bg_color_and_text_color(status):
+    """ฟังก์ชันเพื่อคืนค่าสีพื้นหลังและสีข้อความตามสถานะ"""
     if status == "ว่าง":
-        return "background-color:green; color:white;"
+        return "background-color:green; color:white;"  # พื้นหลังสีเขียวและข้อความสีขาว
     else:
-        return "background-color:red; color:white;"
+        return "background-color:red; color:white;"  # พื้นหลังสีแดงและข้อความสีขาว
 
 def fetch_data_with_retry(sheet, max_retries=3, delay=2):
     """ฟังก์ชันในการดึงข้อมูลด้วยการ retry เมื่อเกิดข้อผิดพลาด"""
@@ -58,7 +58,7 @@ while True:
         for j in range(9):  # 9 columns
             if i + j < len(df_positions):
                 cell = df_positions.iloc[i + j]
-                cell_style = get_bg_color(cell['Status'])
+                cell_style = get_bg_color_and_text_color(cell['Status'])
                 cell_content = f"<div style='{cell_style} padding: 10px; border-radius: 5px;'><b>{cell['PositionID']}</b><br>{cell['PositionName']}</div>"
                 html_table += f'<td style="border: 1px solid black;">{cell_content}</td>'
             else:
@@ -72,4 +72,4 @@ while True:
         st.write("### สถานะตำแหน่ง")
         st.write(html_table, unsafe_allow_html=True)
 
-    time.sleep(5)
+    time.sleep(30)
