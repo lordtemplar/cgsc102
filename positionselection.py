@@ -48,7 +48,7 @@ if student_id:
         if "position3" not in st.session_state:
             st.session_state['position3'] = student_data.iloc[0]['Position3']
 
-        # แสดงข้อมูลในตารางแนวตั้ง
+        # แสดงข้อมูลในตารางแนวตั้งรวมถึงตำแหน่งที่เลือก
         table_placeholder.write(f"""
         <table>
             <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
@@ -57,6 +57,9 @@ if student_id:
             <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
             <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
             <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 1</th><td>{st.session_state['position1']}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 2</th><td>{st.session_state['position2']}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 3</th><td>{st.session_state['position3']}</td></tr>
         </table>
         """, unsafe_allow_html=True)
 
@@ -87,7 +90,7 @@ if student_id:
                 st.write("ไม่พบตำแหน่งที่ตรงกับการค้นหา")
 
         # ส่วนกรอกข้อมูลตำแหน่งลำดับ 1, 2, 3
-        st.write("### กรอกข้อมูลตำแหน่งที่เลือก")
+        st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
         st.session_state['position1'] = st.text_input("ตำแหน่งลำดับ 1", st.session_state['position1'])
         st.session_state['position2'] = st.text_input("ตำแหน่งลำดับ 2", st.session_state['position2'])
         st.session_state['position3'] = st.text_input("ตำแหน่งลำดับ 3", st.session_state['position3'])
