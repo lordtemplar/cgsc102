@@ -10,6 +10,7 @@ client = gspread.authorize(creds)
 
 # เปิดไฟล์ Google Sheets
 student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw').sheet1
+position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1
 
 # Layout ของแอพ Streamlit
 st.title("ระบบเลือกที่ลง CGSC102")
@@ -62,6 +63,32 @@ if student_id:
         </table>
         """, unsafe_allow_html=True)
 
+        # กล่องค้นหาเพื่อค้นหาตำแหน่ง
+        search_term = st.text_input("ค้นหาตำแหน่ง:")
+        
+        if search_term:
+            df_positions = pd.DataFrame(position_sheet.get_all_records())
+            df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)
+
+            # การจับคู่ข้อความกับทุก column
+            filtered_positions = df_positions[df_positions.apply(lambda row: row.astype(str).str.contains(search_term, case=False, na=False).any(), axis=1)]
+
+            if not filtered_positions.empty:
+                st.write(f"### ผลการค้นหาสำหรับ \"{search_term}\"")
+                for index, row in filtered_positions.iterrows():
+                    st.write(f"""
+                    <table>
+                        <tr><th>รหัสตำแหน่ง</th><td>{row['PositionID']}</td></tr>
+                        <tr><th>ตำแหน่ง</th><td>{row['PositionName']}</td></tr>
+                        <tr><th>ชกท.</th><td>{row['Unit']}</td></tr>
+                        <tr><th>อัตรา</th><td>{row['Specialist']}</td></tr>
+                        <tr><th>เหล่า</th><td>{row['Branch']}</td></tr>
+                        <tr><th>อื่นๆ</th><td>{row['Other']}</td></tr>
+                    </table>
+                    """, unsafe_allow_html=True)
+            else:
+                st.write("ไม่พบตำแหน่งที่ตรงกับการค้นหา")
+
         # ส่วนกรอกข้อมูลตำแหน่งลำดับ 1, 2, 3
         st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
         st.session_state['position1'] = st.text_input("ตำแหน่งลำดับ 1", st.session_state['position1'])
@@ -70,25 +97,16 @@ if student_id:
 
         # ปุ่ม Submit เพื่ออัพเดทข้อมูล
         if st.button("Submit"):
-            updated_data = [
-                student_id, 
-                st.session_state['rank_name'], 
-                st.session_state['rank'],
-                st.session_state['branch'], 
-                st.session_state['officer_type'], 
-                st.session_state['other'], 
-                st.session_state['position1'], 
-                st.session_state['position2'], 
-                st.session_state['position3']
-            ]
-            
-            # ค้นหาและอัปเดตแถวใน Google Sheet
             try:
                 row_number = student_sheet.find(student_id).row
-                updated_data = [str(item) for item in updated_data]  # แปลงข้อมูลทั้งหมดเป็น string
-                student_sheet.update(f'A{row_number}:I{row_number}', [updated_data])
-                st.success(f"อัปเดตข้อมูลรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
 
+                # อัปเดตเฉพาะข้อมูล Position1, Position2, Position3 ใน Google Sheets
+                student_sheet.update_cell(row_number, df_students.columns.get_loc('Position1') + 1, st.session_state['position1'])
+                student_sheet.update_cell(row_number, df_students.columns.get_loc('Position2') + 1, st.session_state['position2'])
+                student_sheet.update_cell(row_number, df_students.columns.get_loc('Position3') + 1, st.session_state['position3'])
+                
+                st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
+                
                 # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
                 updated_student_data = pd.DataFrame(student_sheet.get_all_records())
                 updated_student_data = updated_student_data[updated_student_data['StudentID'] == student_id.strip()]
