@@ -24,10 +24,8 @@ def load_and_display_data():
 # Layout ของแอพ Streamlit
 st.title("สถานะตำแหน่ง - CGSC102")
 
-# เรียกฟังก์ชันแสดงผลข้อมูล
-load_and_display_data()
-
-# ตั้งเวลาให้หน้ารีเฟรชทุก 5 วินาที
-time.sleep(5)
-st.experimental_rerun()
-
+# วนลูปเพื่อดึงข้อมูลและแสดงผลใหม่ทุก 5 วินาที
+while True:
+    load_and_display_data()
+    time.sleep(5)
+    st.experimental_rerun()
