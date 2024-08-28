@@ -103,6 +103,14 @@ if student_id:
             else:
                 st.write("ไม่พบตำแหน่งที่ตรงกับการค้นหา")
 
+        # กำหนดให้ข้อมูลตำแหน่งลำดับ 1, 2, 3 เป็น string
+        if "position1" not in st.session_state:
+            st.session_state['position1'] = str(student_data.iloc[0]['Position1']) if pd.notna(student_data.iloc[0]['Position1']) else ""
+        if "position2" not in st.session_state:
+            st.session_state['position2'] = str(student_data.iloc[0]['Position2']) if pd.notna(student_data.iloc[0]['Position2']) else ""
+        if "position3" not in st.session_state:
+            st.session_state['position3'] = str(student_data.iloc[0]['Position3']) if pd.notna(student_data.iloc[0]['Position3']) else ""
+    
         # ส่วนกรอกข้อมูลตำแหน่งลำดับ 1, 2, 3
         st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
         position1_input = st.text_input("ตำแหน่งลำดับ 1", st.session_state['position1'])
