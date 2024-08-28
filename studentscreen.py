@@ -19,12 +19,12 @@ st.title("Live Positions")
 # ใช้ st.empty() เพื่อแสดงผลข้อมูลในช่องว่างที่สามารถอัปเดตได้
 placeholder = st.empty()
 
-def get_indicator(status):
-    """ฟังก์ชันเพื่อคืนค่าสีตามสถานะ"""
+def get_bg_color(status):
+    """ฟังก์ชันเพื่อคืนค่าสีพื้นหลังตามสถานะ"""
     if status == "ว่าง":
-        return '<span style="color:green">🟢</span>'
+        return "background-color:green; color:white;"
     else:
-        return '<span style="color:red">🔴</span>'
+        return "background-color:red; color:white;"
 
 def fetch_data_with_retry(sheet, max_retries=3, delay=2):
     """ฟังก์ชันในการดึงข้อมูลด้วยการ retry เมื่อเกิดข้อผิดพลาด"""
@@ -45,11 +45,8 @@ while True:
     # การจัดเรียงข้อมูลตามที่ต้องการ
     df_positions = df_positions[['PositionID', 'PositionName', 'Unit', 'Specialist', 'Rank', 'Branch', 'Other', 'Status']]
 
-    # เพิ่มคอลัมน์ Indicator
-    df_positions['Indicator'] = df_positions['Status'].apply(get_indicator)
-
-    # รีเซ็ต index ของ DataFrame เพื่อให้เอาคอลัมน์แรกออก
-    df_positions.reset_index(drop=True, inplace=True)
+    # ปรับ ID เป็นเลข 3 ตำแหน่ง
+    df_positions['PositionID'] = df_positions['PositionID'].apply(lambda x: f"{int(x):03d}")
 
     # สร้าง HTML สำหรับตาราง
     html_table = '<table style="width:100%;">'
@@ -61,8 +58,9 @@ while True:
         for j in range(9):  # 9 columns
             if i + j < len(df_positions):
                 cell = df_positions.iloc[i + j]
-                cell_content = f"<b>{cell['PositionID']}</b><br>{cell['PositionName']}<br>{cell['Indicator']}"
-                html_table += f'<td style="border: 1px solid black; padding: 10px;">{cell_content}</td>'
+                cell_style = get_bg_color(cell['Status'])
+                cell_content = f"<div style='{cell_style} padding: 10px; border-radius: 5px;'><b>{cell['PositionID']}</b><br>{cell['PositionName']}</div>"
+                html_table += f'<td style="border: 1px solid black;">{cell_content}</td>'
             else:
                 html_table += '<td></td>'  # Empty cell if no data
         html_table += '</tr>'
@@ -74,4 +72,4 @@ while True:
         st.write("### สถานะตำแหน่ง")
         st.write(html_table, unsafe_allow_html=True)
 
-    time.sleep(30)
+    time.sleep(5)
