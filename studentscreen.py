@@ -48,12 +48,12 @@ while True:
     # เพิ่มคอลัมน์ Indicator
     df_positions['Indicator'] = df_positions['Status'].apply(get_indicator)
 
-    # ซ่อนคอลัมน์ก่อน 'PositionID'
-    df_positions.index += 1  # เพื่อทำให้ไม่แสดง column index
+    # ซ่อนคอลัมน์ index (คอลัมน์แรก)
+    df_positions = df_positions.reset_index(drop=True)
 
     # ใช้ placeholder เพื่อแสดงข้อมูลใหม่ในทุกการรีเฟรช
     with placeholder.container():
         st.write("### สถานะตำแหน่ง")
-        st.write(df_positions.to_html(escape=False), unsafe_allow_html=True)
+        st.write(df_positions.to_html(escape=False, index=False), unsafe_allow_html=True)
 
     time.sleep(5)
