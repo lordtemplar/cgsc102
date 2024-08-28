@@ -22,9 +22,9 @@ placeholder = st.empty()
 def get_indicator(status):
     """ฟังก์ชันเพื่อคืนค่าสีตามสถานะ"""
     if status == "ว่าง":
-        return '<span style="color:green">🟢 ว่าง</span>'
+        return '<span style="color:green">🟢</span>'
     else:
-        return '<span style="color:red">🔴 ไม่ว่าง</span>'
+        return '<span style="color:red">🔴</span>'
 
 def fetch_data_with_retry(sheet, max_retries=3, delay=2):
     """ฟังก์ชันในการดึงข้อมูลด้วยการ retry เมื่อเกิดข้อผิดพลาด"""
@@ -37,6 +37,14 @@ def fetch_data_with_retry(sheet, max_retries=3, delay=2):
             time.sleep(delay + random.uniform(0, 1))  # เพิ่มเวลาหน่วงแบบสุ่มเพื่อลดโอกาสในการชนกันของการเรียก API
     st.error("ไม่สามารถดึงข้อมูลจาก Google Sheets ได้ในขณะนี้ กรุณาลองใหม่ภายหลัง")
     st.stop()
+
+def format_row(row):
+    """ฟังก์ชันในการจัดรูปแบบข้อมูลแต่ละแถว"""
+    return f"""
+        <td>{row['PositionID']}</td>
+        <td>{row['PositionName']}</td>
+        <td>{row['Indicator']}</td>
+    """
 
 while True:
     # ดึงข้อมูลจาก Google Sheets
@@ -51,13 +59,26 @@ while True:
     # รีเซ็ต index ของ DataFrame เพื่อให้เอาคอลัมน์แรกออก
     df_positions.reset_index(drop=True, inplace=True)
 
+    # จัดการแสดงผลข้อมูลเป็น 9 คอลัมน์ (row ละ 3 ID)
+    rows_html = ""
+    for i in range(0, len(df_positions), 3):
+        row_data = df_positions.iloc[i:i+3].apply(format_row, axis=1)
+        rows_html += f"<tr>{''.join(row_data)}</tr>"
+
+    table_html = f"""
+    <table>
+        <tr>
+            <th>ID</th><th>Name</th><th>Indicator</th>
+            <th>ID</th><th>Name</th><th>Indicator</th>
+            <th>ID</th><th>Name</th><th>Indicator</th>
+        </tr>
+        {rows_html}
+    </table>
+    """
+
     # ใช้ placeholder เพื่อแสดงข้อมูลใหม่ในทุกการรีเฟรช
     with placeholder.container():
-        # ใช้ Streamlit columns เพื่อจัดให้แต่ละคอลัมน์แสดงในแนวนอน
-        for index, row in df_positions.iterrows():
-            col1, col2, col3 = st.columns([1, 3, 2])  # กำหนดสัดส่วนความกว้างของคอลัมน์
-            col1.write(row['PositionID'])
-            col2.write(row['PositionName'])
-            col3.markdown(row['Indicator'], unsafe_allow_html=True)
+        st.write("### สถานะตำแหน่ง")
+        st.write(table_html, unsafe_allow_html=True)
 
     time.sleep(5)
