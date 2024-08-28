@@ -74,6 +74,28 @@ if student_id:
         </table>
         """, unsafe_allow_html=True)
 
+        # กล่องค้นหาเพื่อค้นหาตำแหน่ง
+        search_term = st.text_input("ค้นหาตำแหน่ง:")
+        
+        if search_term:
+            filtered_positions = df_positions[df_positions.apply(lambda row: row.astype(str).str.contains(search_term, case=False, na=False).any(), axis=1)]
+
+            if not filtered_positions.empty:
+                st.write(f"### ผลการค้นหาสำหรับ \"{search_term}\"")
+                for index, row in filtered_positions.iterrows():
+                    st.write(f"""
+                    <table>
+                        <tr><th>รหัสตำแหน่ง</th><td>{row['PositionID']}</td></tr>
+                        <tr><th>ตำแหน่ง</th><td>{row['PositionName']}</td></tr>
+                        <tr><th>ชกท.</th><td>{row['Unit']}</td></tr>
+                        <tr><th>อัตรา</th><td>{row['Specialist']}</td></tr>
+                        <tr><th>เหล่า</th><td>{row['Branch']}</td></tr>
+                        <tr><th>อื่นๆ</th><td>{row['Other']}</td></tr>
+                    </table>
+                    """, unsafe_allow_html=True)
+            else:
+                st.write("ไม่พบตำแหน่งที่ตรงกับการค้นหา")
+
         # ส่วนกรอกข้อมูลตำแหน่งลำดับ 1, 2, 3
         st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
         position1_input = st.text_input("ตำแหน่งลำดับ 1", st.session_state['position1'])
