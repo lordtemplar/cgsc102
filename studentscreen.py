@@ -78,7 +78,7 @@ while True:
 
     # ใช้ placeholder เพื่อแสดงข้อมูลใหม่ในทุกการรีเฟรช
     with placeholder.container():
-        st.write("### สถานะตำแหน่ง")
-        st.write(table_html, unsafe_allow_html=True)
+        st.markdown("### สถานะตำแหน่ง")
+        st.markdown(table_html, unsafe_allow_html=True)
 
     time.sleep(5)
