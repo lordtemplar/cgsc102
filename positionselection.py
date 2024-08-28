@@ -16,8 +16,10 @@ position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mfl
 df_positions = pd.DataFrame(position_sheet.get_all_records())
 df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)
 
-# Function เพื่อดึงชื่อหน่วยจาก PositionDB
+# Function เพื่อดึงชื่อหน่วยจาก PositionDB โดยอ้างอิงจาก PositionID
 def get_position_name(position_id):
+    if position_id in ["", "ยังไม่ได้เลือก", "nan"]:
+        return "ยังไม่ได้เลือก"
     position = df_positions[df_positions['PositionID'] == position_id]
     if not position.empty:
         return position.iloc[0]['PositionName']
@@ -30,7 +32,7 @@ st.title("ระบบเลือกที่ลง CGSC102")
 student_id = st.text_input("กรุณาใส่รหัสนายทหารนักเรียน:")
 
 if student_id:
-    # โหลดข้อมูลนายทหารนักเรียน
+    # โหลดข้อมูลนายทหารนักเรียนใหม่ทุกครั้งที่มีการค้นหา
     df_students = pd.DataFrame(student_sheet.get_all_records())
     df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
 
@@ -41,7 +43,7 @@ if student_id:
         st.write("### ข้อมูลนายทหารนักเรียน")
         table_placeholder = st.empty()
 
-        # เก็บค่าของฟิลด์ input ไว้ใน session state
+        # เก็บค่าของฟิลด์ input ไว้ใน session state และดึงชื่อหน่วยตาม Position ID
         if "rank_name" not in st.session_state:
             st.session_state['rank_name'] = student_data.iloc[0]['RankName']
         if "branch" not in st.session_state:
@@ -59,7 +61,11 @@ if student_id:
         if "position3" not in st.session_state:
             st.session_state['position3'] = str(student_data.iloc[0]['Position3'])
 
-        # แสดงข้อมูลในตารางแนวตั้งรวมถึงตำแหน่งที่เลือก พร้อมดึงชื่อหน่วยจาก PositionDB
+        position1_name = get_position_name(st.session_state['position1'])
+        position2_name = get_position_name(st.session_state['position2'])
+        position3_name = get_position_name(st.session_state['position3'])
+
+        # แสดงข้อมูลในตารางแนวตั้งรวมถึงตำแหน่งที่เลือก
         table_placeholder.write(f"""
         <table>
             <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
@@ -68,9 +74,9 @@ if student_id:
             <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
             <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
             <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-            <tr><th>ตำแหน่งลำดับ 1</th><td>{get_position_name(st.session_state['position1'])}</td></tr>
-            <tr><th>ตำแหน่งลำดับ 2</th><td>{get_position_name(st.session_state['position2'])}</td></tr>
-            <tr><th>ตำแหน่งลำดับ 3</th><td>{get_position_name(st.session_state['position3'])}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 1</th><td>{position1_name}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 2</th><td>{position2_name}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 3</th><td>{position3_name}</td></tr>
         </table>
         """, unsafe_allow_html=True)
 
