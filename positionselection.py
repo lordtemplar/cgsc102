@@ -10,6 +10,7 @@ client = gspread.authorize(creds)
 
 # เปิดไฟล์ Google Sheets
 student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw').sheet1
+position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1
 
 # Layout ของแอพ Streamlit
 st.title("ระบบเลือกที่ลง CGSC102")
@@ -56,19 +57,30 @@ if student_id:
             <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
             <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
             <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-            <tr><th>ตำแหน่งลำดับ 1</th><td>{st.session_state['position1']}</td></tr>
-            <tr><th>ตำแหน่งลำดับ 2</th><td>{st.session_state['position2']}</td></tr>
-            <tr><th>ตำแหน่งลำดับ 3</th><td>{st.session_state['position3']}</td></tr>
         </table>
         """, unsafe_allow_html=True)
 
-        # ปุ่มแก้ไข
-        st.write("### แก้ไขข้อมูลนายทหารนักเรียน")
-        st.session_state['rank_name'] = st.text_input("ยศและชื่อ", st.session_state['rank_name'])
-        st.session_state['rank'] = st.text_input("ลำดับ", st.session_state['rank'])
-        st.session_state['branch'] = st.text_input("เหล่า", st.session_state['branch'])
-        st.session_state['officer_type'] = st.text_input("กำเนิด", st.session_state['officer_type'])
-        st.session_state['other'] = st.text_input("อื่นๆ", st.session_state['other'])
+        # ปุ่มแสดงหรือซ่อนตำแหน่งทั้งหมด
+        show_positions = st.checkbox("แสดงตำแหน่งทั้งหมด")
+
+        if show_positions:
+            df_positions = pd.DataFrame(position_sheet.get_all_records())
+            df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)
+            st.write("### ตำแหน่งทั้งหมด")
+            for index, row in df_positions.iterrows():
+                st.write(f"""
+                <table>
+                    <tr><th>รหัสตำแหน่ง</th><td>{row['PositionID']}</td></tr>
+                    <tr><th>ชื่อตำแหน่ง</th><td>{row['PositionName']}</td></tr>
+                    <tr><th>เงื่อนไขเหล่า</th><td>{row['BranchCondition']}</td></tr>
+                    <tr><th>เงื่อนไขประเภทนายทหาร</th><td>{row['OfficerTypeCondition']}</td></tr>
+                    <tr><th>เงื่อนไขอื่นๆ</th><td>{row['OtherCondition']}</td></tr>
+                    <tr><th>สถานะ</th><td>{row['Status']}</td></tr>
+                </table>
+                """, unsafe_allow_html=True)
+
+        # ส่วนกรอกข้อมูลตำแหน่งลำดับ 1, 2, 3
+        st.write("### กรอกข้อมูลตำแหน่งที่เลือก")
         st.session_state['position1'] = st.text_input("ตำแหน่งลำดับ 1", st.session_state['position1'])
         st.session_state['position2'] = st.text_input("ตำแหน่งลำดับ 2", st.session_state['position2'])
         st.session_state['position3'] = st.text_input("ตำแหน่งลำดับ 3", st.session_state['position3'])
