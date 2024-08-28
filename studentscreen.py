@@ -48,9 +48,6 @@ while True:
     # เพิ่มคอลัมน์ Indicator
     df_positions['Indicator'] = df_positions['Status'].apply(get_indicator)
 
-    # รีเซ็ต index ของ DataFrame เพื่อให้เอาคอลัมน์แรกออก
-    df_positions.reset_index(drop=True, inplace=True)
-
     # ใช้ placeholder เพื่อแสดงข้อมูลใหม่ในทุกการรีเฟรช
     with placeholder.container():
         st.write("### สถานะตำแหน่ง")
