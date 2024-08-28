@@ -92,7 +92,7 @@ if student_id:
 
         # กล่องค้นหาเพื่อค้นหาตำแหน่ง
         search_term = st.text_input("ค้นหาตำแหน่ง:")
-        
+
         if search_term:
             df_positions = pd.DataFrame(position_sheet.get_all_records())
             df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)
@@ -106,11 +106,13 @@ if student_id:
                     st.write(f"""
                     <table>
                         <tr><th>รหัสตำแหน่ง</th><td>{row['PositionID']}</td></tr>
-                        <tr><th>ตำแหน่ง</th><td>{row['PositionName']}</td></tr>
-                        <tr><th>ชกท.</th><td>{row['Unit']}</td></tr>
-                        <tr><th>อัตรา</th><td>{row['Specialist']}</td></tr>
+                        <tr><th>ชื่อตำแหน่ง</th><td>{row['PositionName']}</td></tr>
+                        <tr><th>สังกัด</th><td>{row['Unit']}</td></tr>
+                        <tr><th>ชกท.</th><td>{row['Specialist']}</td></tr>
+                        <tr><th>อัตรา</th><td>{row['Rank']}</td></tr>
                         <tr><th>เหล่า</th><td>{row['Branch']}</td></tr>
-                        <tr><th>อื่นๆ</th><td>{row['Other']}</td></tr>
+                        <tr><th>หมายเหตุ</th><td>{row['Other']}</td></tr>
+                        <tr><th>สถานะ</th><td>{row['Status']}</td></tr>
                     </table>
                     """, unsafe_allow_html=True)
             else:
@@ -143,9 +145,9 @@ if student_id:
                     student_sheet.update_cell(row_number, df_students.columns.get_loc('Position1') + 1, st.session_state['position1'])
                     student_sheet.update_cell(row_number, df_students.columns.get_loc('Position2') + 1, st.session_state['position2'])
                     student_sheet.update_cell(row_number, df_students.columns.get_loc('Position3') + 1, st.session_state['position3'])
-                    
+
                     st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
-                    
+
                     # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
                     updated_student_data = pd.DataFrame(student_sheet.get_all_records())
                     updated_student_data = updated_student_data[updated_student_data['StudentID'] == student_id.strip()]
