@@ -40,13 +40,13 @@ if student_id:
         if "other" not in st.session_state:
             st.session_state['other'] = student_data.iloc[0]['Other']
         if "rank" not in st.session_state:
-            st.session_state['rank'] = student_data.iloc[0]['Rank']
+            st.session_state['rank'] = str(student_data.iloc[0]['Rank'])
         if "position1" not in st.session_state:
-            st.session_state['position1'] = student_data.iloc[0]['Position1']
+            st.session_state['position1'] = str(student_data.iloc[0]['Position1'])
         if "position2" not in st.session_state:
-            st.session_state['position2'] = student_data.iloc[0]['Position2']
+            st.session_state['position2'] = str(student_data.iloc[0]['Position2'])
         if "position3" not in st.session_state:
-            st.session_state['position3'] = student_data.iloc[0]['Position3']
+            st.session_state['position3'] = str(student_data.iloc[0]['Position3'])
 
         # แสดงข้อมูลในตารางแนวตั้งรวมถึงตำแหน่งที่เลือก
         table_placeholder.write(f"""
@@ -112,6 +112,7 @@ if student_id:
             # ค้นหาและอัปเดตแถวใน Google Sheet
             try:
                 row_number = student_sheet.find(student_id).row
+                updated_data = [str(item) for item in updated_data]  # แปลงข้อมูลทั้งหมดเป็น string
                 student_sheet.update(f'A{row_number}:I{row_number}', [updated_data])
                 st.success(f"อัปเดตข้อมูลรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
 
