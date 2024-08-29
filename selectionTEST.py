@@ -122,7 +122,7 @@ if student_id:
 
                         # ส่ง Line Notify
                         line_token = "jeFjvSfzdSE6GrSdGNnVbvQRDNeirxnLxRP0Wr5kCni"  # ใช้ token ที่คุณให้มา
-                        message = f"รหัสนักเรียน {student_id}, ยศ {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {get_position_name(st.session_state['position1'])}"
+                        message = f"รหัสนักเรียน {student_id}, {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {get_position_name(st.session_state['position1'])}"
                         send_line_notify(message, line_token)
 
                         # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
