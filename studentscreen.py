@@ -41,6 +41,7 @@ while True:
             flex-wrap: wrap;
             gap: 10px;
             justify-content: center;
+            align-items: start; /* จัดตำแหน่งบล็อคข้อมูลด้านบน */
         }
         .block {
             flex: 1 1 200px; /* ขนาดบล็อคจะปรับตามขนาดหน้าจอ โดยมีขนาดขั้นต่ำ 200px */
@@ -67,7 +68,7 @@ while True:
 
     # แสดงผล HTML ใน Streamlit
     with placeholder.container():
-        st.components.v1.html(html_blocks)
+        st.components.v1.html(html_blocks, height=1000)  # เพิ่มความสูงของ container เพื่อรองรับข้อมูลมากขึ้น
 
     # หน่วงเวลา 1 นาที (60 วินาที) ก่อนอัปเดตข้อมูลใหม่
     time.sleep(60)
