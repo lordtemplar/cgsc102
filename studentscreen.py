@@ -34,7 +34,7 @@ while True:
     df_positions['PositionID'] = df_positions['PositionID'].apply(lambda x: f"{int(x):03d}")
 
     # สร้าง HTML สำหรับบล็อคข้อมูลที่ปรับตามขนาดหน้าจอ
-    html_blocks = '<div style="display: flex; flex-wrap: wrap; gap: 10px;">'
+    html_blocks = '<div style="display: flex; flex-wrap: wrap; gap: 10px; overflow-y: auto; max-height: 90vh;">'
 
     for index, row in df_positions.iterrows():
         cell_style = get_bg_color_and_text_color(row['Status'])
@@ -49,7 +49,7 @@ while True:
 
     # แสดงผล HTML ใน Streamlit
     with placeholder.container():
-        st.components.v1.html(html_blocks, height=800)
+        st.components.v1.html(html_blocks, height=800, scrolling=True)
 
     # หน่วงเวลา 1 นาที (60 วินาที) ก่อนอัปเดตข้อมูลใหม่
     time.sleep(60)
