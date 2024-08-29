@@ -18,6 +18,9 @@ df_positions['PositionID'] = df_positions['PositionID'].apply(lambda x: f"{int(x
 # Layout ของแอพ Streamlit
 st.title("Live Positions")
 
+# เพิ่มกล่องค้นหาด้านบน
+search_term = st.text_input("ค้นหา PositionID หรือ PositionName")
+
 def get_bg_color(status):
     """ฟังก์ชันเพื่อคืนค่าสีพื้นหลังตามสถานะ"""
     if status == "ว่าง":
@@ -25,11 +28,11 @@ def get_bg_color(status):
     else:
         return "red"
 
-def render_simple_table():
+def render_simple_table(data):
     """ฟังก์ชันในการสร้างและแสดงผลตารางแบบง่าย"""
     html_table = '<table style="width:100%;">'
     html_table += '<tr><th>PositionID</th><th>PositionName</th></tr>'
-    for _, row in df_positions.iterrows():
+    for _, row in data.iterrows():
         bg_color = get_bg_color(row['Status'])
         html_table += f'<tr style="background-color:{bg_color}; color:white;"><td>{row["PositionID"]}</td><td>{row["PositionName"]}</td></tr>'
     html_table += '</table>'
@@ -37,5 +40,11 @@ def render_simple_table():
     # แสดงผลตาราง
     st.write(html_table, unsafe_allow_html=True)
 
+# กรองข้อมูลตามคำค้นหา
+if search_term:
+    filtered_positions = df_positions[df_positions.apply(lambda row: search_term.lower() in row['PositionID'].lower() or search_term.lower() in row['PositionName'].lower(), axis=1)]
+else:
+    filtered_positions = df_positions
+
 # เรียกฟังก์ชัน render_simple_table เพื่อแสดงผลตาราง
-render_simple_table()
+render_simple_table(filtered_positions)
