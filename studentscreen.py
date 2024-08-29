@@ -41,6 +41,8 @@ while True:
             flex-wrap: wrap;
             gap: 10px;
             justify-content: center;
+            overflow-y: auto;
+            max-height: 90vh; /* ปรับความสูงตามขนาดหน้าจอ */
         }
         .block {
             flex: 1 1 200px; /* ขนาดบล็อคจะปรับตามขนาดหน้าจอ โดยมีขนาดขั้นต่ำ 200px */
@@ -67,7 +69,7 @@ while True:
 
     # แสดงผล HTML ใน Streamlit
     with placeholder.container():
-        st.components.v1.html(html_blocks, height=800, scrolling=True)
+        st.components.v1.html(html_blocks, height=800)  # เอา scrolling=True ออก
 
     # หน่วงเวลา 1 นาที (60 วินาที) ก่อนอัปเดตข้อมูลใหม่
     time.sleep(60)
