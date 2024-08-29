@@ -70,23 +70,22 @@ def render_table(columns):
     st.write("### สถานะตำแหน่ง")
     st.write(html_table, unsafe_allow_html=True)
 
-# ดึงขนาดหน้าต่างของผู้ใช้โดยใช้ CSS ใน Streamlit
-st.markdown(
-    """
-    <style>
-    @media (min-width: 400px) { .window-size { display: none; } }
-    @media (min-width: 550px) { .window-size { display: none; } }
-    @media (min-width: 700px) { .window-size { display: none; } }
-    @media (min-width: 850px) { .window-size { display: none; } }
-    @media (min-width: 1000px) { .window-size { display: none; } }
-    @media (min-width: 1150px) { .window-size { display: none; } }
-    @media (min-width: 1300px) { .window-size { display: none; } }
-    @media (min-width: 1450px) { .window-size { display: none; } }
-    </style>
-    """, unsafe_allow_html=True)
+# ใช้ JavaScript เพื่อดึงขนาดหน้าต่างของผู้ใช้
+st.markdown("""
+    <script>
+        function sendWidthToStreamlit() {
+            var width = window.innerWidth;
+            window.parent.postMessage({isStreamlitMessage: true, width: width}, "*");
+        }
+        window.onload = sendWidthToStreamlit;
+        window.onresize = sendWidthToStreamlit;
+    </script>
+""", unsafe_allow_html=True)
 
-# กำหนดขนาดหน้าต่างให้คำนวณจำนวนคอลัมน์ตามขนาดหน้าต่าง
-window_width = st.get_window_size()["width"]
+# รับค่าจาก JavaScript
+window_width = st.session_state.get('window_width', 800)
+
+# คำนวณจำนวนคอลัมน์ตามขนาดหน้าต่าง
 columns = calculate_columns(window_width)
 
 # เรียกฟังก์ชัน render_table เพื่อแสดงผลตาราง
