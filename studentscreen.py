@@ -48,7 +48,8 @@ while True:
     html_blocks += '</div>'
 
     # แสดงผล HTML ใน Streamlit
-    placeholder.html(html_blocks, height=800)
+    with placeholder.container():
+        st.components.v1.html(html_blocks, height=800)
 
     # หน่วงเวลา 1 นาที (60 วินาที) ก่อนอัปเดตข้อมูลใหม่
     time.sleep(60)
