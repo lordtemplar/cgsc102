@@ -18,75 +18,24 @@ df_positions['PositionID'] = df_positions['PositionID'].apply(lambda x: f"{int(x
 # Layout ของแอพ Streamlit
 st.title("Live Positions")
 
-# ฟังก์ชันในการคำนวณจำนวนคอลัมน์ตามขนาดหน้าจอ
-def calculate_columns(window_width):
-    if window_width < 400:
-        return 1
-    elif window_width < 550:
-        return 2
-    elif window_width < 700:
-        return 3
-    elif window_width < 850:
-        return 4
-    elif window_width < 1000:
-        return 5
-    elif window_width < 1150:
-        return 6
-    elif window_width < 1300:
-        return 7
-    elif window_width < 1450:
-        return 8
-    else:
-        return 9  # ปรับจำนวนคอลัมน์ตามความเหมาะสม
-
-# ฟังก์ชันเพื่อคืนค่าสีพื้นหลังและสีข้อความตามสถานะ
-def get_bg_color_and_text_color(status):
+def get_bg_color(status):
+    """ฟังก์ชันเพื่อคืนค่าสีพื้นหลังตามสถานะ"""
     if status == "ว่าง":
-        return "background-color:green; color:white;"  # พื้นหลังสีเขียวและข้อความสีขาว
+        return "green"
     else:
-        return "background-color:red; color:white;"  # พื้นหลังสีแดงและข้อความสีขาว
+        return "red"
 
-# ฟังก์ชันในการสร้างและแสดงผลตาราง
-def render_table(columns):
-    # สร้าง HTML สำหรับตาราง
+def render_simple_table():
+    """ฟังก์ชันในการสร้างและแสดงผลตารางแบบง่าย"""
     html_table = '<table style="width:100%;">'
-    rows = 0
-    for i in range(0, len(df_positions), columns):  # ใช้จำนวนคอลัมน์ที่คำนวณได้
-        if rows >= (153 // columns):  # เพิ่มแถวตามจำนวนคอลัมน์เพื่อให้ครบ 153 บล็อก
-            break
-        html_table += '<tr>'
-        for j in range(columns):
-            if i + j < len(df_positions):
-                cell = df_positions.iloc[i + j]
-                cell_style = get_bg_color_and_text_color(cell['Status'])
-                cell_content = f"<div style='{cell_style} padding: 10px; border-radius: 5px;'><b>{cell['PositionID']}</b><br>{cell['PositionName']}</div>"
-                html_table += f'<td style="border: 1px solid black;">{cell_content}</td>'
-            else:
-                html_table += '<td></td>'  # Empty cell if no data
-        html_table += '</tr>'
-        rows += 1
+    html_table += '<tr><th>PositionID</th><th>PositionName</th></tr>'
+    for _, row in df_positions.iterrows():
+        bg_color = get_bg_color(row['Status'])
+        html_table += f'<tr style="background-color:{bg_color}; color:white;"><td>{row["PositionID"]}</td><td>{row["PositionName"]}</td></tr>'
     html_table += '</table>'
 
-    st.write("### สถานะตำแหน่ง")
+    # แสดงผลตาราง
     st.write(html_table, unsafe_allow_html=True)
 
-# ใช้ JavaScript เพื่อดึงขนาดหน้าต่างของผู้ใช้
-st.markdown("""
-    <script>
-        function sendWidthToStreamlit() {
-            var width = window.innerWidth;
-            window.parent.postMessage({isStreamlitMessage: true, width: width}, "*");
-        }
-        window.onload = sendWidthToStreamlit;
-        window.onresize = sendWidthToStreamlit;
-    </script>
-""", unsafe_allow_html=True)
-
-# รับค่าจาก JavaScript
-window_width = st.session_state.get('window_width', 800)
-
-# คำนวณจำนวนคอลัมน์ตามขนาดหน้าต่าง
-columns = calculate_columns(window_width)
-
-# เรียกฟังก์ชัน render_table เพื่อแสดงผลตาราง
-render_table(columns)
+# เรียกฟังก์ชัน render_simple_table เพื่อแสดงผลตาราง
+render_simple_table()
