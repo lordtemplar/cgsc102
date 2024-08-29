@@ -9,6 +9,9 @@ scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/au
 creds = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-87525a85b092.json', scope)
 client = gspread.authorize(creds)
 
+# เปลี่ยน Title บน browser tab
+st.set_page_config(page_title="LIVE Position")
+
 # ฟังก์ชันในการดึงข้อมูลและแสดงผล
 def load_data_and_render_table():
     # เปิดไฟล์ Google Sheets และดึงข้อมูล
@@ -26,7 +29,7 @@ def load_data_and_render_table():
         if status == "ว่าง":
             return "green"
         else:
-            return "grey"
+            return "darkred"
 
     def render_simple_table(data):
         """ฟังก์ชันในการสร้างและแสดงผลตารางแบบง่าย"""
