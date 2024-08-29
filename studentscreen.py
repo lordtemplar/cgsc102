@@ -26,7 +26,7 @@ def get_bg_color(status):
     if status == "ว่าง":
         return "green"
     else:
-        return "grey"
+        return "black"
 
 def render_simple_table(data):
     """ฟังก์ชันในการสร้างและแสดงผลตารางแบบง่าย"""
