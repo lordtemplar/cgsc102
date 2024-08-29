@@ -9,12 +9,12 @@ scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/au
 creds = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-87525a85b092.json', scope)
 client = gspread.authorize(creds)
 
-# ฟังก์ชันเพื่อคืนค่าสีพื้นหลังและสีข้อความตามสถานะ
-def get_bg_color_and_text_color(status):
-    if status == "ว่าง":
-        return "background-color:green; color:white;"  # พื้นหลังสีเขียวและข้อความสีขาว
-    else:
-        return "background-color:red; color:white;"  # พื้นหลังสีแดงและข้อความสีขาว
+# เปิดไฟล์ Google Sheets และดึงข้อมูลครั้งเดียว
+position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1
+df_positions = pd.DataFrame(position_sheet.get_all_records())
+
+# ปรับ ID เป็นเลข 3 ตำแหน่ง
+df_positions['PositionID'] = df_positions['PositionID'].apply(lambda x: f"{int(x):03d}")
 
 # Layout ของแอพ Streamlit
 st.title("Live Positions")
@@ -22,55 +22,38 @@ st.title("Live Positions")
 # ใช้ st.empty() เพื่อแสดงผลข้อมูลในช่องว่างที่สามารถอัปเดตได้
 placeholder = st.empty()
 
-while True:
-    # ดึงข้อมูลจาก Google Sheets
-    position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1
-    df_positions = pd.DataFrame(position_sheet.get_all_records())
+def get_bg_color_and_text_color(status):
+    """ฟังก์ชันเพื่อคืนค่าสีพื้นหลังและสีข้อความตามสถานะ"""
+    if status == "ว่าง":
+        return "background-color:green; color:white;"  # พื้นหลังสีเขียวและข้อความสีขาว
+    else:
+        return "background-color:red; color:white;"  # พื้นหลังสีแดงและข้อความสีขาว
 
-    # การจัดเรียงข้อมูลตามที่ต้องการ
-    df_positions = df_positions[['PositionID', 'PositionName', 'Unit', 'Specialist', 'Rank', 'Branch', 'Other', 'Status']]
+def render_table():
+    """ฟังก์ชันในการสร้างและแสดงผลตาราง"""
+    # สร้าง HTML สำหรับตาราง
+    html_table = '<table style="width:100%;">'
+    rows = 0
+    for i in range(0, len(df_positions), 9):  # 9 columns
+        if rows >= 20:  # Limit to 20 rows
+            break
+        html_table += '<tr>'
+        for j in range(9):  # 9 columns
+            if i + j < len(df_positions):
+                cell = df_positions.iloc[i + j]
+                cell_style = get_bg_color_and_text_color(cell['Status'])
+                cell_content = f"<div style='{cell_style} padding: 10px; border-radius: 5px;'><b>{cell['PositionID']}</b><br>{cell['PositionName']}</div>"
+                html_table += f'<td style="border: 1px solid black;">{cell_content}</td>'
+            else:
+                html_table += '<td></td>'  # Empty cell if no data
+        html_table += '</tr>'
+        rows += 1
+    html_table += '</table>'
 
-    # ปรับ ID เป็นเลข 3 ตำแหน่ง
-    df_positions['PositionID'] = df_positions['PositionID'].apply(lambda x: f"{int(x):03d}")
-
-    # สร้าง HTML สำหรับบล็อคข้อมูลที่ปรับตามขนาดหน้าจอ
-    html_blocks = """
-    <style>
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            align-items: start;
-            width: 100%;  /* ขยาย container ตามขนาดเนื้อหา */
-            height: auto;  /* ปรับความสูงให้ขยายตามข้อมูลที่มี */
-        }
-        .block {
-            flex: 1 1 200px; /* ขนาดบล็อคจะปรับตามขนาดหน้าจอ โดยมีขนาดขั้นต่ำ 200px */
-            max-width: 300px;
-            padding: 15px;
-            border-radius: 5px;
-            text-align: center;
-            margin: 5px;
-        }
-    </style>
-    <div class="container">
-    """
-
-    for index, row in df_positions.iterrows():
-        cell_style = get_bg_color_and_text_color(row['Status'])
-        block_content = f"""
-        <div class="block" style='{cell_style}'>
-            <b>{row['PositionID']}</b><br>{row['PositionName']}
-        </div>
-        """
-        html_blocks += block_content
-
-    html_blocks += '</div>'
-
-    # แสดงผล HTML ใน Streamlit
+    # ใช้ placeholder เพื่อแสดงข้อมูลใหม่ในทุกการรีเฟรช
     with placeholder.container():
-        st.components.v1.html(html_blocks, height=None)  # ตั้งค่า height เป็น None เพื่อให้ขยายตามเนื้อหา
+        st.write("### สถานะตำแหน่ง")
+        st.write(html_table, unsafe_allow_html=True)
 
-    # หน่วงเวลา 1 นาที (60 วินาที) ก่อนอัปเดตข้อมูลใหม่
-    time.sleep(60)
+# เรียกฟังก์ชัน render_table เพื่อแสดงผลตาราง
+render_table()
