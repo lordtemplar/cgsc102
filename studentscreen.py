@@ -39,7 +39,7 @@ while True:
     for index, row in df_positions.iterrows():
         cell_style = get_bg_color_and_text_color(row['Status'])
         block_content = f"""
-        <div style='{cell_style} padding: 15px; border-radius: 5px; width: 200px; text-align: center;'>
+        <div style='{cell_style} width: 200px; text-align: center;'>
             <b>{row['PositionID']}</b><br>{row['PositionName']}
         </div>
         """
