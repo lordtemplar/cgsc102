@@ -20,14 +20,24 @@ st.title("Live Positions")
 
 # ฟังก์ชันในการคำนวณจำนวนคอลัมน์ตามขนาดหน้าจอ
 def calculate_columns(window_width):
-    if window_width < 600:
+    if window_width < 400:
+        return 1
+    elif window_width < 550:
         return 2
-    elif window_width < 900:
+    elif window_width < 700:
         return 3
-    elif window_width < 1200:
+    elif window_width < 850:
         return 4
+    elif window_width < 1000:
+        return 5
+    elif window_width < 1150:
+        return 6
+    elif window_width < 1300:
+        return 7
+    elif window_width < 1450:
+        return 8
     else:
-        return 6  # ปรับจำนวนคอลัมน์ตามความเหมาะสม
+        return 9  # ปรับจำนวนคอลัมน์ตามความเหมาะสม
 
 # ฟังก์ชันเพื่อคืนค่าสีพื้นหลังและสีข้อความตามสถานะ
 def get_bg_color_and_text_color(status):
