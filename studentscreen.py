@@ -68,7 +68,7 @@ while True:
 
     # แสดงผล HTML ใน Streamlit
     with placeholder.container():
-        st.components.v1.html(html_blocks, height=1000)  # เพิ่มความสูงของ container เพื่อรองรับข้อมูลมากขึ้น
+        st.components.v1.html(html_blocks, height=100%)  # เพิ่มความสูงของ container เพื่อรองรับข้อมูลมากขึ้น
 
     # หน่วงเวลา 1 นาที (60 วินาที) ก่อนอัปเดตข้อมูลใหม่
     time.sleep(60)
