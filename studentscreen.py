@@ -34,12 +34,30 @@ while True:
     df_positions['PositionID'] = df_positions['PositionID'].apply(lambda x: f"{int(x):03d}")
 
     # สร้าง HTML สำหรับบล็อคข้อมูลที่ปรับตามขนาดหน้าจอ
-    html_blocks = '<div style="display: flex; flex-wrap: wrap; gap: 10px; overflow-y: auto; max-height: 90vh;">'
+    html_blocks = """
+    <style>
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .block {
+            flex: 1 1 200px; /* ขนาดบล็อคจะปรับตามขนาดหน้าจอ โดยมีขนาดขั้นต่ำ 200px */
+            max-width: 300px;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin: 5px;
+        }
+    </style>
+    <div class="container">
+    """
 
     for index, row in df_positions.iterrows():
         cell_style = get_bg_color_and_text_color(row['Status'])
         block_content = f"""
-        <div style='{cell_style} width: 200px; text-align: center;'>
+        <div class="block" style='{cell_style}'>
             <b>{row['PositionID']}</b><br>{row['PositionName']}
         </div>
         """
