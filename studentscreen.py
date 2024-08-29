@@ -41,7 +41,9 @@ while True:
             flex-wrap: wrap;
             gap: 10px;
             justify-content: center;
-            align-items: start; /* จัดตำแหน่งบล็อคข้อมูลด้านบน */
+            align-items: start;
+            width: 100%;  /* ขยาย container ตามขนาดเนื้อหา */
+            height: auto;  /* ปรับความสูงให้ขยายตามข้อมูลที่มี */
         }
         .block {
             flex: 1 1 200px; /* ขนาดบล็อคจะปรับตามขนาดหน้าจอ โดยมีขนาดขั้นต่ำ 200px */
@@ -68,7 +70,7 @@ while True:
 
     # แสดงผล HTML ใน Streamlit
     with placeholder.container():
-        st.components.v1.html(html_blocks, height=3000)  # เพิ่มความสูงของ container เพื่อรองรับข้อมูลมากขึ้น
+        st.components.v1.html(html_blocks, height=None)  # ตั้งค่า height เป็น None เพื่อให้ขยายตามเนื้อหา
 
     # หน่วงเวลา 1 นาที (60 วินาที) ก่อนอัปเดตข้อมูลใหม่
     time.sleep(60)
