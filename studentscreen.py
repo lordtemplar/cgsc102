@@ -70,10 +70,23 @@ def render_table(columns):
     st.write("### สถานะตำแหน่ง")
     st.write(html_table, unsafe_allow_html=True)
 
-# ดึงขนาดหน้าต่างของผู้ใช้
-window_width = st.slider("ปรับขนาดหน้าต่างเพื่อทดสอบ", min_value=400, max_value=1600, value=800)
+# ดึงขนาดหน้าต่างของผู้ใช้โดยใช้ CSS ใน Streamlit
+st.markdown(
+    """
+    <style>
+    @media (min-width: 400px) { .window-size { display: none; } }
+    @media (min-width: 550px) { .window-size { display: none; } }
+    @media (min-width: 700px) { .window-size { display: none; } }
+    @media (min-width: 850px) { .window-size { display: none; } }
+    @media (min-width: 1000px) { .window-size { display: none; } }
+    @media (min-width: 1150px) { .window-size { display: none; } }
+    @media (min-width: 1300px) { .window-size { display: none; } }
+    @media (min-width: 1450px) { .window-size { display: none; } }
+    </style>
+    """, unsafe_allow_html=True)
 
-# คำนวณจำนวนคอลัมน์ตามขนาดหน้าต่าง
+# กำหนดขนาดหน้าต่างให้คำนวณจำนวนคอลัมน์ตามขนาดหน้าต่าง
+window_width = st.get_window_size()["width"]
 columns = calculate_columns(window_width)
 
 # เรียกฟังก์ชัน render_table เพื่อแสดงผลตาราง
