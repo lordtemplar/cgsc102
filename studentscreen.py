@@ -19,7 +19,7 @@ df_positions['PositionID'] = df_positions['PositionID'].apply(lambda x: f"{int(x
 st.title("Live Positions")
 
 # เพิ่มกล่องค้นหาด้านบน
-search_term = st.text_input("ค้นหา PositionID, PositionName หรือ ชกท. (Specialist)")
+search_term = st.text_input("ค้นหา รหัสตำแหน่ง, ชื่อตำแหน่ง, ชกท. หรือ เงื่อนไข")
 
 def get_bg_color(status):
     """ฟังก์ชันเพื่อคืนค่าสีพื้นหลังตามสถานะ"""
@@ -31,10 +31,10 @@ def get_bg_color(status):
 def render_simple_table(data):
     """ฟังก์ชันในการสร้างและแสดงผลตารางแบบง่าย"""
     html_table = '<table style="width:100%;">'
-    html_table += '<tr><th>PositionID</th><th>PositionName</th><th>ชกท.</th></tr>'
+    html_table += '<tr><th>รหัสตำแหน่ง</th><th>ชื่อตำแหน่ง</th><th>ชกท.</th><th>เงื่อนไข</th></tr>'
     for _, row in data.iterrows():
         bg_color = get_bg_color(row['Status'])
-        html_table += f'<tr style="background-color:{bg_color}; color:white;"><td>{row["PositionID"]}</td><td>{row["PositionName"]}</td><td>{row["Specialist"]}</td></tr>'
+        html_table += f'<tr style="background-color:{bg_color}; color:white;"><td>{row["PositionID"]}</td><td>{row["PositionName"]}</td><td>{row["Specialist"]}</td><td>{row["Other"]}</td></tr>'
     html_table += '</table>'
 
     # แสดงผลตาราง
@@ -42,7 +42,7 @@ def render_simple_table(data):
 
 # กรองข้อมูลตามคำค้นหา
 if search_term:
-    filtered_positions = df_positions[df_positions.apply(lambda row: search_term.lower() in row['PositionID'].lower() or search_term.lower() in row['PositionName'].lower() or search_term.lower() in row['Specialist'].lower(), axis=1)]
+    filtered_positions = df_positions[df_positions.apply(lambda row: search_term.lower() in row['PositionID'].lower() or search_term.lower() in row['PositionName'].lower() or search_term.lower() in row['Specialist'].lower() or search_term.lower() in row['Other'].lower(), axis=1)]
 else:
     filtered_positions = df_positions
 
