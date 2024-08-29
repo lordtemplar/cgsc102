@@ -58,6 +58,10 @@ if student_id:
     df_students = pd.DataFrame(student_sheet.get_all_records())
     df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
 
+    # Clean the 'Rank' column to ensure all values are numeric
+    df_students['Rank'] = pd.to_numeric(df_students['Rank'], errors='coerce')
+    df_students = df_students.dropna(subset=['Rank'])  # Drop rows where Rank is NaN
+
     # ค้นหาข้อมูลนายทหารนักเรียนด้วยรหัสนายทหารนักเรียน
     student_data = df_students[df_students['StudentID'] == student_id.strip()]
 
@@ -69,12 +73,12 @@ if student_id:
             'branch': student_info['Branch'],
             'officer_type': student_info['OfficerType'],
             'other': student_info['Other'],
-            'rank': str(student_info['Rank']),
+            'rank': str(int(student_info['Rank'])),  # Convert to string after ensuring it's an integer
             'position1': str(student_info['Position1']).zfill(3),
         })
 
         # ตรวจสอบว่าลำดับก่อนหน้าได้เลือกตำแหน่งหรือยัง
-        lower_rank_students = df_students[df_students['Rank'].astype(int) < int(st.session_state['rank'])]
+        lower_rank_students = df_students[df_students['Rank'] < int(st.session_state['rank'])]
         if lower_rank_students[['Position1']].isnull().any().any():
             st.error("กรุณารอให้ลำดับก่อนหน้าเลือกตำแหน่งก่อน")
         else:
@@ -117,7 +121,7 @@ if student_id:
                         st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
 
                         # ส่ง Line Notify
-                        line_token = "YOUR_LINE_NOTIFY_TOKEN"  # ใส่ token ของคุณที่นี่
+                        line_token = "jeFjvSfzdSE6GrSdGNnVbvQRDNeirxnLxRP0Wr5kCni"  # ใช้ token ที่คุณให้มา
                         message = f"รหัสนักเรียน {student_id}, ยศ {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {get_position_name(st.session_state['position1'])}"
                         send_line_notify(message, line_token)
 
