@@ -12,6 +12,10 @@ client = gspread.authorize(creds)
 # เปลี่ยน Title บน browser tab
 st.set_page_config(page_title="LIVE Position")
 
+# เพิ่มกล่องค้นหาด้านบน (นอกฟังก์ชันและลูปเพื่อป้องกัน Duplicate Widget ID)
+if "search_term" not in st.session_state:
+    st.session_state.search_term = st.text_input("ค้นหา ลำดับ, ตำแหน่ง, สังกัด, ชกท., อัตรา, เหล่า หรือ เงื่อนไข")
+
 # ฟังก์ชันในการดึงข้อมูลและแสดงผล
 def load_data_and_render_table():
     # เปิดไฟล์ Google Sheets และดึงข้อมูล
@@ -20,9 +24,6 @@ def load_data_and_render_table():
 
     # ปรับ ID เป็นเลข 3 ตำแหน่ง
     df_positions['PositionID'] = df_positions['PositionID'].apply(lambda x: f"{int(x):03d}")
-
-    # เพิ่มกล่องค้นหาด้านบน
-    search_term = st.text_input("ค้นหา ลำดับ, ตำแหน่ง, สังกัด, ชกท., อัตรา, เหล่า หรือ เงื่อนไข")
 
     def get_bg_color(status):
         """ฟังก์ชันเพื่อคืนค่าสีพื้นหลังตามสถานะ"""
@@ -44,8 +45,8 @@ def load_data_and_render_table():
         st.write(html_table, unsafe_allow_html=True)
 
     # กรองข้อมูลตามคำค้นหา
-    if search_term:
-        filtered_positions = df_positions[df_positions.apply(lambda row: search_term.lower() in row['PositionID'].lower() or search_term.lower() in row['PositionName'].lower() or search_term.lower() in row['Unit'].lower() or search_term.lower() in row['Specialist'].lower() or search_term.lower() in row['Rank'].lower() or search_term.lower() in row['Branch'].lower() or search_term.lower() in row['Other'].lower(), axis=1)]
+    if st.session_state.search_term:
+        filtered_positions = df_positions[df_positions.apply(lambda row: st.session_state.search_term.lower() in row['PositionID'].lower() or st.session_state.search_term.lower() in row['PositionName'].lower() or st.session_state.search_term.lower() in row['Unit'].lower() or st.session_state.search_term.lower() in row['Specialist'].lower() or st.session_state.search_term.lower() in row['Rank'].lower() or st.session_state.search_term.lower() in row['Branch'].lower() or st.session_state.search_term.lower() in row['Other'].lower(), axis=1)]
     else:
         filtered_positions = df_positions
 
