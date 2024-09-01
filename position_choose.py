@@ -126,11 +126,12 @@ if rank_query:
         position2_input = st.text_input("ตำแหน่งลำดับ 2", st.session_state['position2'])
         position3_input = st.text_input("ตำแหน่งลำดับ 3", st.session_state['position3'])
 
-        # ตรวจสอบรหัสหน่วยที่กรอกเข้ามาว่ามี 3 หลักและเป็นตัวเลขหรือไม่
-        valid_positions = all(len(pos) == 3 and pos.isdigit() for pos in [position1_input, position2_input, position3_input])
+        # ตรวจสอบว่ามีการกรอกข้อมูลอย่างน้อย 1 ตำแหน่งที่ถูกต้อง
+        filled_positions = [position1_input, position2_input, position3_input]
+        valid_positions = any(len(pos) == 3 and pos.isdigit() for pos in filled_positions)
 
         if not valid_positions:
-            st.error("กรุณากรอกรหัสด้วยเลข 3 หลักสำหรับตำแหน่งที่เลือกทั้งหมด")
+            st.error("กรุณากรอกรหัสด้วยเลข 3 หลักอย่างน้อย 1 ตำแหน่งที่เลือก")
         else:
             st.session_state.update({
                 'position1': position1_input.zfill(3),
