@@ -17,6 +17,7 @@ internal_student_sheet = client.open_by_url('https://docs.google.com/spreadsheet
 internal_position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/edit?usp=sharing').sheet1
 confirm_student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1subaqI_b4xj5nKSvDvAkqAVthlRVAavQOy983l-bOn4/edit?usp=sharing').sheet1
 external_position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iKu8mpZeDXonDQhX-mJtDWx_-g68TSGlefdCXdle8ec/edit?usp=sharing').sheet1
+external_student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iOcrhg1qmJ-mT9c3hkpsa1ajyr8riWrZrhL-eO_SCSg/edit?usp=sharing').sheet1
 
 # โหลดข้อมูลจากฐานข้อมูลตำแหน่งและนักเรียนเพียงครั้งเดียว
 df_internal_positions = pd.DataFrame(internal_position_sheet.get_all_records())
@@ -158,6 +159,10 @@ if rank_query:
 
                                 internal_position_sheet.update_cell(internal_position_row, internal_position_sheet.find('Status').col, "ไม่ว่าง")
                                 external_position_sheet.update_cell(external_position_row, external_position_sheet.find('Status').col, "ไม่ว่าง")
+
+                                # อัปเดตข้อมูลในฐานข้อมูล external_student_db และ internal_student_db
+                                internal_student_sheet.update_cell(row_number, internal_student_sheet.find('Position1').col, st.session_state['position1'])
+                                external_student_sheet.update_cell(row_number, external_student_sheet.find('Position1').col, st.session_state['position1'])
 
                                 # ส่ง Line Notify
                                 line_token = "jeFjvSfzdSE6GrSdGNnVbvQRDNeirxnLxRP0Wr5kCni"
