@@ -2,7 +2,6 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 import streamlit as st
-import requests  # Import requests to send Line Notify
 
 # ตั้งค่าข้อมูลรับรองของ Google Sheets API
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -25,14 +24,6 @@ def get_position_name(position_id):
             return position.iloc[0]['PositionName']
     return position_id
 
-# Function ส่ง Line Notify
-def send_line_notify(message, token):
-    headers = {
-        "Authorization": "Bearer " + token
-    }
-    payload = {"message": message}
-    requests.post("https://notify-api.line.me/api/notify", headers=headers, params=payload)
-
 # Layout ของแอพ Streamlit
 st.title("ระบบเลือกที่ลง CGSC102")
 
@@ -49,6 +40,10 @@ if 'rank' not in st.session_state:
     st.session_state['rank'] = ""
 if 'position1' not in st.session_state:
     st.session_state['position1'] = ""
+if 'position2' not in st.session_state:
+    st.session_state['position2'] = ""
+if 'position3' not in st.session_state:
+    st.session_state['position3'] = ""
 
 # กล่องค้นหาเพื่อรับรหัสนายทหารนักเรียน
 student_id = st.text_input("กรุณาใส่รหัสนายทหารนักเรียน:")
@@ -57,10 +52,6 @@ if student_id:
     # โหลดข้อมูลนายทหารนักเรียนใหม่ทุกครั้งที่มีการค้นหา
     df_students = pd.DataFrame(student_sheet.get_all_records())
     df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
-
-    # Clean the 'Rank' column to ensure all values are numeric
-    df_students['Rank'] = pd.to_numeric(df_students['Rank'], errors='coerce')
-    df_students = df_students.dropna(subset=['Rank'])  # Drop rows where Rank is NaN
 
     # ค้นหาข้อมูลนายทหารนักเรียนด้วยรหัสนายทหารนักเรียน
     student_data = df_students[df_students['StudentID'] == student_id.strip()]
@@ -73,73 +64,107 @@ if student_id:
             'branch': student_info['Branch'],
             'officer_type': student_info['OfficerType'],
             'other': student_info['Other'],
-            'rank': str(int(student_info['Rank'])),  # Convert to string after ensuring it's an integer
+            'rank': str(student_info['Rank']),
             'position1': str(student_info['Position1']).zfill(3),
+            'position2': str(student_info['Position2']).zfill(3),
+            'position3': str(student_info['Position3']).zfill(3)
         })
 
-        # ตรวจสอบว่าลำดับก่อนหน้าได้เลือกตำแหน่งหรือยัง
-        lower_rank_students = df_students[df_students['Rank'] < int(st.session_state['rank'])]
-        if lower_rank_students[['Position1']].isnull().any().any():
-            st.error("กรุณารอให้ลำดับก่อนหน้าเลือกตำแหน่งก่อน")
-        else:
-            position1_name = get_position_name(st.session_state['position1'])
+        position1_name = get_position_name(st.session_state['position1'])
+        position2_name = get_position_name(st.session_state['position2'])
+        position3_name = get_position_name(st.session_state['position3'])
 
-            # แสดงข้อมูลในตารางแนวตั้งรวมถึงตำแหน่งที่เลือก
-            st.write("### ข้อมูลนายทหารนักเรียน")
-            st.write(f"""
-            <table>
-                <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
-                <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
-                <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
-                <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
-                <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
-                <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-                <tr><th>ตำแหน่งลำดับ 1</th><td>{position1_name}</td></tr>
-            </table>
-            """, unsafe_allow_html=True)
+        # แสดงข้อมูลในตารางแนวตั้งรวมถึงตำแหน่งที่เลือก
+        st.write("### ข้อมูลนายทหารนักเรียน")
+        st.write(f"""
+        <table>
+            <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
+            <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
+            <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
+            <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
+            <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
+            <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 1</th><td>{position1_name}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 2</th><td>{position2_name}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 3</th><td>{position3_name}</td></tr>
+        </table>
+        """, unsafe_allow_html=True)
 
-            # ส่วนกรอกข้อมูลตำแหน่งลำดับ 1
-            st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
-            position1_input = st.text_input("ตำแหน่งที่เลือก", st.session_state['position1'])
+        # กล่องค้นหาเพื่อค้นหาตำแหน่ง
+        search_term = st.text_input("ค้นหาตำแหน่ง:")
 
-            # ตรวจสอบรหัสหน่วยที่กรอกเข้ามาว่ามี 3 หลักและเป็นตัวเลขหรือไม่
-            if len(position1_input) != 3 or not position1_input.isdigit():
-                st.error("กรุณากรอกรหัสด้วยเลข 3 หลักสำหรับตำแหน่งที่เลือก")
+        if search_term:
+            df_positions = pd.DataFrame(position_sheet.get_all_records())
+            df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)
+
+            # การจับคู่ข้อความกับทุก column
+            filtered_positions = df_positions[df_positions.apply(lambda row: row.astype(str).str.contains(search_term, case=False, na=False).any(), axis=1)]
+
+            if not filtered_positions.empty:
+                st.write(f"### ผลการค้นหาสำหรับ \"{search_term}\"")
+                for index, row in filtered_positions.iterrows():
+                    st.write(f"""
+                    <table>
+                        <tr><th>รหัสตำแหน่ง</th><td>{row['PositionID']}</td></tr>
+                        <tr><th>ชื่อตำแหน่ง</th><td>{row['PositionName']}</td></tr>
+                        <tr><th>สังกัด</th><td>{row['Unit']}</td></tr>
+                        <tr><th>ชกท.</th><td>{row['Specialist']}</td></tr>
+                        <tr><th>อัตรา</th><td>{row['Rank']}</td></tr>
+                        <tr><th>เหล่า</th><td>{row['Branch']}</td></tr>
+                        <tr><th>หมายเหตุ</th><td>{row['Other']}</td></tr>
+                        <tr><th>สถานะ</th><td>{row['Status']}</td></tr>
+                    </table>
+                    """, unsafe_allow_html=True)
             else:
-                st.session_state.update({
-                    'position1': position1_input.zfill(3),
-                })
+                st.write("ไม่พบตำแหน่งที่ตรงกับการค้นหา")
 
-                # ปุ่ม Submit เพื่ออัพเดทข้อมูล
-                if st.button("Submit"):
-                    try:
-                        row_number = student_sheet.find(student_id).row
+        # ส่วนกรอกข้อมูลตำแหน่งลำดับ 1, 2, 3
+        st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
+        position1_input = st.text_input("ตำแหน่งลำดับ 1", st.session_state['position1'])
+        position2_input = st.text_input("ตำแหน่งลำดับ 2", st.session_state['position2'])
+        position3_input = st.text_input("ตำแหน่งลำดับ 3", st.session_state['position3'])
 
-                        # อัปเดตเฉพาะข้อมูล Position1 ใน Google Sheets
-                        student_sheet.update_cell(row_number, df_students.columns.get_loc('Position1') + 1, st.session_state['position1'])
+        # ตรวจสอบรหัสหน่วยที่กรอกเข้ามาว่ามี 3 หลักและเป็นตัวเลขหรือไม่
+        valid_positions = all(len(pos) == 3 and pos.isdigit() for pos in [position1_input, position2_input, position3_input])
 
-                        st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
+        if not valid_positions:
+            st.error("กรุณากรอกรหัสด้วยเลข 3 หลักสำหรับตำแหน่งที่เลือกทั้งหมด")
+        else:
+            st.session_state.update({
+                'position1': position1_input.zfill(3),
+                'position2': position2_input.zfill(3),
+                'position3': position3_input.zfill(3)
+            })
 
-                        # ส่ง Line Notify
-                        line_token = "jeFjvSfzdSE6GrSdGNnVbvQRDNeirxnLxRP0Wr5kCni"  # ใช้ token ที่คุณให้มา
-                        message = f"รหัสนักเรียน {student_id}, {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {get_position_name(st.session_state['position1'])}"
-                        send_line_notify(message, line_token)
+            # ปุ่ม Submit เพื่ออัพเดทข้อมูล
+            if st.button("Submit"):
+                try:
+                    row_number = student_sheet.find(student_id).row
 
-                        # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
-                        updated_student_data = pd.DataFrame(student_sheet.get_all_records())
-                        updated_student_data = updated_student_data[updated_student_data['StudentID'] == student_id.strip()]
-                        st.write(f"""
-                        <table>
-                            <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
-                            <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
-                            <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
-                            <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
-                            <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
-                            <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-                            <tr><th>ตำแหน่งลำดับ 1</th><td>{get_position_name(st.session_state['position1'])}</td></tr>
-                        </table>
-                        """, unsafe_allow_html=True)
-                    except Exception as e:
-                        st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
+                    # อัปเดตเฉพาะข้อมูล Position1, Position2, Position3 ใน Google Sheets
+                    student_sheet.update_cell(row_number, df_students.columns.get_loc('Position1') + 1, st.session_state['position1'])
+                    student_sheet.update_cell(row_number, df_students.columns.get_loc('Position2') + 1, st.session_state['position2'])
+                    student_sheet.update_cell(row_number, df_students.columns.get_loc('Position3') + 1, st.session_state['position3'])
+
+                    st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
+
+                    # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
+                    updated_student_data = pd.DataFrame(student_sheet.get_all_records())
+                    updated_student_data = updated_student_data[updated_student_data['StudentID'] == student_id.strip()]
+                    st.write(f"""
+                    <table>
+                        <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
+                        <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
+                        <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
+                        <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
+                        <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
+                        <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 1</th><td>{get_position_name(st.session_state['position1'])}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 2</th><td>{get_position_name(st.session_state['position2'])}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 3</th><td>{get_position_name(st.session_state['position3'])}</td></tr>
+                    </table>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
     else:
         st.error("ไม่พบรหัสนายทหารนักเรียน")
