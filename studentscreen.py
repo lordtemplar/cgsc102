@@ -16,7 +16,12 @@ st.set_page_config(page_title="LIVE Position")
 if "search_term" not in st.session_state:
     st.session_state.search_term = st.text_input("ค้นหา ลำดับ, ตำแหน่ง, สังกัด, ชกท., อัตรา, เหล่า หรือ เงื่อนไข")
 
-# ฟังก์ชันในการดึงข้อมูลและแสดงผล
+# Layout ของแอพ Streamlit
+st.title("Live Positions")
+
+# สร้างพื้นที่ว่างเพื่ออัปเดตข้อมูลตาราง
+placeholder = st.empty()
+
 def load_data_and_render_table():
     # เปิดไฟล์ Google Sheets และดึงข้อมูล
     position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iKu8mpZeDXonDQhX-mJtDWx_-g68TSGlefdCXdle8ec/edit?usp=sharing').sheet1
@@ -41,8 +46,8 @@ def load_data_and_render_table():
             html_table += f'<tr style="background-color:{bg_color}; color:white;"><td>{row["PositionID"]}</td><td>{row["PositionName"]}</td><td>{row["Unit"]}</td><td>{row["Specialist"]}</td><td>{row["Rank"]}</td><td>{row["Branch"]}</td><td>{row["Other"]}</td></tr>'
         html_table += '</table>'
 
-        # แสดงผลตาราง
-        st.write(html_table, unsafe_allow_html=True)
+        # แสดงผลตารางในพื้นที่ว่างที่สร้างขึ้น
+        placeholder.write(html_table, unsafe_allow_html=True)
 
     # กรองข้อมูลตามคำค้นหา
     if st.session_state.search_term:
@@ -52,9 +57,6 @@ def load_data_and_render_table():
 
     # เรียกฟังก์ชัน render_simple_table เพื่อแสดงผลตาราง
     render_simple_table(filtered_positions)
-
-# Layout ของแอพ Streamlit
-st.title("Live Positions")
 
 # ใช้ loop เพื่ออัปเดตข้อมูลทุก 1 นาที
 while True:
