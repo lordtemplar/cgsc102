@@ -61,8 +61,10 @@ def check_previous_rank_selection(rank):
     previous_rank = rank - 1
     previous_rank_data = df_confirm_students[df_confirm_students['Rank'] == previous_rank]
     
-    if not previous_rank_data.empty and previous_rank_data.iloc[0]['Status'] == "ยังไม่ได้เลือก":
-        return False
+    if not previous_rank_data.empty:
+        # ตรวจสอบว่าคอลัมน์ 'Status' มีอยู่ในข้อมูลหรือไม่
+        if 'Status' in previous_rank_data.columns and previous_rank_data.iloc[0]['Status'] == "ยังไม่ได้เลือก":
+            return False
     return True
 
 # Function ส่ง Line Notify
