@@ -11,15 +11,15 @@ scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/au
 creds = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-87525a85b092.json', scope)
 client = gspread.authorize(creds)
 
-# เปิดไฟล์ Google Sheets
+# เปิดไฟล์ Google Sheets ใหม่
 student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iOcrhg1qmJ-mT9c3hkpsa1ajyr8riWrZrhL-eO_SCSg').sheet1
-position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1
+position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1  # ลิงค์ใหม่ที่ให้มา
 
 # ลิงก์สำหรับการอัปเดตข้อมูล
 update_link_1 = 'https://docs.google.com/spreadsheets/d/1iOcrhg1qmJ-mT9c3hkpsa1ajyr8riWrZrhL-eO_SCSg'
 update_link_2 = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw'
 
-# โหลดข้อมูลจาก PositionDB
+# โหลดข้อมูลจาก PositionDB ใหม่
 df_positions = pd.DataFrame(position_sheet.get_all_records())
 df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)
 
