@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 # ตั้งค่า title bar ของแอพในเบราว์เซอร์
-st.set_page_config(page_title="Position Choose")
+st.set_page_config(page_title="Position Recheck")
 
 # ตั้งค่าข้อมูลรับรองของ Google Sheets API
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
