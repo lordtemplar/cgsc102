@@ -12,7 +12,6 @@ creds = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-
 client = gspread.authorize(creds)
 
 # เปิดไฟล์ Google Sheets
-# ดึงข้อมูลจาก Google Sheets ลิงก์ใหม่
 student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iOcrhg1qmJ-mT9c3hkpsa1ajyr8riWrZrhL-eO_SCSg').sheet1
 position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1
 
@@ -39,20 +38,17 @@ st.title("ระบบเลือกที่ลง CGSC102")
 if 'student_data' not in st.session_state:
     st.session_state['student_data'] = None
 
-# กล่องค้นหาเพื่อค้นหาจาก "ยศ ชื่อ สกุล" หรือ "ลำดับผลการเรียน"
-search_query = st.text_input("กรุณาใส่ยศ ชื่อ สกุล หรือ ลำดับผลการเรียน:")
+# กล่องค้นหาเพื่อค้นหาจาก "ลำดับผลการเรียน"
+rank_query = st.text_input("กรุณาใส่ลำดับผลการเรียน:")
 
-if search_query:
+if rank_query:
     if st.session_state['student_data'] is None:
         # โหลดข้อมูลนักเรียนจาก Google Sheets ครั้งเดียว
         df_students = pd.DataFrame(student_sheet.get_all_records())
         df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
 
-        # ค้นหาข้อมูลนักเรียนด้วย "ยศ ชื่อ สกุล" หรือ "ลำดับผลการเรียน"
-        student_data = df_students[
-            (df_students['RankName'].str.contains(search_query, case=False, na=False)) |
-            (df_students['Rank'].astype(str).str.contains(search_query, case=False, na=False))
-        ]
+        # ค้นหาข้อมูลนักเรียนด้วย "ลำดับผลการเรียน"
+        student_data = df_students[df_students['Rank'].astype(str).str.contains(rank_query.strip(), case=False, na=False)]
 
         if not student_data.empty:
             st.session_state['student_data'] = student_data.iloc[0]  # เก็บข้อมูลใน session state
