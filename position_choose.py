@@ -145,15 +145,15 @@ if rank_query:
                     row_number = student_sheet.find(student_info['StudentID']).row
 
                     # อัปเดตข้อมูลไปยังทั้งสองลิงก์ Google Sheets
-                    student_sheet.update_cell(row_number, df_students.columns.get_loc('Position1') + 1, st.session_state['position1'])
-                    student_sheet.update_cell(row_number, df_students.columns.get_loc('Position2') + 1, st.session_state['position2'])
-                    student_sheet.update_cell(row_number, df_students.columns.get_loc('Position3') + 1, st.session_state['position3'])
+                    student_sheet.update_cell(row_number, student_sheet.find('Position1').col, st.session_state['position1'])
+                    student_sheet.update_cell(row_number, student_sheet.find('Position2').col, st.session_state['position2'])
+                    student_sheet.update_cell(row_number, student_sheet.find('Position3').col, st.session_state['position3'])
 
                     # อัปเดตข้อมูลไปยังลิงก์ที่สอง
                     update_sheet_2 = client.open_by_url(update_link_2).sheet1
-                    update_sheet_2.update_cell(row_number, df_students.columns.get_loc('Position1') + 1, st.session_state['position1'])
-                    update_sheet_2.update_cell(row_number, df_students.columns.get_loc('Position2') + 1, st.session_state['position2'])
-                    update_sheet_2.update_cell(row_number, df_students.columns.get_loc('Position3') + 1, st.session_state['position3'])
+                    update_sheet_2.update_cell(row_number, update_sheet_2.find('Position1').col, st.session_state['position1'])
+                    update_sheet_2.update_cell(row_number, update_sheet_2.find('Position2').col, st.session_state['position2'])
+                    update_sheet_2.update_cell(row_number, update_sheet_2.find('Position3').col, st.session_state['position3'])
 
                     st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
 
