@@ -12,25 +12,20 @@ scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/au
 creds = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-87525a85b092.json', scope)
 client = gspread.authorize(creds)
 
-# เปิดไฟล์ Google Sheets ตามการเชื่อมโยงใหม่
-internal_student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw/edit?usp=sharing').sheet1
-internal_position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/edit?usp=sharing').sheet1
+# เปิดไฟล์ Google Sheets ใหม่
+student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1subaqI_b4xj5nKSvDvAkqAVthlRVAavQOy983l-bOn4/edit?usp=sharing').sheet1
 confirm_student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1subaqI_b4xj5nKSvDvAkqAVthlRVAavQOy983l-bOn4/edit?usp=sharing').sheet1
-external_position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iKu8mpZeDXonDQhX-mJtDWx_-g68TSGlefdCXdle8ec/edit?usp=sharing').sheet1
 
-# โหลดข้อมูลจากฐานข้อมูลตำแหน่งและนักเรียนเพียงครั้งเดียว
+# ลิงก์สำหรับการอัปเดตข้อมูล
+internal_position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/edit?usp=drive_link').sheet1
+external_position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iKu8mpZeDXonDQhX-mJtDWx_-g68TSGlefdCXdle8ec/edit?usp=drive_link').sheet1
+
+# โหลดข้อมูลจากฐานข้อมูลตำแหน่ง
 df_internal_positions = pd.DataFrame(internal_position_sheet.get_all_records())
 df_external_positions = pd.DataFrame(external_position_sheet.get_all_records())
-df_students = pd.DataFrame(internal_student_sheet.get_all_records())
-df_confirm_students = pd.DataFrame(confirm_student_sheet.get_all_records())
 
 df_internal_positions['PositionID'] = df_internal_positions['PositionID'].astype(str).str.zfill(3)
 df_external_positions['PositionID'] = df_external_positions['PositionID'].astype(str).str.zfill(3)
-
-# Clean and convert 'Rank' columns to integers
-df_confirm_students['Rank'] = pd.to_numeric(df_confirm_students['Rank'], errors='coerce')
-df_confirm_students = df_confirm_students.dropna(subset=['Rank'])  # Remove rows where 'Rank' is NaN
-df_confirm_students['Rank'] = df_confirm_students['Rank'].astype(int)
 
 # Function เพื่อดึงชื่อหน่วยจากฐานข้อมูลตำแหน่ง
 def get_position_name(position_id):
@@ -59,12 +54,11 @@ def check_previous_rank_selection(rank):
         return True
     # ตรวจสอบสถานะของลำดับก่อนหน้า
     previous_rank = rank - 1
-    previous_rank_data = df_confirm_students[df_confirm_students['Rank'] == previous_rank]
+    df_confirm_students = pd.DataFrame(confirm_student_sheet.get_all_records())
+    previous_rank_data = df_confirm_students[df_confirm_students['Rank'].astype(int) == previous_rank]
     
-    if not previous_rank_data.empty:
-        # ตรวจสอบว่าคอลัมน์ 'Status' มีอยู่ในข้อมูลหรือไม่
-        if 'Status' in previous_rank_data.columns and previous_rank_data.iloc[0]['Status'] == "ยังไม่ได้เลือก":
-            return False
+    if not previous_rank_data.empty and previous_rank_data.iloc[0]['Status'] == "ยังไม่ได้เลือก":
+        return False
     return True
 
 # Function ส่ง Line Notify
@@ -91,6 +85,10 @@ if rank_query and rank_query != st.session_state['last_search_query']:
 
 if rank_query:
     if st.session_state['student_data'] is None:
+        # โหลดข้อมูลนักเรียนจาก Google Sheets ครั้งเดียว
+        df_students = pd.DataFrame(student_sheet.get_all_records())
+        df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
+
         # ค้นหาข้อมูลนักเรียนด้วย "ลำดับผลการเรียน"
         student_data = df_students[df_students['Rank'].astype(str).str.contains(rank_query.strip(), case=False, na=False)]
 
@@ -152,10 +150,10 @@ if rank_query:
                     # ปุ่ม Confirm เพื่อยืนยันการเลือก
                     if st.button("Confirm"):
                         try:
-                            row_number = confirm_student_sheet.find(str(student_info['StudentID'])).row
+                            row_number = student_sheet.find(str(student_info['StudentID'])).row
 
-                            # อัปเดตข้อมูลนักเรียนใน confirm_student_db
-                            confirm_student_sheet.update_cell(row_number, confirm_student_sheet.find('Position1').col, st.session_state['position1'])
+                            # อัปเดตข้อมูลใน Google Sheets
+                            student_sheet.update_cell(row_number, student_sheet.find('Position1').col, st.session_state['position1'])
 
                             # อัปเดตข้อมูลในฐานข้อมูล internal_position_db และ external_position_db
                             internal_position_row = internal_position_sheet.find(st.session_state['position1']).row
