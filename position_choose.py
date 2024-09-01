@@ -36,37 +36,32 @@ def get_position_name(position_id):
 st.title("ระบบเลือกที่ลง CGSC102")
 
 # ตั้งค่าเริ่มต้นของ session state เพื่อเก็บข้อมูลที่ใช้ในการแก้ไข
-if 'rank_name' not in st.session_state:
-    st.session_state['rank_name'] = ""
-if 'branch' not in st.session_state:
-    st.session_state['branch'] = ""
-if 'officer_type' not in st.session_state:
-    st.session_state['officer_type'] = ""
-if 'other' not in st.session_state:
-    st.session_state['other'] = ""
-if 'rank' not in st.session_state:
-    st.session_state['rank'] = ""
-if 'position1' not in st.session_state:
-    st.session_state['position1'] = ""
-if 'position2' not in st.session_state:
-    st.session_state['position2'] = ""
-if 'position3' not in st.session_state:
-    st.session_state['position3'] = ""
+if 'student_data' not in st.session_state:
+    st.session_state['student_data'] = None
 
-# กล่องค้นหาเพื่อรับรหัสนายทหารนักเรียน
-student_id = st.text_input("กรุณาใส่รหัสนายทหารนักเรียน:")
+# กล่องค้นหาเพื่อค้นหาจาก "ยศ ชื่อ สกุล" หรือ "ลำดับผลการเรียน"
+search_query = st.text_input("กรุณาใส่ยศ ชื่อ สกุล หรือ ลำดับผลการเรียน:")
 
-if student_id:
-    # โหลดข้อมูลนักเรียนจาก Google Sheets
-    df_students = pd.DataFrame(student_sheet.get_all_records())
-    df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
+if search_query:
+    if st.session_state['student_data'] is None:
+        # โหลดข้อมูลนักเรียนจาก Google Sheets ครั้งเดียว
+        df_students = pd.DataFrame(student_sheet.get_all_records())
+        df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
 
-    # ค้นหาข้อมูลนายทหารนักเรียนด้วยรหัสนายทหารนักเรียน
-    student_data = df_students[df_students['StudentID'] == student_id.strip()]
+        # ค้นหาข้อมูลนักเรียนด้วย "ยศ ชื่อ สกุล" หรือ "ลำดับผลการเรียน"
+        student_data = df_students[
+            (df_students['RankName'].str.contains(search_query, case=False, na=False)) |
+            (df_students['Rank'].astype(str).str.contains(search_query, case=False, na=False))
+        ]
 
-    if not student_data.empty:
-        # เก็บค่าของฟิลด์ input ไว้ใน session state และดึงชื่อหน่วยตาม Position ID
-        student_info = student_data.iloc[0]
+        if not student_data.empty:
+            st.session_state['student_data'] = student_data.iloc[0]  # เก็บข้อมูลใน session state
+        else:
+            st.error("ไม่พบข้อมูลที่ค้นหา")
+            st.session_state['student_data'] = None
+
+    if st.session_state['student_data'] is not None:
+        student_info = st.session_state['student_data']
         st.session_state.update({
             'rank_name': student_info['RankName'],
             'branch': student_info['Branch'],
@@ -86,7 +81,7 @@ if student_id:
         st.write("### ข้อมูลนายทหารนักเรียน")
         st.write(f"""
         <table>
-            <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
+            <tr><th>รหัสนักเรียน</th><td>{student_info['StudentID']}</td></tr>
             <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
             <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
             <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
@@ -102,10 +97,6 @@ if student_id:
         search_term = st.text_input("ค้นหาตำแหน่ง:")
 
         if search_term:
-            df_positions = pd.DataFrame(position_sheet.get_all_records())
-            df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)
-
-            # การจับคู่ข้อความกับทุก column
             filtered_positions = df_positions[df_positions.apply(lambda row: row.astype(str).str.contains(search_term, case=False, na=False).any(), axis=1)]
 
             if not filtered_positions.empty:
@@ -147,7 +138,7 @@ if student_id:
             # ปุ่ม Submit เพื่ออัพเดทข้อมูล
             if st.button("Submit"):
                 try:
-                    row_number = student_sheet.find(student_id).row
+                    row_number = student_sheet.find(student_info['StudentID']).row
 
                     # อัปเดตข้อมูลไปยังทั้งสองลิงก์ Google Sheets
                     student_sheet.update_cell(row_number, df_students.columns.get_loc('Position1') + 1, st.session_state['position1'])
@@ -160,14 +151,14 @@ if student_id:
                     update_sheet_2.update_cell(row_number, df_students.columns.get_loc('Position2') + 1, st.session_state['position2'])
                     update_sheet_2.update_cell(row_number, df_students.columns.get_loc('Position3') + 1, st.session_state['position3'])
 
-                    st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
+                    st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
 
                     # รีเฟรชตารางด้วยข้อมูลที่อัปเดตแล้ว
                     updated_student_data = pd.DataFrame(student_sheet.get_all_records())
-                    updated_student_data = updated_student_data[updated_student_data['StudentID'] == student_id.strip()]
+                    updated_student_data = updated_student_data[updated_student_data['StudentID'] == student_info['StudentID'].strip()]
                     st.write(f"""
                     <table>
-                        <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
+                        <tr><th>รหัสนักเรียน</th><td>{student_info['StudentID']}</td></tr>
                         <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
                         <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
                         <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
@@ -180,5 +171,3 @@ if student_id:
                     """, unsafe_allow_html=True)
                 except Exception as e:
                     st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
-    else:
-        st.error("ไม่พบรหัสนายทหารนักเรียน")
