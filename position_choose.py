@@ -142,7 +142,7 @@ if rank_query:
             # ปุ่ม Submit เพื่ออัพเดทข้อมูล
             if st.button("Submit"):
                 try:
-                    row_number = student_sheet.find(student_info['StudentID']).row
+                    row_number = student_sheet.find(str(student_info['StudentID'])).row  # ใช้ str() เพื่อให้เป็นประเภทที่ถูกต้อง
 
                     # อัปเดตข้อมูลไปยังทั้งสองลิงก์ Google Sheets
                     student_sheet.update_cell(row_number, student_sheet.find('Position1').col, st.session_state['position1'])
