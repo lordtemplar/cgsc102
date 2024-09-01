@@ -27,6 +27,11 @@ df_confirm_students = pd.DataFrame(confirm_student_sheet.get_all_records())
 df_internal_positions['PositionID'] = df_internal_positions['PositionID'].astype(str).str.zfill(3)
 df_external_positions['PositionID'] = df_external_positions['PositionID'].astype(str).str.zfill(3)
 
+# Clean and convert 'Rank' columns to integers
+df_confirm_students['Rank'] = pd.to_numeric(df_confirm_students['Rank'], errors='coerce')
+df_confirm_students = df_confirm_students.dropna(subset=['Rank'])  # Remove rows where 'Rank' is NaN
+df_confirm_students['Rank'] = df_confirm_students['Rank'].astype(int)
+
 # Function เพื่อดึงชื่อหน่วยจากฐานข้อมูลตำแหน่ง
 def get_position_name(position_id):
     if position_id.isdigit() and len(position_id) == 3:
@@ -54,7 +59,7 @@ def check_previous_rank_selection(rank):
         return True
     # ตรวจสอบสถานะของลำดับก่อนหน้า
     previous_rank = rank - 1
-    previous_rank_data = df_confirm_students[df_confirm_students['Rank'].astype(int) == previous_rank]
+    previous_rank_data = df_confirm_students[df_confirm_students['Rank'] == previous_rank]
     
     if not previous_rank_data.empty and previous_rank_data.iloc[0]['Status'] == "ยังไม่ได้เลือก":
         return False
