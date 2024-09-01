@@ -37,9 +37,16 @@ st.title("ระบบเลือกที่ลง CGSC102")
 # ตั้งค่าเริ่มต้นของ session state เพื่อเก็บข้อมูลที่ใช้ในการแก้ไข
 if 'student_data' not in st.session_state:
     st.session_state['student_data'] = None
+if 'last_search_query' not in st.session_state:
+    st.session_state['last_search_query'] = ""
 
 # กล่องค้นหาเพื่อค้นหาจาก "ลำดับผลการเรียน"
 rank_query = st.text_input("กรุณาใส่ลำดับผลการเรียน:")
+
+# ตรวจสอบว่าคำค้นหาใหม่แตกต่างจากคำค้นหาครั้งก่อนหรือไม่
+if rank_query and rank_query != st.session_state['last_search_query']:
+    st.session_state['student_data'] = None  # รีเซ็ตข้อมูล
+    st.session_state['last_search_query'] = rank_query  # อัพเดตคำค้นหาใหม่
 
 if rank_query:
     if st.session_state['student_data'] is None:
