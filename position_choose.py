@@ -3,14 +3,22 @@ from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 import streamlit as st
 
+# ตั้งค่า title bar ของแอพในเบราว์เซอร์
+st.set_page_config(page_title="Position Choose")
+
 # ตั้งค่าข้อมูลรับรองของ Google Sheets API
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-87525a85b092.json', scope)
 client = gspread.authorize(creds)
 
 # เปิดไฟล์ Google Sheets
-student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw').sheet1
+# ดึงข้อมูลจาก Google Sheets ลิงก์ใหม่
+student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iOcrhg1qmJ-mT9c3hkpsa1ajyr8riWrZrhL-eO_SCSg').sheet1
 position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1
+
+# ลิงก์สำหรับการอัปเดตข้อมูล
+update_link_1 = 'https://docs.google.com/spreadsheets/d/1iOcrhg1qmJ-mT9c3hkpsa1ajyr8riWrZrhL-eO_SCSg'
+update_link_2 = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw'
 
 # โหลดข้อมูลจาก PositionDB
 df_positions = pd.DataFrame(position_sheet.get_all_records())
@@ -49,7 +57,7 @@ if 'position3' not in st.session_state:
 student_id = st.text_input("กรุณาใส่รหัสนายทหารนักเรียน:")
 
 if student_id:
-    # โหลดข้อมูลนายทหารนักเรียนใหม่ทุกครั้งที่มีการค้นหา
+    # โหลดข้อมูลนักเรียนจาก Google Sheets
     df_students = pd.DataFrame(student_sheet.get_all_records())
     df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
 
@@ -141,10 +149,16 @@ if student_id:
                 try:
                     row_number = student_sheet.find(student_id).row
 
-                    # อัปเดตเฉพาะข้อมูล Position1, Position2, Position3 ใน Google Sheets
+                    # อัปเดตข้อมูลไปยังทั้งสองลิงก์ Google Sheets
                     student_sheet.update_cell(row_number, df_students.columns.get_loc('Position1') + 1, st.session_state['position1'])
                     student_sheet.update_cell(row_number, df_students.columns.get_loc('Position2') + 1, st.session_state['position2'])
                     student_sheet.update_cell(row_number, df_students.columns.get_loc('Position3') + 1, st.session_state['position3'])
+
+                    # อัปเดตข้อมูลไปยังลิงก์ที่สอง
+                    update_sheet_2 = client.open_by_url(update_link_2).sheet1
+                    update_sheet_2.update_cell(row_number, df_students.columns.get_loc('Position1') + 1, st.session_state['position1'])
+                    update_sheet_2.update_cell(row_number, df_students.columns.get_loc('Position2') + 1, st.session_state['position2'])
+                    update_sheet_2.update_cell(row_number, df_students.columns.get_loc('Position3') + 1, st.session_state['position3'])
 
                     st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
 
