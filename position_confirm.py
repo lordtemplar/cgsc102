@@ -13,20 +13,23 @@ creds = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-
 client = gspread.authorize(creds)
 
 # เปิดไฟล์ Google Sheets ใหม่
-student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw').sheet1
-position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1  # ลิงค์ใหม่ที่ให้มา
+student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1subaqI_b4xj5nKSvDvAkqAVthlRVAavQOy983l-bOn4/edit?usp=sharing').sheet1
 
 # ลิงก์สำหรับการอัปเดตข้อมูล
-update_link_2 = 'https://docs.google.com/spreadsheets/d/1iOcrhg1qmJ-mT9c3hkpsa1ajyr8riWrZrhL-eO_SCSg'
+internal_position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/edit?usp=drive_link').sheet1
+external_position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iKu8mpZeDXonDQhX-mJtDWx_-g68TSGlefdCXdle8ec/edit?usp=drive_link').sheet1
 
-# โหลดข้อมูลจาก PositionDB ใหม่
-df_positions = pd.DataFrame(position_sheet.get_all_records())
-df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)
+# โหลดข้อมูลจากฐานข้อมูลตำแหน่ง
+df_internal_positions = pd.DataFrame(internal_position_sheet.get_all_records())
+df_external_positions = pd.DataFrame(external_position_sheet.get_all_records())
 
-# Function เพื่อดึงชื่อหน่วยจาก PositionDB โดยอ้างอิงจาก PositionID
+df_internal_positions['PositionID'] = df_internal_positions['PositionID'].astype(str).str.zfill(3)
+df_external_positions['PositionID'] = df_external_positions['PositionID'].astype(str).str.zfill(3)
+
+# Function เพื่อดึงชื่อหน่วยจากฐานข้อมูลตำแหน่ง
 def get_position_name(position_id):
     if position_id.isdigit() and len(position_id) == 3:
-        position = df_positions[df_positions['PositionID'] == position_id]
+        position = df_internal_positions[df_internal_positions['PositionID'] == position_id]
         if not position.empty:
             return position.iloc[0]['PositionName']
     return position_id
@@ -115,9 +118,12 @@ if rank_query:
                     # อัปเดตข้อมูลใน Google Sheets
                     student_sheet.update_cell(row_number, student_sheet.find('Position1').col, st.session_state['position1'])
 
-                    # อัปเดตข้อมูลไปยังลิงก์ที่สอง
-                    update_sheet_2 = client.open_by_url(update_link_2).sheet1
-                    update_sheet_2.update_cell(row_number, update_sheet_2.find('Position1').col, st.session_state['position1'])
+                    # อัปเดตข้อมูลในฐานข้อมูล internal_position_db และ external_position_db
+                    internal_position_row = internal_position_sheet.find(st.session_state['position1']).row
+                    external_position_row = external_position_sheet.find(st.session_state['position1']).row
+
+                    internal_position_sheet.update_cell(internal_position_row, internal_position_sheet.find('Status').col, "ไม่ว่าง")
+                    external_position_sheet.update_cell(external_position_row, external_position_sheet.find('Status').col, "ไม่ว่าง")
 
                     # ส่ง Line Notify
                     line_token = "jeFjvSfzdSE6GrSdGNnVbvQRDNeirxnLxRP0Wr5kCni"
