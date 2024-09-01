@@ -20,12 +20,10 @@ external_position_sheet = client.open_by_url('https://docs.google.com/spreadshee
 
 # โหลดข้อมูลจากฐานข้อมูลตำแหน่งและนักเรียนเพียงครั้งเดียว
 df_internal_positions = pd.DataFrame(internal_position_sheet.get_all_records())
-df_external_positions = pd.DataFrame(external_position_sheet.get_all_records())
 df_students = pd.DataFrame(internal_student_sheet.get_all_records())
 df_confirm_students = pd.DataFrame(confirm_student_sheet.get_all_records())
 
 df_internal_positions['PositionID'] = df_internal_positions['PositionID'].astype(str).str.zfill(3)
-df_external_positions['PositionID'] = df_external_positions['PositionID'].astype(str).str.zfill(3)
 
 # Clean and convert 'Rank' columns to integers
 df_confirm_students['Rank'] = pd.to_numeric(df_confirm_students['Rank'], errors='coerce')
@@ -43,12 +41,8 @@ def get_position_name(position_id):
 # Function ตรวจสอบสถานะตำแหน่ง
 def check_position_availability(position_id):
     internal_position = df_internal_positions[df_internal_positions['PositionID'] == position_id]
-    external_position = df_external_positions[df_external_positions['PositionID'] == position_id]
-    
-    # ตรวจสอบสถานะจากทั้งสองฐานข้อมูล
+    # ตรวจสอบสถานะจากฐานข้อมูล
     if not internal_position.empty and internal_position.iloc[0]['Status'] == "ไม่ว่าง":
-        return False
-    if not external_position.empty and external_position.iloc[0]['Status'] == "ไม่ว่าง":
         return False
     return True
 
@@ -62,8 +56,8 @@ def check_previous_rank_selection(rank):
     previous_rank_data = df_confirm_students[df_confirm_students['Rank'] == previous_rank]
     
     if not previous_rank_data.empty:
-        # ตรวจสอบว่าคอลัมน์ 'Status' มีอยู่ในข้อมูลหรือไม่
-        if 'Status' in previous_rank_data.columns and previous_rank_data.iloc[0]['Status'] == "ยังไม่ได้เลือก":
+        # ตรวจสอบว่าคอลัมน์ 'Position1' มีอยู่ในข้อมูลหรือไม่
+        if 'Position1' in previous_rank_data.columns and previous_rank_data.iloc[0]['Position1'] == "ยังไม่ได้เลือก":
             return False
     return True
 
@@ -133,55 +127,56 @@ if rank_query:
             </table>
             """, unsafe_allow_html=True)
 
-            # ส่วนกรอกข้อมูลตำแหน่งที่เลือก
-            st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
-            position1_input = st.text_input("ตำแหน่งที่เลือก", st.session_state['position1'])
+            # แสดงฟิลด์สำหรับกรอกรหัสตำแหน่ง หากลำดับก่อนหน้าได้เลือกแล้ว
+            if check_previous_rank_selection(rank_number):
+                st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
+                position1_input = st.text_input("ตำแหน่งที่เลือก", st.session_state['position1'])
 
-            # ตรวจสอบรหัสหน่วยที่กรอกเข้ามาว่ามี 3 หลักและเป็นตัวเลขหรือไม่
-            if len(position1_input) != 3 or not position1_input.isdigit():
-                st.error("กรุณากรอกรหัสด้วยเลข 3 หลักสำหรับตำแหน่งที่เลือก")
-            else:
-                # ตรวจสอบสถานะของตำแหน่ง
-                if not check_position_availability(position1_input.zfill(3)):
-                    st.error("ตำแหน่งนี้ถูกเลือกไปแล้ว กรุณาเลือกตำแหน่งอื่น")
+                # ตรวจสอบรหัสหน่วยที่กรอกเข้ามาว่ามี 3 หลักและเป็นตัวเลขหรือไม่
+                if len(position1_input) != 3 or not position1_input.isdigit():
+                    st.error("กรุณากรอกรหัสด้วยเลข 3 หลักสำหรับตำแหน่งที่เลือก")
                 else:
-                    st.session_state.update({
-                        'position1': position1_input.zfill(3)
-                    })
+                    # ตรวจสอบสถานะของตำแหน่ง
+                    if not check_position_availability(position1_input.zfill(3)):
+                        st.error("ตำแหน่งนี้ถูกเลือกไปแล้ว กรุณาเลือกตำแหน่งอื่น")
+                    else:
+                        st.session_state.update({
+                            'position1': position1_input.zfill(3)
+                        })
 
-                    # ปุ่ม Confirm เพื่อยืนยันการเลือก
-                    if st.button("Confirm"):
-                        try:
-                            row_number = confirm_student_sheet.find(str(student_info['StudentID'])).row
+                        # ปุ่ม Confirm เพื่อยืนยันการเลือก
+                        if st.button("Confirm"):
+                            try:
+                                row_number = confirm_student_sheet.find(str(student_info['StudentID'])).row
 
-                            # อัปเดตข้อมูลนักเรียนใน confirm_student_db
-                            confirm_student_sheet.update_cell(row_number, confirm_student_sheet.find('Position1').col, st.session_state['position1'])
+                                # อัปเดตข้อมูลนักเรียนใน confirm_student_db
+                                confirm_student_sheet.update_cell(row_number, confirm_student_sheet.find('Position1').col, st.session_state['position1'])
 
-                            # อัปเดตข้อมูลในฐานข้อมูล internal_position_db และ external_position_db
-                            internal_position_row = internal_position_sheet.find(st.session_state['position1']).row
-                            external_position_row = external_position_sheet.find(st.session_state['position1']).row
+                                # อัปเดตข้อมูลในฐานข้อมูล internal_position_db และ external_position_db
+                                internal_position_row = internal_position_sheet.find(st.session_state['position1']).row
+                                external_position_row = external_position_sheet.find(st.session_state['position1']).row
 
-                            internal_position_sheet.update_cell(internal_position_row, internal_position_sheet.find('Status').col, "ไม่ว่าง")
-                            external_position_sheet.update_cell(external_position_row, external_position_sheet.find('Status').col, "ไม่ว่าง")
+                                internal_position_sheet.update_cell(internal_position_row, internal_position_sheet.find('Status').col, "ไม่ว่าง")
+                                external_position_sheet.update_cell(external_position_row, external_position_sheet.find('Status').col, "ไม่ว่าง")
 
-                            # ส่ง Line Notify
-                            line_token = "jeFjvSfzdSE6GrSdGNnVbvQRDNeirxnLxRP0Wr5kCni"
-                            message = f"รหัสนักเรียน {student_info['StudentID']}, ยศ {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {get_position_name(st.session_state['position1'])}"
-                            send_line_notify(message, line_token)
+                                # ส่ง Line Notify
+                                line_token = "jeFjvSfzdSE6GrSdGNnVbvQRDNeirxnLxRP0Wr5kCni"
+                                message = f"รหัสนักเรียน {student_info['StudentID']}, ยศ {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {get_position_name(st.session_state['position1'])}"
+                                send_line_notify(message, line_token)
 
-                            st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
+                                st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
 
-                            # อัพเดทข้อมูลในตารางเดิมที่แสดงผล
-                            table_placeholder.write(f"""
-                            <table>
-                                <tr><th>รหัสนักเรียน</th><td>{student_info['StudentID']}</td></tr>
-                                <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
-                                <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
-                                <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
-                                <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
-                                <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-                                <tr><th>ตำแหน่งที่เลือก</th><td>{get_position_name(st.session_state['position1'])}</td></tr>
-                            </table>
-                            """, unsafe_allow_html=True)
-                        except Exception as e:
-                            st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
+                                # อัพเดทข้อมูลในตารางเดิมที่แสดงผล
+                                table_placeholder.write(f"""
+                                <table>
+                                    <tr><th>รหัสนักเรียน</th><td>{student_info['StudentID']}</td></tr>
+                                    <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
+                                    <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
+                                    <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
+                                    <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
+                                    <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
+                                    <tr><th>ตำแหน่งที่เลือก</th><td>{get_position_name(st.session_state['position1'])}</td></tr>
+                                </table>
+                                """, unsafe_allow_html=True)
+                            except Exception as e:
+                                st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
