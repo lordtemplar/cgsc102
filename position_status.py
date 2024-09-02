@@ -2,16 +2,16 @@ import firebase_admin
 from firebase_admin import credentials, db
 import streamlit as st
 
-# ฟังก์ชันสำหรับการตรวจสอบและเชื่อมต่อ Firebase Admin SDK
+# Function to initialize Firebase Admin SDK
 def initialize_firebase_app():
     try:
-        # ตรวจสอบว่า Firebase Admin SDK ถูกตั้งค่าแล้วหรือยัง
+        # Check if Firebase Admin SDK is already initialized
         if not firebase_admin._apps:
             st.write("Initializing Firebase...")
-            # ใช้ไฟล์ JSON ของ Service Account Key ที่อยู่ในโฟลเดอร์เดียวกัน
-            cred = credentials.Certificate("positionchoosing-firebase-adminsdk-vr2az-a74f69f4eb.json")  # ใช้ชื่อไฟล์ JSON ที่คุณมี
+            # Use the JSON service account key file located in the same folder
+            cred = credentials.Certificate("positionchoosing-firebase-adminsdk-vr2az-a74f69f4eb.json")
             firebase_admin.initialize_app(cred, {
-                'databaseURL': 'https://positionchoosing-default-rtdb.asia-southeast1.firebasedatabase.app/'  # ใช้ URL ของ Firebase ที่คุณให้มา
+                'databaseURL': 'https://positionchoosing-default-rtdb.asia-southeast1.firebasedatabase.app/'
             })
             st.write("Firebase initialized successfully.")
         else:
@@ -20,25 +20,35 @@ def initialize_firebase_app():
         st.error(f"Failed to initialize Firebase: {e}")
         st.stop()
 
-# ฟังก์ชันทดสอบการดึงข้อมูลจาก Firebase Realtime Database
+# Function to fetch data from Firebase Realtime Database
 def fetch_data_from_firebase():
     try:
         st.write("Attempting to fetch data from Firebase Realtime Database...")
-        # ดึงข้อมูลจาก Firebase Realtime Database
-        ref = db.reference("alert_logs")  # ใช้ชื่อโหนด (node) ที่ต้องการดึงข้อมูล
+        # Reference to the root node where positions are stored
+        ref = db.reference("/")  # Root node to fetch all positions
         data = ref.get()
         if data:
             st.write("Data fetched successfully.")
-            st.write(data)  # แสดงข้อมูลที่ดึงมาเพื่อทดสอบ
+            # Display each position's details
+            for position in data:
+                st.write(f"Position ID: {position['PositionID']}")
+                st.write(f"Position Name: {position['PositionName']}")
+                st.write(f"Unit: {position['Unit']}")
+                st.write(f"Specialist: {position['Specialist']}")
+                st.write(f"Rank: {position['Rank']}")
+                st.write(f"Branch: {position['Branch']}")
+                st.write(f"Other: {position['Other']}")
+                st.write(f"Status: {position['Status']}")
+                st.write("---")  # Separator between records
         else:
             st.write("No data found.")
     except Exception as e:
         st.error(f"Error fetching data: {e}")
 
-# เรียกใช้ฟังก์ชัน
+# Main script
 if __name__ == "__main__":
     st.set_page_config(page_title="Firebase Test")
     st.title("Firebase Connection Test")
 
-    initialize_firebase_app()  # เรียกใช้ฟังก์ชันเพื่อเชื่อมต่อ Firebase
-    fetch_data_from_firebase()  # ทดสอบการดึงข้อมูลจาก Firebase
+    initialize_firebase_app()  # Initialize Firebase connection
+    fetch_data_from_firebase()  # Fetch and display data from Firebase
