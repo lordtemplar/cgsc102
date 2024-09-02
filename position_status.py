@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 import time
 
-# ตั้งค่า Streamlit ก่อนคำสั่งอื่น ๆ
+# ตั้งค่า Streamlit
 st.set_page_config(page_title="LIVE Position")
 st.title("Live Positions")
 
@@ -17,8 +17,8 @@ def initialize_firebase():
     except ValueError:
         try:
             st.write("Initializing Firebase...")
-            # ระบุ path ไปยังไฟล์ JSON ของ Service Account Key
-            cred = credentials.Certificate("positionchoosing-firebase-adminsdk-vr2az-04309817a7.json")
+            # ระบุ path ไปยังไฟล์ JSON ของ Service Account Key ที่เปลี่ยนชื่อใหม่
+            cred = credentials.Certificate("positionchoosing-firebase-adminsdk-vr2az-a74f69f4eb.json")
             firebase_admin.initialize_app(cred, {
                 'databaseURL': 'https://positionchoosing-default-rtdb.asia-southeast1.firebasedatabase.app/'
             })
