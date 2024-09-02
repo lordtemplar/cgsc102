@@ -18,7 +18,7 @@ def initialize_firebase():
         try:
             st.write("Initializing Firebase...")
             # ระบุ path ไปยังไฟล์ JSON ของ Service Account Key ที่เปลี่ยนชื่อใหม่
-            cred = credentials.Certificate("positionchoosing-firebase-adminsdk-vr2az-a74f69f4eb.json")
+            cred = credentials.Certificate("positionselection/positionchoosing-firebase-adminsdk-vr2az-a74f69f4eb.json")
             firebase_admin.initialize_app(cred, {
                 'databaseURL': 'https://positionchoosing-default-rtdb.asia-southeast1.firebasedatabase.app/'
             })
