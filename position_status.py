@@ -1,13 +1,14 @@
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+import firebase_admin
+from firebase_admin import credentials, db
 import pandas as pd
 import streamlit as st
 import time
 
-# ตั้งค่าข้อมูลรับรองของ Google Sheets API
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-87525a85b092.json', scope)
-client = gspread.authorize(creds)
+# ตั้งค่า Firebase Admin SDK
+cred = credentials.Certificate("positionchoosing-firebase-adminsdk-vr2az-04309817a7.json")  # ใส่ชื่อไฟล์ JSON ของคุณ
+firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://positionchoosing-default-rtdb.asia-southeast1.firebasedatabase.app/'  # URL ของ Firebase Realtime Database
+})
 
 # เปลี่ยน Title บน browser tab
 st.set_page_config(page_title="LIVE Position")
@@ -23,9 +24,17 @@ st.title("Live Positions")
 placeholder = st.empty()
 
 def load_data_and_render_table():
-    # เปิดไฟล์ Google Sheets และดึงข้อมูล
-    position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iKu8mpZeDXonDQhX-mJtDWx_-g68TSGlefdCXdle8ec/edit?usp=sharing').sheet1
-    df_positions = pd.DataFrame(position_sheet.get_all_records())
+    # ดึงข้อมูลจาก Firebase Realtime Database
+    ref = db.reference('positions')  # เปลี่ยน 'positions' เป็นชื่อของคอลเล็กชันในฐานข้อมูล Firebase ของคุณ
+    data = ref.get()
+
+    # ตรวจสอบว่ามีข้อมูลหรือไม่
+    if data:
+        # สร้าง DataFrame จากข้อมูลที่ดึงมา
+        df_positions = pd.DataFrame(data.values())
+    else:
+        st.error("ไม่พบข้อมูลใน Firebase Realtime Database")
+        return
 
     # ปรับ ID เป็นเลข 3 ตำแหน่ง
     df_positions['PositionID'] = df_positions['PositionID'].apply(lambda x: f"{int(x):03d}")
