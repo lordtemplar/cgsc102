@@ -165,7 +165,7 @@ if rank_query:
                                 external_student_sheet.update_cell(row_number, external_student_sheet.find('Position1').col, st.session_state['position1'])
 
                                 # ส่ง Line Notify
-                                line_token = "3YOl5tevDgWcXSoBU518u0xTWDxaIhwx6CWLM9u6lAM"
+                                line_token = "xGnQxPXeS9AsJlgEDa8BzaKpKx53dtPAGG6o1ovRfnO"
                                 message = f"รหัสนักเรียน {student_info['StudentID']}, {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {get_position_name(st.session_state['position1'])}"
                                 send_line_notify(message, line_token)
 
