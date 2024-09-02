@@ -1,14 +1,19 @@
 import firebase_admin
 from firebase_admin import credentials, db
-import pandas as pd
 import streamlit as st
+import pandas as pd
 import time
 
 # ตั้งค่า Firebase Admin SDK
-cred = credentials.Certificate("positionchoosing-firebase-adminsdk-vr2az-04309817a7.json")  # ใส่ชื่อไฟล์ JSON ของคุณ
-firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://positionchoosing-default-rtdb.asia-southeast1.firebasedatabase.app/'  # URL ของ Firebase Realtime Database
-})
+try:
+    # ตรวจสอบว่ามีการตั้งค่าแล้วหรือยัง เพื่อหลีกเลี่ยงการ initialize ซ้ำ
+    firebase_admin.get_app()
+except ValueError:
+    # ระบุ path ไปยังไฟล์ JSON ของ Service Account Key
+    cred = credentials.Certificate("positionchoosing-firebase-adminsdk-vr2az-04309817a7.json")
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': 'https://positionchoosing-default-rtdb.asia-southeast1.firebasedatabase.app/'  # URL ของ Firebase Realtime Database
+    })
 
 # เปลี่ยน Title บน browser tab
 st.set_page_config(page_title="LIVE Position")
@@ -25,7 +30,7 @@ placeholder = st.empty()
 
 def load_data_and_render_table():
     # ดึงข้อมูลจาก Firebase Realtime Database
-    ref = db.reference('positions')  # เปลี่ยน 'positions' เป็นชื่อของคอลเล็กชันในฐานข้อมูล Firebase ของคุณ
+    ref = db.reference('positions')  # เปลี่ยน 'positions' เป็นชื่อของโหนดในฐานข้อมูล Firebase ของคุณ
     data = ref.get()
 
     # ตรวจสอบว่ามีข้อมูลหรือไม่
@@ -60,7 +65,7 @@ def load_data_and_render_table():
 
     # กรองข้อมูลตามคำค้นหา
     if st.session_state.search_term:
-        filtered_positions = df_positions[df_positions.apply(lambda row: st.session_state.search_term.lower() in row['PositionID'].lower() or st.session_state.search_term.lower() in row['PositionName'].lower() or st.session_state.search_term.lower() in row['Unit'].lower() or st.session_state.search_term.lower() in row['Specialist'].lower() or st.session_state.search_term.lower() in row['Rank'].lower() or st.session_state.search_term.lower() in row['Branch'].lower() or st.session_state.search_term.lower() in row['Other'].lower(), axis=1)]
+        filtered_positions = df_positions[df_positions.apply(lambda row: st.session_state.search_term.lower() in str(row['PositionID']).lower() or st.session_state.search_term.lower() in row['PositionName'].lower() or st.session_state.search_term.lower() in row['Unit'].lower() or st.session_state.search_term.lower() in row['Specialist'].lower() or st.session_state.search_term.lower() in row['Rank'].lower() or st.session_state.search_term.lower() in row['Branch'].lower() or st.session_state.search_term.lower() in row['Other'].lower(), axis=1)]
     else:
         filtered_positions = df_positions
 
