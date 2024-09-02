@@ -4,6 +4,10 @@ import streamlit as st
 import pandas as pd
 import time
 
+# ตั้งค่า Streamlit ก่อนคำสั่งอื่น ๆ
+st.set_page_config(page_title="LIVE Position")
+st.title("Live Positions")
+
 # ฟังก์ชันสำหรับการตรวจสอบและเชื่อมต่อ Firebase Admin SDK
 def initialize_firebase():
     try:
@@ -25,10 +29,6 @@ def initialize_firebase():
 
 # เรียกใช้ฟังก์ชันสำหรับเชื่อมต่อ Firebase
 initialize_firebase()
-
-# ตั้งค่า Streamlit
-st.set_page_config(page_title="LIVE Position")
-st.title("Live Positions")
 
 # สร้างพื้นที่ว่างเพื่ออัปเดตข้อมูลตาราง
 placeholder = st.empty()
