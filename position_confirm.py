@@ -17,7 +17,7 @@ internal_student_sheet = client.open_by_url('https://docs.google.com/spreadsheet
 internal_position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/edit?usp=sharing').sheet1
 confirm_student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1subaqI_b4xj5nKSvDvAkqAVthlRVAavQOy983l-bOn4/edit?usp=sharing').sheet1
 external_position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iKu8mpZeDXonDQhX-mJtDWx_-g68TSGlefdCXdle8ec/edit?usp=sharing').sheet1
-external_student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iOcrhg1qmJ-mT9c3hkpsa1ajyr8riWrZrhL-eO_SCSg/edit?usp=sharing').sheet1
+external_student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iOcrhg1qmJ-mJt3hkpsa1ajyr8riWrZrhL-eO_SCSg/edit?usp=sharing').sheet1
 
 # โหลดข้อมูลจากฐานข้อมูลตำแหน่งและนักเรียนเพียงครั้งเดียว
 df_internal_positions = pd.DataFrame(internal_position_sheet.get_all_records())
@@ -109,10 +109,15 @@ if rank_query:
                 'officer_type': student_info['OfficerType'],
                 'other': student_info['Other'],
                 'rank': str(rank_number),
-                'position1': str(student_info['Position1']).zfill(3)
+                'position1': str(student_info['Position1']).zfill(3),
+                'position2': str(student_info['Position2']).zfill(3),
+                'position3': str(student_info['Position3']).zfill(3)
             })
 
+            # ดึงชื่อหน่วยสำหรับตำแหน่งที่ 1, 2, 3
             position1_name = get_position_name(st.session_state['position1'])
+            position2_name = get_position_name(st.session_state['position2'])
+            position3_name = get_position_name(st.session_state['position3'])
 
             # แสดงข้อมูลในตารางแนวตั้งรวมถึงตำแหน่งที่เลือก
             table_placeholder = st.empty()  # สร้าง placeholder เพื่ออัพเดทตารางเดิม
@@ -124,7 +129,9 @@ if rank_query:
                 <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
                 <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
                 <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-                <tr><th>ตำแหน่งที่เลือก</th><td>{position1_name}</td></tr>
+                <tr><th>ตำแหน่งที่เลือก 1</th><td>{position1_name}</td></tr>
+                <tr><th>ตำแหน่งที่เลือก 2</th><td>{position2_name}</td></tr>
+                <tr><th>ตำแหน่งที่เลือก 3</th><td>{position3_name}</td></tr>
             </table>
             """, unsafe_allow_html=True)
 
@@ -161,12 +168,16 @@ if rank_query:
                                 external_position_sheet.update_cell(external_position_row, external_position_sheet.find('Status').col, "ไม่ว่าง")
 
                                 # อัปเดตข้อมูลในฐานข้อมูล external_student_db และ internal_student_db
-                                internal_student_sheet.update_cell(row_number, internal_student_sheet.find('Position1').col, st.session_state['position1'])
-                                external_student_sheet.update_cell(row_number, external_student_sheet.find('Position1').col, st.session_state['position1'])
+                                internal_student_row = internal_student_sheet.find(str(student_info['StudentID'])).row
+                                external_student_row = external_student_sheet.find(str(student_info['StudentID'])).row
 
-                                # ส่ง Line Notify
-                                line_token = "I0HNf4jsfKtqZgctNZm93od6d8umed9SvPcFABXUZjo"
-                                message = f"รหัสนักเรียน {student_info['StudentID']}, {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {get_position_name(st.session_state['position1'])}"
+                                internal_student_sheet.update_cell(internal_student_row, internal_student_sheet.find('Position1').col, st.session_state['position1'])
+                                external_student_sheet.update_cell(external_student_row, external_student_sheet.find('Position1').col, st.session_state['position1'])
+
+                                # ส่ง Line Notify พร้อมข้อความใหม่
+                                next_rank = rank_number + 1
+                                line_token = "jeFjvSfzdSE6GrSdGNnVbvQRDNeirxnLxRP0Wr5kCni"
+                                message = f"รหัสนักเรียน {student_info['StudentID']}, {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {get_position_name(st.session_state['position1'])}, อันดับปัจจุบัน {st.session_state['rank']}, เชิญอันดับถัดไป {next_rank} เลือกต่อ"
                                 send_line_notify(message, line_token)
 
                                 st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
@@ -180,7 +191,9 @@ if rank_query:
                                     <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
                                     <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
                                     <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-                                    <tr><th>ตำแหน่งที่เลือก</th><td>{get_position_name(st.session_state['position1'])}</td></tr>
+                                    <tr><th>ตำแหน่งที่เลือก 1</th><td>{get_position_name(st.session_state['position1'])}</td></tr>
+                                    <tr><th>ตำแหน่งที่เลือก 2</th><td>{get_position_name(st.session_state['position2'])}</td></tr>
+                                    <tr><th>ตำแหน่งที่เลือก 3</th><td>{get_position_name(st.session_state['position3'])}</td></tr>
                                 </table>
                                 """, unsafe_allow_html=True)
                             except Exception as e:
