@@ -13,8 +13,8 @@ try:
     if not firebase_admin._apps:
         log_status("Starting Firebase connection...")
 
-        # Replace with your Firebase project credentials
-        cred = credentials.Certificate('positionchoosing-firebase-adminsdk-vr2az-a74f69f4eb.json')  # Ensure this file is in the same folder or provide the correct path
+        # Replace with your new Firebase project credentials
+        cred = credentials.Certificate('positionchoosing-ffdfc3920e83.json')  # Update this with the new JSON file path
         firebase_admin.initialize_app(cred, {
             'databaseURL': 'https://positionchoosing-default-rtdb.asia-southeast1.firebasedatabase.app/'  # Your correct database URL
         })
