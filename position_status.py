@@ -1,58 +1,44 @@
+import os
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, db
 import traceback
 
-# Function to log status messages
-def log_status(message):
-    st.write(message)  # Display in Streamlit app
-    print(message)     # Print to console for debugging
+# Load the environment variable that stores the credentials path
+service_account_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 
 try:
     # Check if the Firebase app is already initialized
     if not firebase_admin._apps:
-        log_status("Starting Firebase connection...")
+        st.write("Starting Firebase connection...")
 
-        # Replace with your new Firebase project credentials
-        cred = credentials.Certificate('positionchoosing-ffdfc3920e83.json')  # Update this with the new JSON file path
+        # Initialize Firebase app with credentials from environment variable
+        cred = credentials.Certificate(service_account_path)
         firebase_admin.initialize_app(cred, {
-            'databaseURL': 'https://positionchoosing-default-rtdb.asia-southeast1.firebasedatabase.app/'  # Your correct database URL
+            'databaseURL': 'https://positionchoosing-default-rtdb.asia-southeast1.firebasedatabase.app/'
         })
 
-        log_status("Firebase Realtime Database connection established successfully.")
+        st.write("Firebase Realtime Database connection established successfully.")
     else:
-        log_status("Firebase app is already initialized. Using the existing app.")
+        st.write("Firebase app is already initialized. Using the existing app.")
 
 except Exception as e:
-    log_status(f"Error during Firebase initialization: {str(e)}")
-    st.error(f"An error occurred: {traceback.format_exc()}")  # Display the traceback in Streamlit
+    st.error(f"An error occurred: {traceback.format_exc()}")
 
-# Function to fetch data from Firebase Realtime Database
+# Function to fetch data from Firebase
 def fetch_data():
     try:
-        log_status("Fetching data from Firebase Realtime Database...")
-        
-        # Reference to the database root
+        st.write("Fetching data from Firebase Realtime Database...")
         ref = db.reference('/')
-
-        # Fetch the entire data from the root
-        data = ref.get()  # Get all data from the root
+        data = ref.get()
 
         if data:
-            # Print the entire data structure in the console
-            print("Entire data structure:", data)
-
-            # Display the entire data structure in Streamlit
-            st.write("Entire data structure:", data)
-
-            log_status("Data fetched and displayed successfully.")
+            st.write("Data fetched successfully:", data)
         else:
-            log_status("No data found in the database.")
+            st.write("No data found.")
 
     except Exception as e:
-        log_status(f"Error while fetching data: {str(e)}")
-        st.error(f"An error occurred: {traceback.format_exc()}")  # Display the traceback in Streamlit
+        st.error(f"An error occurred: {traceback.format_exc()}")
 
-# Button to fetch data in Streamlit
 if st.button('Fetch Data'):
     fetch_data()
