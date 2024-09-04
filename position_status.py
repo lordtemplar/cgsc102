@@ -22,7 +22,7 @@ try:
 
 except Exception as e:
     log_status(f"Error during Firebase initialization: {str(e)}")
-    traceback.print_exc()  # Print full error traceback to console
+    st.error(f"An error occurred: {traceback.format_exc()}")  # Display the traceback in Streamlit
 
 # Function to fetch data from Firebase Realtime Database
 def fetch_data():
@@ -48,7 +48,7 @@ def fetch_data():
 
     except Exception as e:
         log_status(f"Error while fetching data: {str(e)}")
-        traceback.print_exc()  # Print full error traceback to console
+        st.error(f"An error occurred: {traceback.format_exc()}")  # Display the traceback in Streamlit
 
 # Button to fetch data in Streamlit
 if st.button('Fetch Data'):
