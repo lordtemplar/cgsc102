@@ -23,8 +23,8 @@ st.title("Live Positions")
 placeholder = st.empty()
 
 def load_data_and_render_table():
-    # เปิดไฟล์ Google Sheets และดึงข้อมูล
-    position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iKu8mpZeDXonDQhX-mJtDWx_-g68TSGlefdCXdle8ec/edit?usp=sharing').sheet1
+    # เปิดไฟล์ Google Sheets และดึงข้อมูลจาก external_position_db
+    position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1A7yP-Nufd_gy8oWW9ZbJ7zk0lyZ3zC13H4ki_1st4Lo/edit?usp=drive_link').sheet1
     df_positions = pd.DataFrame(position_sheet.get_all_records())
 
     # ปรับ ID เป็นเลข 3 ตำแหน่ง
