@@ -158,14 +158,15 @@ if rank_query:
 
                         # อัปเดตข้อมูลในฐานข้อมูล internal_student_db
                         internal_student_sheet.update_cell(row_number, internal_student_sheet.find('Position1').col, selected_position_id)
-
+    
                         # ส่ง Line Notify
+                        next_rank = rank_number + 1
                         line_token = "jeFjvSfzdSE6GrSdGNnVbvQRDNeirxnLxRP0Wr5kCni"
-                        message = f"รหัสนักเรียน {student_info['StudentID']}, {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {get_position_name(selected_position_id)}"
+                        message = f"ลำดับที่ {rank_number}, รหัสนักเรียน {student_info['StudentID']}, {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {get_position_name(selected_position_id)} ต่อไปเชิญ {next_rank} เลือกที่ลงต่อครับ"
                         send_line_notify(message, line_token)
-
+    
                         st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
-
+    
                         # อัพเดทข้อมูลในตารางเดิมที่แสดงผล
                         table_placeholder.write(f"""
                         <table>
