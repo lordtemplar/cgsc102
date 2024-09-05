@@ -15,13 +15,15 @@ creds_json1 = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-4332
 client_json1 = gspread.authorize(creds_json1)
 
 # Client for JSON2
-creds_json2 = ServiceAccountCredentials.from_json_keyfile_name('soldier-risk-calculator-ebaa5b0e095d.json', scope)
+creds_json2 = ServiceAccountCredentials.from_json_keyfile_name('positionselection-d40f2d782b2d.json', scope)
 client_json2 = gspread.authorize(creds_json2)
 
-# โหลดข้อมูล Google Sheets ทุกแผ่นงานมาเก็บไว้ในโปรแกรม
+# Access Google Sheets using JSON1
 internal_student_sheet = client_json1.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw/edit?usp=sharing').sheet1
-internal_position_sheet = client_json1.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/edit?usp=drive_link').sheet1
-confirm_student_sheet = client_json1.open_by_url('https://docs.google.com/spreadsheets/d/1subaqI_b4xj5nKSvDvAkqAVthlRVAavQOy983l-bOn4/edit?usp=drive_link').sheet1
+internal_position_sheet = client_json1.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/edit?usp=sharing').sheet1
+confirm_student_sheet = client_json1.open_by_url('https://docs.google.com/spreadsheets/d/1subaqI_b4xj5nKSvDvAkqAVthlRVAavQOy983l-bOn4/edit?usp=sharing').sheet1
+
+# Access Google Sheets using JSON2
 external_position_sheet = client_json2.open_by_url('https://docs.google.com/spreadsheets/d/1N9YSyQ19Gi5roZfgbuo_Bh78CEDHRiVY/edit?usp=sharing&ouid=108880626923731848508&rtpof=true&sd=true').sheet1
 
 # ดึงข้อมูลจาก Google Sheets มาครั้งเดียว
