@@ -9,15 +9,22 @@ st.set_page_config(page_title="Position Confirm")
 
 # ตั้งค่าข้อมูลรับรองของ Google Sheets API
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-87525a85b092.json', scope)
-client = gspread.authorize(creds)
 
-# เปิดไฟล์ Google Sheets ตามการเชื่อมโยงใหม่
-internal_student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw/edit?usp=sharing').sheet1
-internal_position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/edit?usp=sharing').sheet1
-confirm_student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1subaqI_b4xj5nKSvDvAkqAVthlRVAavQOy983l-bOn4/edit?usp=sharing').sheet1
-external_position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iKu8mpZeDXonDQhX-mJtDWx_-g68TSGlefdCXdle8ec/edit?usp=sharing').sheet1
-external_student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iOcrhg1qmJ-mT9c3hkpsa1ajyr8riWrZrhL-eO_SCSg/edit?usp=sharing').sheet1
+# Client for JSON1
+creds_json1 = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-87525a85b092.json', scope)
+client_json1 = gspread.authorize(creds_json1)
+
+# Client for JSON2
+creds_json2 = ServiceAccountCredentials.from_json_keyfile_name('soldier-risk-calculator-ebaa5b0e095d.json', scope)
+client_json2 = gspread.authorize(creds_json2)
+
+# Access Google Sheets using JSON1
+internal_student_sheet = client_json1.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw/edit?usp=sharing').sheet1
+internal_position_sheet = client_json1.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/edit?usp=drive_link').sheet1
+confirm_student_sheet = client_json1.open_by_url('https://docs.google.com/spreadsheets/d/1subaqI_b4xj5nKSvDvAkqAVthlRVAavQOy983l-bOn4/edit?usp=drive_link').sheet1
+
+# Access Google Sheets using JSON2
+external_position_sheet = client_json2.open_by_url('https://docs.google.com/spreadsheets/d/1N9YSyQ19Gi5roZfgbuo_Bh78CEDHRiVY/edit?usp=sharing&ouid=108880626923731848508&rtpof=true&sd=true').sheet1
 
 # โหลดข้อมูลจากฐานข้อมูลตำแหน่งและนักเรียนเพียงครั้งเดียว
 df_internal_positions = pd.DataFrame(internal_position_sheet.get_all_records())
