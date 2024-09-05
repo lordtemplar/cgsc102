@@ -108,10 +108,14 @@ if rank_query:
                 'officer_type': student_info['OfficerType'],
                 'other': student_info['Other'],
                 'rank': str(rank_number),
-                'position1': str(student_info['Position1']).zfill(3)
+                'position1': str(student_info['Position1']).zfill(3),
+                'position2': str(student_info.get('Position2', '')).zfill(3),  # Adding Position2
+                'position3': str(student_info.get('Position3', '')).zfill(3)   # Adding Position3
             })
 
             position1_name = get_position_name(st.session_state['position1'])
+            position2_name = get_position_name(st.session_state['position2'])
+            position3_name = get_position_name(st.session_state['position3'])
 
             # แสดงข้อมูลในตารางแนวตั้งรวมถึงตำแหน่งที่เลือก
             table_placeholder = st.empty()  # สร้าง placeholder เพื่ออัพเดทตารางเดิม
@@ -123,25 +127,31 @@ if rank_query:
                 <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
                 <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
                 <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-                <tr><th>ตำแหน่งที่เลือก</th><td>{position1_name}</td></tr>
+                <tr><th>ตำแหน่งที่เลือกลำดับ 1</th><td>{position1_name}</td></tr>
+                <tr><th>ตำแหน่งที่เลือกลำดับ 2</th><td>{position2_name}</td></tr>
+                <tr><th>ตำแหน่งที่เลือกลำดับ 3</th><td>{position3_name}</td></tr>
             </table>
             """, unsafe_allow_html=True)
 
             # แสดงฟิลด์สำหรับกรอกรหัสตำแหน่ง หากลำดับก่อนหน้าได้เลือกแล้ว
             if check_previous_rank_selection(rank_number):
                 st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
-                position1_input = st.text_input("ตำแหน่งที่เลือก", st.session_state['position1'])
+                position1_input = st.text_input("ตำแหน่งที่เลือกลำดับ 1", st.session_state['position1'])
+                position2_input = st.text_input("ตำแหน่งที่เลือกลำดับ 2", st.session_state['position2'])
+                position3_input = st.text_input("ตำแหน่งที่เลือกลำดับ 3", st.session_state['position3'])
 
                 # ตรวจสอบรหัสหน่วยที่กรอกเข้ามาว่ามี 3 หลักและเป็นตัวเลขหรือไม่
-                if len(position1_input) != 3 or not position1_input.isdigit():
-                    st.error("กรุณากรอกรหัสด้วยเลข 3 หลักสำหรับตำแหน่งที่เลือก")
+                if not all(len(pos) == 3 and pos.isdigit() for pos in [position1_input, position2_input, position3_input]):
+                    st.error("กรุณากรอกรหัสด้วยเลข 3 หลักสำหรับตำแหน่งที่เลือกทั้งหมด")
                 else:
                     # ตรวจสอบสถานะของตำแหน่ง
-                    if not check_position_availability(position1_input.zfill(3)):
+                    if not all(check_position_availability(pos) for pos in [position1_input, position2_input, position3_input]):
                         st.error("ตำแหน่งนี้ถูกเลือกไปแล้ว กรุณาเลือกตำแหน่งอื่น")
                     else:
                         st.session_state.update({
-                            'position1': position1_input.zfill(3)
+                            'position1': position1_input.zfill(3),
+                            'position2': position2_input.zfill(3),
+                            'position3': position3_input.zfill(3)
                         })
 
                         # ปุ่ม Confirm เพื่อยืนยันการเลือก
@@ -151,6 +161,8 @@ if rank_query:
 
                                 # อัปเดตข้อมูลนักเรียนใน confirm_student_db
                                 confirm_student_sheet.update_cell(row_number, confirm_student_sheet.find('Position1').col, st.session_state['position1'])
+                                confirm_student_sheet.update_cell(row_number, confirm_student_sheet.find('Position2').col, st.session_state['position2'])
+                                confirm_student_sheet.update_cell(row_number, confirm_student_sheet.find('Position3').col, st.session_state['position3'])
 
                                 # อัปเดตข้อมูลในฐานข้อมูล internal_position_db และ external_position_db
                                 internal_position_row = internal_position_sheet.find(st.session_state['position1']).row
@@ -161,6 +173,8 @@ if rank_query:
 
                                 # อัปเดตข้อมูลในฐานข้อมูล internal_student_db
                                 internal_student_sheet.update_cell(row_number, internal_student_sheet.find('Position1').col, st.session_state['position1'])
+                                internal_student_sheet.update_cell(row_number, internal_student_sheet.find('Position2').col, st.session_state['position2'])
+                                internal_student_sheet.update_cell(row_number, internal_student_sheet.find('Position3').col, st.session_state['position3'])
 
                                 # ส่ง Line Notify
                                 line_token = "jeFjvSfzdSE6GrSdGNnVbvQRDNeirxnLxRP0Wr5kCni"
@@ -178,7 +192,9 @@ if rank_query:
                                     <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
                                     <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
                                     <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-                                    <tr><th>ตำแหน่งที่เลือก</th><td>{get_position_name(st.session_state['position1'])}</td></tr>
+                                    <tr><th>ตำแหน่งที่เลือกลำดับ 1</th><td>{get_position_name(st.session_state['position1'])}</td></tr>
+                                    <tr><th>ตำแหน่งที่เลือกลำดับ 2</th><td>{get_position_name(st.session_state['position2'])}</td></tr>
+                                    <tr><th>ตำแหน่งที่เลือกลำดับ 3</th><td>{get_position_name(st.session_state['position3'])}</td></tr>
                                 </table>
                                 """, unsafe_allow_html=True)
                             except Exception as e:
