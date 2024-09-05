@@ -162,7 +162,7 @@ if rank_query:
                         # ส่ง Line Notify
                         next_rank = rank_number + 1
                         line_token = "IXXqxz9o2oBAzUKPm38tLqijrzs91zoT51M6D7zCINj"
-                        message = f"ลำดับที่ {rank_number}, รหัสนักเรียน {student_info['StudentID']}, {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {get_position_name(selected_position_id)} ต่อไปเชิญลำดีบที่ {next_rank} เลือกที่ลงต่อครับ"
+                        message = f"ลำดับที่ {rank_number}, รหัสนักเรียน {student_info['StudentID']}, {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {get_position_name(selected_position_id)} ต่อไปเชิญลำดับที่ {next_rank} เลือกที่ลงต่อครับ"
                         send_line_notify(message, line_token)
     
                         st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
