@@ -11,12 +11,12 @@ scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/au
 creds = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-87525a85b092.json', scope)
 client = gspread.authorize(creds)
 
-# เปิดไฟล์ Google Sheets
-student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iOcrhg1qmJ-mT9c3hkpsa1ajyr8riWrZrhL-eO_SCSg').sheet1
+# เปิดไฟล์ Google Sheets โดยใช้ลิงก์ใหม่
+student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw').sheet1
 position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1
 
 # ลิงก์สำหรับการอัปเดตข้อมูล
-update_link_1 = 'https://docs.google.com/spreadsheets/d/1iOcrhg1qmJ-mT9c3hkpsa1ajyr8riWrZrhL-eO_SCSg'
+update_link_1 = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw'
 update_link_2 = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw'
 
 # โหลดข้อมูลจาก PositionDB
@@ -50,7 +50,7 @@ if rank_query and rank_query != st.session_state['last_search_query']:
 
 if rank_query:
     if st.session_state['student_data'] is None:
-        # โหลดข้อมูลนักเรียนจาก Google Sheets ครั้งเดียว
+        # โหลดข้อมูลนักเรียนจาก Google Sheets ใหม่โดยใช้ลิงก์ที่ให้มา
         df_students = pd.DataFrame(student_sheet.get_all_records())
         df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
 
