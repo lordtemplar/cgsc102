@@ -1,13 +1,1 @@
-{
-  "type": "service_account",
-  "project_id": "adroit-petal-434703-n9",
-  "private_key_id": "d7fa86c4559db8c846e476a9ab32ef54c781893f",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEuwIBADANBgkqhkiG9w0BAQEFAASCBKUwggShAgEAAoIBAQDqRoFZ8houNGZR\n6pQuL5VgXlio/pTaY3nP7TJFa9yuLYg7oFd146C9hq+Erjnx2ZoKQkYvQJVJn9ou\nuia7+ciGGbR/lZ9uxYVW942dgpUU4/E2fBrpWU6IjoX90BP7JIoU/RsWaoTj0rqR\n2AXlCvNYjeENESsEYzR3Y+9nxXDBDHubvKChVXUYrsQWZQywx9iVm0+XNMAdoBWA\nhL9+HeJY3NfXqg/SONR8yGoH2wLlJK+LJ3R3tw9j29tDhWQ9xSzjm/juS9EW8kKy\n0+y9e14hfUTZ/0gxyJnzaZYBpqcuXIpkJO5PTFL+s10T56wDNdz8XP5HFmN3rRp6\nO0kZuKnhAgMBAAECgf8LUNAm3jbiT9+tN4Tgwhq0u8Pu0Zl4I2bP+JRRmqjt3Sdv\nY+mMaNufEWN8lVxikIiToMpgxMMSHrynPkd3E77LigJPB0vFCDnrg7pwZgBVMNZ/\noWMQ3U5JbmA14YtiUxG4VtZjThr3KNn31J32GbyBViP+08ConoIRVWph9cvE4qZD\nX0IThvM2xFXUXEtXwd8IfKMg9z4F1lVnf9IZ4lAg//oGXRl6lV7qEBP6uOBqiA6L\nzwn5G7Y/Wk0NC9uNcTfuyY07+3nuSDr0Lcqe/H+PiOXUCgnSns+AQPgz9PLcE6+y\n6Vy9sozTSh0OYXuxbRLVODh4t1IpYhI/RglX/IECgYEA+R9uPTT5gWe4wHvvr68F\nQpKoomVmyv5GQwzdJiTqwPLOzC18ULaXIjjlSa8bG8wIj/9wRpJ36vK6++yav/P7\n8BzGdSndJmJJAA7npZcJa/tvVG8XWfl/1lN+/0CizRAKWzfuRfKwIsUAqdu1wTi0\nBO/3Qr5CWWLk46Tk7jnJJIECgYEA8L4lr+38bixZM/pfR3VVFfDjD1v/w6I+IMgw\niVmxbJY8qSAlvJniqUWTsBm/ds2F5nJrfvDSGHADDRGnRUfY9Wx8/0MlQ9LIkQe8\n1NJajOTWxWRH1nWfO3JeNpDZ99Vd99ls5wv64wWCDmwEEqGmC2Y/LK4OODMy7kgR\n343jVWECgYEAv4yKP+e2nOh6pw3kiuoBGmIX5d4f/p8quS1v8X9bPYa0uUuUFZ9/\nb6Hdsx0/s8zbHJVk5+6A5BdE7KXNiyB3q/UEJ1xMHdJenPvY43rRlMScoohUpSrx\nP4Ot12gEhbX6sI691+y1v9ZIH1K/WtVVnaJBNYGDFKW0ptDH8eBep4ECgYAH1dh6\nKl+94jmhBHQXak0zopxxQohHgL9O59UUk1O/+f/NbVttEQEci0QsRhpCLpw+DNlM\nz1+3JeYjhcCQ866vBjHnSPMsiu62Ma9GqfYCgewvjnz8EOX21FkWo45Ej7A4Qd5W\ngsBOpT4/Y+qaBKLX2iMSPDQARkJRGQ1j3kVY4QKBgAvZu1YaXqXDxyeWe5O/O2Qn\nP2wn86vgDGNatP5NE8DEhn/USPl+Fbn7BcfpXHc/6tkT4IbsFSoIi1A5PnHv/0IK\nfSUM1tluEaiPZCy1gASxrUqAv/opSNSu/+mDzBBcglTVRgS7JZVgk1l+zGqNdI+d\noofx9Z7mYJq+qqJ7v9il\n-----END PRIVATE KEY-----\n",
-  "client_email": "positionselection@adroit-petal-434703-n9.iam.gserviceaccount.com",
-  "client_id": "112509269408477778514",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/positionselection%40adroit-petal-434703-n9.iam.gserviceaccount.com",
-  "universe_domain": "googleapis.com"
-}
+{"web":{"client_id":"183089548070-nqndespufuc10sqi3gdt6b3drkfkgd49.apps.googleusercontent.com","project_id":"adroit-petal-434703-n9","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"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"}}
