@@ -16,8 +16,7 @@ student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfc
 position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1
 
 # ลิงก์สำหรับการอัปเดตข้อมูล
-update_link_1 = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw'
-update_link_2 = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw'
+update_link = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw'
 
 # โหลดข้อมูลจาก PositionDB
 df_positions = pd.DataFrame(position_sheet.get_all_records())
@@ -120,16 +119,10 @@ if rank_query:
                 try:
                     row_number = student_sheet.find(str(student_info['StudentID'])).row  # ใช้ str() เพื่อให้เป็นประเภทที่ถูกต้อง
 
-                    # อัปเดตข้อมูลไปยังทั้งสองลิงก์ Google Sheets
+                    # อัปเดตข้อมูลไปยัง Google Sheets ที่ลิงก์เดียว
                     student_sheet.update_cell(row_number, student_sheet.find('Position1').col, st.session_state['position1'])
                     student_sheet.update_cell(row_number, student_sheet.find('Position2').col, st.session_state['position2'])
                     student_sheet.update_cell(row_number, student_sheet.find('Position3').col, st.session_state['position3'])
-
-                    # อัปเดตข้อมูลไปยังลิงก์ที่สอง
-                    update_sheet_2 = client.open_by_url(update_link_2).sheet1
-                    update_sheet_2.update_cell(row_number, update_sheet_2.find('Position1').col, st.session_state['position1'])
-                    update_sheet_2.update_cell(row_number, update_sheet_2.find('Position2').col, st.session_state['position2'])
-                    update_sheet_2.update_cell(row_number, update_sheet_2.find('Position3').col, st.session_state['position3'])
 
                     st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
 
