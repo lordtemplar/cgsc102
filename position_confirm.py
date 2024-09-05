@@ -18,25 +18,21 @@ client_json1 = gspread.authorize(creds_json1)
 creds_json2 = ServiceAccountCredentials.from_json_keyfile_name('soldier-risk-calculator-ebaa5b0e095d.json', scope)
 client_json2 = gspread.authorize(creds_json2)
 
-# Access Google Sheets using JSON1
+# โหลดข้อมูล Google Sheets ทุกแผ่นงานมาเก็บไว้ในโปรแกรม
 internal_student_sheet = client_json1.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw/edit?usp=sharing').sheet1
 internal_position_sheet = client_json1.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/edit?usp=drive_link').sheet1
 confirm_student_sheet = client_json1.open_by_url('https://docs.google.com/spreadsheets/d/1subaqI_b4xj5nKSvDvAkqAVthlRVAavQOy983l-bOn4/edit?usp=drive_link').sheet1
-
-# Access Google Sheets using JSON2
 external_position_sheet = client_json2.open_by_url('https://docs.google.com/spreadsheets/d/1N9YSyQ19Gi5roZfgbuo_Bh78CEDHRiVY/edit?usp=sharing&ouid=108880626923731848508&rtpof=true&sd=true').sheet1
 
-# โหลดข้อมูลจากฐานข้อมูลตำแหน่งและนักเรียนเพียงครั้งเดียว
+# ดึงข้อมูลจาก Google Sheets มาครั้งเดียว
+df_internal_students = pd.DataFrame(internal_student_sheet.get_all_records())
 df_internal_positions = pd.DataFrame(internal_position_sheet.get_all_records())
-df_students = pd.DataFrame(internal_student_sheet.get_all_records())
 df_confirm_students = pd.DataFrame(confirm_student_sheet.get_all_records())
+df_external_positions = pd.DataFrame(external_position_sheet.get_all_records())
 
+# จัดการข้อมูลรหัสตำแหน่งและลำดับ
 df_internal_positions['PositionID'] = df_internal_positions['PositionID'].astype(str).str.zfill(3)
-
-# Clean and convert 'Rank' columns to integers
-df_confirm_students['Rank'] = pd.to_numeric(df_confirm_students['Rank'], errors='coerce')
-df_confirm_students = df_confirm_students.dropna(subset=['Rank'])  # Remove rows where 'Rank' is NaN
-df_confirm_students['Rank'] = df_confirm_students['Rank'].astype(int)
+df_confirm_students['Rank'] = pd.to_numeric(df_confirm_students['Rank'], errors='coerce').dropna().astype(int)
 
 # Function เพื่อดึงชื่อหน่วยจากฐานข้อมูลตำแหน่ง
 def get_position_name(position_id):
@@ -49,24 +45,17 @@ def get_position_name(position_id):
 # Function ตรวจสอบสถานะตำแหน่ง
 def check_position_availability(position_id):
     internal_position = df_internal_positions[df_internal_positions['PositionID'] == position_id]
-    # ตรวจสอบสถานะจากฐานข้อมูล
     if not internal_position.empty and internal_position.iloc[0]['Status'] == "ไม่ว่าง":
         return False
     return True
 
 # Function ตรวจสอบสถานะการเลือกของลำดับก่อนหน้า
 def check_previous_rank_selection(rank):
-    # ลำดับที่ 1 สามารถเลือกได้เลย
     if rank == 1:
         return True
-    # ตรวจสอบสถานะของลำดับก่อนหน้า
-    previous_rank = rank - 1
-    previous_rank_data = df_confirm_students[df_confirm_students['Rank'] == previous_rank]
-    
-    if not previous_rank_data.empty:
-        # ตรวจสอบว่าคอลัมน์ 'Position1' มีอยู่ในข้อมูลหรือไม่
-        if 'Position1' in previous_rank_data.columns and previous_rank_data.iloc[0]['Position1'] == "ยังไม่ได้เลือก":
-            return False
+    previous_rank_data = df_confirm_students[df_confirm_students['Rank'] == rank - 1]
+    if not previous_rank_data.empty and 'Position1' in previous_rank_data.columns and previous_rank_data.iloc[0]['Position1'] == "ยังไม่ได้เลือก":
+        return False
     return True
 
 # Function ส่ง Line Notify
@@ -88,16 +77,14 @@ if 'last_search_query' not in st.session_state:
 rank_query = st.text_input("กรุณาใส่ลำดับผลการเรียน:")
 
 if rank_query and rank_query != st.session_state['last_search_query']:
-    st.session_state['student_data'] = None  # รีเซ็ตข้อมูล
-    st.session_state['last_search_query'] = rank_query  # อัพเดตคำค้นหาใหม่
+    st.session_state['student_data'] = None
+    st.session_state['last_search_query'] = rank_query
 
 if rank_query:
     if st.session_state['student_data'] is None:
-        # ค้นหาข้อมูลนักเรียนด้วย "ลำดับผลการเรียน"
-        student_data = df_students[df_students['Rank'].astype(str).str.contains(rank_query.strip(), case=False, na=False)]
-
+        student_data = df_internal_students[df_internal_students['Rank'].astype(str).str.contains(rank_query.strip(), case=False, na=False)]
         if not student_data.empty:
-            st.session_state['student_data'] = student_data.iloc[0]  # เก็บข้อมูลใน session state
+            st.session_state['student_data'] = student_data.iloc[0]
         else:
             st.error("ไม่พบข้อมูลที่ค้นหา")
             st.session_state['student_data'] = None
@@ -105,8 +92,7 @@ if rank_query:
     if st.session_state['student_data'] is not None:
         student_info = st.session_state['student_data']
         rank_number = int(student_info['Rank'])
-        
-        # ตรวจสอบว่าลำดับก่อนหน้าได้เลือกแล้วหรือยัง
+
         if not check_previous_rank_selection(rank_number):
             st.error(f"ลำดับก่อนหน้า (ลำดับ {rank_number - 1}) ยังไม่ได้เลือกตำแหน่ง กรุณารอให้ลำดับก่อนหน้าเลือกก่อน")
         else:
@@ -126,7 +112,7 @@ if rank_query:
             position3_name = get_position_name(st.session_state['position3'])
 
             # แสดงข้อมูลในตารางแนวตั้งรวมถึงตำแหน่งที่เลือก
-            table_placeholder = st.empty()  # สร้าง placeholder เพื่ออัพเดทตารางเดิม
+            table_placeholder = st.empty()
             table_placeholder.write(f"""
             <table>
                 <tr><th>รหัสนักเรียน</th><td>{student_info['StudentID']}</td></tr>
@@ -141,14 +127,13 @@ if rank_query:
             </table>
             """, unsafe_allow_html=True)
 
-            # แสดงฟิลด์สำหรับกรอกรหัสตำแหน่ง หากลำดับก่อนหน้าได้เลือกแล้ว
+            # แสดงฟิลด์สำหรับกรอกรหัสตำแหน่ง
             if check_previous_rank_selection(rank_number):
                 st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
                 position1_input = st.text_input("ตำแหน่งที่เลือก 1", st.session_state['position1'])
                 position2_input = st.text_input("ตำแหน่งที่เลือก 2", st.session_state['position2'])
                 position3_input = st.text_input("ตำแหน่งที่เลือก 3", st.session_state['position3'])
 
-                # ตรวจสอบรหัสหน่วยที่กรอกเข้ามาว่ามี 3 หลักและเป็นตัวเลขหรือไม่
                 valid_positions = all(len(pos) == 3 and pos.isdigit() for pos in [position1_input, position2_input, position3_input])
 
                 if not valid_positions:
@@ -160,15 +145,14 @@ if rank_query:
                         'position3': position3_input.zfill(3)
                     })
 
-                    # ปุ่ม Confirm เพื่อยืนยันการเลือก
                     if st.button("Confirm"):
                         try:
-                            row_number = confirm_student_sheet.find(str(student_info['StudentID'])).row
+                            # Update ข้อมูลใน DataFrame ก่อน
+                            df_confirm_students.loc[df_confirm_students['StudentID'] == student_info['StudentID'], ['Position1', 'Position2', 'Position3']] = \
+                                [st.session_state['position1'], st.session_state['position2'], st.session_state['position3']]
 
-                            # อัปเดตข้อมูลนักเรียนใน confirm_student_db
-                            confirm_student_sheet.update_cell(row_number, confirm_student_sheet.find('Position1').col, st.session_state['position1'])
-                            confirm_student_sheet.update_cell(row_number, confirm_student_sheet.find('Position2').col, st.session_state['position2'])
-                            confirm_student_sheet.update_cell(row_number, confirm_student_sheet.find('Position3').col, st.session_state['position3'])
+                            # อัปเดตข้อมูลกลับไปยัง Google Sheets (ทำครั้งเดียว)
+                            confirm_student_sheet.update([df_confirm_students.columns.values.tolist()] + df_confirm_students.values.tolist())
 
                             # อัปเดตข้อมูลในฐานข้อมูล internal_position_db และ external_position_db
                             internal_position_row = internal_position_sheet.find(st.session_state['position1']).row
@@ -176,10 +160,6 @@ if rank_query:
 
                             internal_position_sheet.update_cell(internal_position_row, internal_position_sheet.find('Status').col, "ไม่ว่าง")
                             external_position_sheet.update_cell(external_position_row, external_position_sheet.find('Status').col, "ไม่ว่าง")
-
-                            # อัปเดตข้อมูลในฐานข้อมูล external_student_db และ internal_student_db
-                            internal_student_sheet.update_cell(row_number, internal_student_sheet.find('Position1').col, st.session_state['position1'])
-                            external_student_sheet.update_cell(row_number, external_student_sheet.find('Position1').col, st.session_state['position1'])
 
                             # ส่ง Line Notify
                             line_token = "jeFjvSfzdSE6GrSdGNnVbvQRDNeirxnLxRP0Wr5kCni"
