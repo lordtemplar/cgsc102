@@ -10,23 +10,41 @@ st.set_page_config(page_title="Position Confirm")
 # ตั้งค่าข้อมูลรับรองของ Google Sheets API
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 
-# Client for JSON1
-creds_json1 = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-87525a85b092.json', scope)
-client_json1 = gspread.authorize(creds_json1)
+def check_credential_and_connection(json_file, sheet_url):
+    try:
+        # Load credentials from JSON file
+        creds = ServiceAccountCredentials.from_json_keyfile_name(json_file, scope)
+        client = gspread.authorize(creds)
+        
+        # Test the connection to Google Sheets
+        sheet = client.open_by_url(sheet_url).sheet1
+        st.write(f"✅ Successfully connected to Google Sheet: {sheet_url} using {json_file}")
+        return client, sheet
+    except Exception as e:
+        st.error(f"❌ Error connecting to Google Sheet: {sheet_url} using {json_file}: {e}")
+        return None, None
 
-# Client for JSON2 (Updated)
-creds_json2 = ServiceAccountCredentials.from_json_keyfile_name('positionselection-4b5437945c60.json', scope)
-client_json2 = gspread.authorize(creds_json2)
+# Check JSON1 credentials
+client_json1, internal_student_sheet = check_credential_and_connection('boreal-dock-433205-b0-87525a85b092.json', 
+                                                                       'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw/edit?usp=sharing')
 
-# Access Google Sheets using JSON1
-internal_student_sheet = client_json1.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw/edit?usp=sharing').sheet1
-internal_position_sheet = client_json1.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/edit?usp=sharing').sheet1
-confirm_student_sheet = client_json1.open_by_url('https://docs.google.com/spreadsheets/d/1subaqI_b4xj5nKSvDvAkqAVthlRVAavQOy983l-bOn4/edit?usp=sharing').sheet1
+# Check JSON2 credentials (Updated)
+client_json2, external_position_sheet = check_credential_and_connection('positionselection-4b5437945c60.json', 
+                                                                       'https://docs.google.com/spreadsheets/d/1BPo68UAzPV3mLfbZnEc3Q31Og1QOknb6/edit?usp=sharing&ouid=108880626923731848508&rtpof=true&sd=true')
 
-# Access Google Sheets using JSON2 (Updated)
-external_position_sheet = client_json2.open_by_url('https://docs.google.com/spreadsheets/d/1BPo68UAzPV3mLfbZnEc3Q31Og1QOknb6/edit?usp=sharing&ouid=108880626923731848508&rtpof=true&sd=true').sheet1
+# Check other sheets if JSON1 is successful
+if client_json1:
+    _, internal_position_sheet = check_credential_and_connection('boreal-dock-433205-b0-87525a85b092.json', 
+                                                                 'https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ/edit?usp=sharing')
+    _, confirm_student_sheet = check_credential_and_connection('boreal-dock-433205-b0-87525a85b092.json', 
+                                                               'https://docs.google.com/spreadsheets/d/1subaqI_b4xj5nKSvDvAkqAVthlRVAavQOy983l-bOn4/edit?usp=sharing')
 
-# ดึงข้อมูลจาก Google Sheets มาครั้งเดียว
+# If any of the connections failed, stop the script
+if not (client_json1 and client_json2):
+    st.error("❌ One or more credentials or connections failed. Please check the logs above.")
+    st.stop()
+
+# Load data from Google Sheets into DataFrames
 df_internal_students = pd.DataFrame(internal_student_sheet.get_all_records())
 df_internal_positions = pd.DataFrame(internal_position_sheet.get_all_records())
 df_confirm_students = pd.DataFrame(confirm_student_sheet.get_all_records())
@@ -128,61 +146,3 @@ if rank_query:
                 <tr><th>ตำแหน่งที่เลือก 3</th><td>{position3_name}</td></tr>
             </table>
             """, unsafe_allow_html=True)
-
-            # แสดงฟิลด์สำหรับกรอกรหัสตำแหน่ง
-            if check_previous_rank_selection(rank_number):
-                st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
-                position1_input = st.text_input("ตำแหน่งที่เลือก 1", st.session_state['position1'])
-                position2_input = st.text_input("ตำแหน่งที่เลือก 2", st.session_state['position2'])
-                position3_input = st.text_input("ตำแหน่งที่เลือก 3", st.session_state['position3'])
-
-                valid_positions = all(len(pos) == 3 and pos.isdigit() for pos in [position1_input, position2_input, position3_input])
-
-                if not valid_positions:
-                    st.error("กรุณากรอกรหัสด้วยเลข 3 หลักสำหรับตำแหน่งที่เลือกทั้งหมด")
-                else:
-                    st.session_state.update({
-                        'position1': position1_input.zfill(3),
-                        'position2': position2_input.zfill(3),
-                        'position3': position3_input.zfill(3)
-                    })
-
-                    if st.button("Confirm"):
-                        try:
-                            # Update ข้อมูลใน DataFrame ก่อน
-                            df_confirm_students.loc[df_confirm_students['StudentID'] == student_info['StudentID'], ['Position1', 'Position2', 'Position3']] = \
-                                [st.session_state['position1'], st.session_state['position2'], st.session_state['position3']]
-
-                            # อัปเดตข้อมูลกลับไปยัง Google Sheets (ทำครั้งเดียว)
-                            confirm_student_sheet.update([df_confirm_students.columns.values.tolist()] + df_confirm_students.values.tolist())
-
-                            # อัปเดตข้อมูลในฐานข้อมูล internal_position_db และ external_position_db
-                            internal_position_row = internal_position_sheet.find(st.session_state['position1']).row
-                            external_position_row = external_position_sheet.find(st.session_state['position1']).row
-
-                            internal_position_sheet.update_cell(internal_position_row, internal_position_sheet.find('Status').col, "ไม่ว่าง")
-                            external_position_sheet.update_cell(external_position_row, external_position_sheet.find('Status').col, "ไม่ว่าง")
-
-                            # ส่ง Line Notify
-                            line_token = "jeFjvSfzdSE6GrSdGNnVbvQRDNeirxnLxRP0Wr5kCni"
-                            message = f"รหัสนักเรียน {student_info['StudentID']}, {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {get_position_name(st.session_state['position1'])}"
-                            send_line_notify(message, line_token)
-
-                            st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
-
-                            # อัพเดทข้อมูลในตารางเดิมที่แสดงผล
-                            table_placeholder.write(f"""
-                            <table>
-                                <tr><th>รหัสนักเรียน</th><td>{student_info['StudentID']}</td></tr>
-                                <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
-                                <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
-                                <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
-                                <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
-                                <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-                                <tr><th>ตำแหน่งที่เลือก 1</th><td>{get_position_name(st.session_state['position1'])}</td></tr>
-                                <tr><th>ตำแหน่งที่เลือก 2</th><td>{get_position_name(st.session_state['position2'])}</td></tr>
-                                <tr><th>ตำแหน่งที่เลือก 3</th><td>{get_position_name(st.session_state['position3'])}</td></tr>
-                            </table>
-                            """, unsafe_allow_html=True)
-                        except Exception as e:
-                            st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
