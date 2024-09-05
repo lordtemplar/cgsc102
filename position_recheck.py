@@ -11,15 +11,15 @@ scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/au
 creds = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-87525a85b092.json', scope)
 client = gspread.authorize(creds)
 
-# เปิดไฟล์ Google Sheets ใหม่
-student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw').sheet1
-position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1  # ลิงค์ใหม่ที่ให้มา
+# เปิดไฟล์ Google Sheets
+student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1iOcrhg1qmJ-mT9c3hkpsa1ajyr8riWrZrhL-eO_SCSg').sheet1
+position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1
 
 # ลิงก์สำหรับการอัปเดตข้อมูล
-update_link_1 = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw'
-update_link_2 = 'https://docs.google.com/spreadsheets/d/1iOcrhg1qmJ-mT9c3hkpsa1ajyr8riWrZrhL-eO_SCSg'
+update_link_1 = 'https://docs.google.com/spreadsheets/d/1iOcrhg1qmJ-mT9c3hkpsa1ajyr8riWrZrhL-eO_SCSg'
+update_link_2 = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw'
 
-# โหลดข้อมูลจาก PositionDB ใหม่
+# โหลดข้อมูลจาก PositionDB
 df_positions = pd.DataFrame(position_sheet.get_all_records())
 df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)
 
@@ -95,30 +95,6 @@ if rank_query:
             <tr><th>ตำแหน่งลำดับ 3</th><td>{position3_name}</td></tr>
         </table>
         """, unsafe_allow_html=True)
-
-        # กล่องค้นหาเพื่อค้นหาตำแหน่ง
-        search_term = st.text_input("ค้นหาตำแหน่ง:")
-
-        if search_term:
-            filtered_positions = df_positions[df_positions.apply(lambda row: row.astype(str).str.contains(search_term, case=False, na=False).any(), axis=1)]
-
-            if not filtered_positions.empty:
-                st.write(f"### ผลการค้นหาสำหรับ \"{search_term}\"")
-                for index, row in filtered_positions.iterrows():
-                    st.write(f"""
-                    <table>
-                        <tr><th>รหัสตำแหน่ง</th><td>{row['PositionID']}</td></tr>
-                        <tr><th>ชื่อตำแหน่ง</th><td>{row['PositionName']}</td></tr>
-                        <tr><th>สังกัด</th><td>{row['Unit']}</td></tr>
-                        <tr><th>ชกท.</th><td>{row['Specialist']}</td></tr>
-                        <tr><th>อัตรา</th><td>{row['Rank']}</td></tr>
-                        <tr><th>เหล่า</th><td>{row['Branch']}</td></tr>
-                        <tr><th>หมายเหตุ</th><td>{row['Other']}</td></tr>
-                        <tr><th>สถานะ</th><td>{row['Status']}</td></tr>
-                    </table>
-                    """, unsafe_allow_html=True)
-            else:
-                st.write("ไม่พบตำแหน่งที่ตรงกับการค้นหา")
 
         # ส่วนกรอกข้อมูลตำแหน่งลำดับ 1, 2, 3
         st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
