@@ -28,7 +28,7 @@ try:
         firebase_admin.initialize_app(cred, {
             'databaseURL': 'https://positionchoosing-default-rtdb.asia-southeast1.firebasedatabase.app/'
         })
-    
+
 except ValueError as e:
     st.error(f"Firebase initialization error: {e}")
     st.stop()
@@ -37,21 +37,18 @@ except Exception as e:
     st.stop()
 
 # ฟังก์ชันการอ่านข้อมูลจาก Firebase
-def get_data():
-    ref = db.reference('/positions')  # เส้นทางไปยังตำแหน่งข้อมูล
+def get_data(path='/'):
+    ref = db.reference(path)  # เส้นทางไปยังตำแหน่งข้อมูล
     data = ref.get()
     return data
 
-# ดึงข้อมูลจาก Firebase
+# ดึงข้อมูลระดับต้นๆ จาก Firebase
 data = get_data()
 
 # ตรวจสอบว่ามีข้อมูลหรือไม่
 if data:
-    # แปลงข้อมูลเป็น DataFrame
-    df = pd.DataFrame(data.values(), columns=["PositionID", "PositionName", "Unit", "Specialist", "Branch", "Rank", "Other", "Status"])
-    
-    # แสดงผลข้อมูลในรูปแบบตาราง
-    st.write("Data from Firebase:")
-    st.dataframe(df)
+    # แสดงผลข้อมูลในรูปแบบ JSON เพื่อดูโครงสร้าง
+    st.write("Firebase Data Structure:")
+    st.json(data)
 else:
     st.write("No data found in Firebase.")
