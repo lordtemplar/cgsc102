@@ -2,6 +2,7 @@ import streamlit as st
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
+import pandas as pd
 
 # โหลด Credential จาก Secrets
 firebase_config = {
@@ -18,27 +19,28 @@ firebase_config = {
     "universe_domain": st.secrets["firebase"]["universe_domain"]
 }
 
+# เริ่มการใช้งาน Firebase
 cred = credentials.Certificate(firebase_config)
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://positionchoosing-default-rtdb.asia-southeast1.firebasedatabase.app/'
 })
 
-# ฟังก์ชันการอ่านข้อมูลจาก Firebase
+# ฟังก์ชันเพื่ออ่านข้อมูลจาก Firebase Realtime Database
 def get_data():
     ref = db.reference('/')
     data = ref.get()
     return data
 
-# ฟังก์ชันการเขียนข้อมูลไปยัง Firebase
-def write_data(path, data):
-    ref = db.reference(path)
-    ref.set(data)
-
-# การเรียกใช้งานใน Streamlit
-st.write('Reading data from Firebase:')
+# อ่านข้อมูลจาก Firebase
 data = get_data()
-st.write(data)
 
-st.write('Writing data to Firebase:')
-write_data('/example_path', {'name': 'John Doe', 'age': 30})
-st.write('Data written!')
+# ตรวจสอบว่ามีข้อมูลหรือไม่
+if data:
+    # แปลงข้อมูลให้เป็น DataFrame
+    df = pd.DataFrame.from_dict(data, orient='index')
+
+    # แสดงข้อมูลในรูปแบบตารางใน Streamlit
+    st.write("ข้อมูลจาก Firebase Realtime Database:")
+    st.dataframe(df)
+else:
+    st.write("ไม่พบข้อมูลใน Firebase Realtime Database.")
