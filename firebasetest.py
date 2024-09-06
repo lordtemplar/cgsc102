@@ -3,26 +3,38 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 
-# เริ่มต้นการใช้งาน Firebase Admin SDK ด้วย Credential JSON
-cred_path = r'C:\Users\JUTSUMARU\Desktop\FirebaseJSON\positionchoosing-firebase-adminsdk-vr2az-bff93d8f1d.json'
-cred = credentials.Certificate(cred_path)
+# โหลด Credential จาก Secrets
+firebase_config = {
+    "type": st.secrets["firebase"]["type"],
+    "project_id": st.secrets["firebase"]["project_id"],
+    "private_key_id": st.secrets["firebase"]["private_key_id"],
+    "private_key": st.secrets["firebase"]["private_key"].replace('\\n', '\n'),
+    "client_email": st.secrets["firebase"]["client_email"],
+    "client_id": st.secrets["firebase"]["client_id"],
+    "auth_uri": st.secrets["firebase"]["auth_uri"],
+    "token_uri": st.secrets["firebase"]["token_uri"],
+    "auth_provider_x509_cert_url": st.secrets["firebase"]["auth_provider_x509_cert_url"],
+    "client_x509_cert_url": st.secrets["firebase"]["client_x509_cert_url"],
+    "universe_domain": st.secrets["firebase"]["universe_domain"]
+}
 
+cred = credentials.Certificate(firebase_config)
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://positionchoosing-default-rtdb.asia-southeast1.firebasedatabase.app/'
 })
 
-# ฟังก์ชันตัวอย่างเพื่ออ่านข้อมูลจาก Firebase Realtime Database
+# ฟังก์ชันการอ่านข้อมูลจาก Firebase
 def get_data():
     ref = db.reference('/')
     data = ref.get()
     return data
 
-# ฟังก์ชันตัวอย่างเพื่อเขียนข้อมูลไปยัง Firebase Realtime Database
+# ฟังก์ชันการเขียนข้อมูลไปยัง Firebase
 def write_data(path, data):
     ref = db.reference(path)
     ref.set(data)
 
-# ตัวอย่างการเรียกใช้งานใน Streamlit
+# การเรียกใช้งานใน Streamlit
 st.write('Reading data from Firebase:')
 data = get_data()
 st.write(data)
