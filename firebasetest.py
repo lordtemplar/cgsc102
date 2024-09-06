@@ -42,13 +42,20 @@ def get_data(path='/'):
     data = ref.get()
     return data
 
-# ดึงข้อมูลระดับต้นๆ จาก Firebase
-data = get_data()
+# ดึงข้อมูลจาก Firebase
+data = get_data('/')
 
 # ตรวจสอบว่ามีข้อมูลหรือไม่
 if data:
-    # แสดงผลข้อมูลในรูปแบบ JSON เพื่อดูโครงสร้าง
-    st.write("Firebase Data Structure:")
-    st.json(data)
+    # สร้าง DataFrame จากข้อมูล
+    # แปลงข้อมูลเป็น DataFrame โดยการแปลง dict เป็น list of dicts
+    df = pd.DataFrame(data.values())
+
+    # เรียงลำดับคอลัมน์ตามที่ต้องการ
+    df = df[["PositionID", "PositionName", "Unit", "Specialist", "Branch", "Rank", "Other", "Status"]]
+
+    # แสดงผลข้อมูลในรูปแบบตาราง
+    st.write("Data from Firebase:")
+    st.dataframe(df)
 else:
     st.write("No data found in Firebase.")
