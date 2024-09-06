@@ -50,8 +50,8 @@ if data:
     # สร้าง DataFrame จากข้อมูล
     df = pd.DataFrame(data.values())
 
-    # แปลงค่าในคอลัมน์ PositionID เป็นเลข 3 ตำแหน่ง
-    df['PositionID'] = df['PositionID'].apply(lambda x: f"{int(x):03d}")
+    # กรองค่า NaN และค่าไม่ใช่ตัวเลขในคอลัมน์ PositionID
+    df['PositionID'] = pd.to_numeric(df['PositionID'], errors='coerce').fillna(0).astype(int).apply(lambda x: f"{x:03d}")
 
     # เรียงลำดับคอลัมน์ตามที่ต้องการ
     df = df[["PositionID", "PositionName", "Unit", "Specialist", "Branch", "Rank", "Other", "Status"]]
