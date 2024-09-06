@@ -47,8 +47,13 @@ data = get_data('/')
 
 # ตรวจสอบว่ามีข้อมูลหรือไม่
 if data:
-    # สร้าง DataFrame จากข้อมูล
-    df = pd.DataFrame(data.values())
+    # ตรวจสอบว่าข้อมูลเป็น dictionary หรือไม่
+    if isinstance(data, dict):
+        # สร้าง DataFrame จากข้อมูล
+        df = pd.DataFrame.from_dict(data, orient='index')
+    else:
+        st.write("Data from Firebase is not in the expected dictionary format.")
+        st.stop()
 
     # กรองค่า NaN และค่าไม่ใช่ตัวเลขในคอลัมน์ PositionID
     df['PositionID'] = pd.to_numeric(df['PositionID'], errors='coerce').fillna(0).astype(int).apply(lambda x: f"{x:03d}")
