@@ -50,18 +50,22 @@ if data:
     # สร้าง DataFrame จากข้อมูล
     df = pd.DataFrame(data.values())
 
+    # แปลงค่าในคอลัมน์ PositionID เป็นเลข 3 ตำแหน่ง
+    df['PositionID'] = df['PositionID'].apply(lambda x: f"{int(x):03d}")
+
     # เรียงลำดับคอลัมน์ตามที่ต้องการ
     df = df[["PositionID", "PositionName", "Unit", "Specialist", "Branch", "Rank", "Other", "Status"]]
 
-    # ฟังก์ชันการเปลี่ยนสีพื้นหลังของเซลล์ตามเงื่อนไข
-    def highlight_status(status):
-        return ['background-color: darkred' if s == 'ไม่ว่าง' else '' for s in status]
+    # ฟังก์ชันการเปลี่ยนสีพื้นหลังทั้งแถวตามเงื่อนไข
+    def highlight_status(row):
+        color = 'green' if row['Status'] == 'ว่าง' else 'darkred'
+        return ['background-color: {}'.format(color)] * len(row)
 
-    # ใช้ Styler เพื่อเปลี่ยนสีพื้นหลัง
-    styled_df = df.style.apply(highlight_status, subset=['Status'])
+    # ใช้ Styler เพื่อเปลี่ยนสีพื้นหลังทั้งแถว
+    styled_df = df.style.apply(highlight_status, axis=1)
 
-    # แสดงผลข้อมูลในรูปแบบตารางที่สามารถขยายขนาดได้
+    # แสดงผลข้อมูลในรูปแบบตารางที่สามารถขยายขนาดได้และซ่อน column แรกที่เป็น index
     st.write("Data from Firebase:")
-    st.dataframe(styled_df, use_container_width=True)
+    st.dataframe(styled_df, use_container_width=True, hide_index=True)
 else:
     st.write("No data found in Firebase.")
