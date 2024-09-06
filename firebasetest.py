@@ -47,12 +47,19 @@ data = get_data('/')
 
 # ตรวจสอบว่ามีข้อมูลหรือไม่
 if data:
-    # ตรวจสอบว่าข้อมูลเป็น dictionary หรือไม่
+    # แสดงข้อมูลที่ได้รับในรูปแบบ JSON
+    st.write("Data structure received from Firebase:")
+    st.json(data)  # แสดงข้อมูลในรูปแบบ JSON เพื่อดูโครงสร้าง
+    
+    # ตรวจสอบชนิดข้อมูลที่ได้รับ
     if isinstance(data, dict):
         # สร้าง DataFrame จากข้อมูล
         df = pd.DataFrame.from_dict(data, orient='index')
+    elif isinstance(data, list):
+        # สร้าง DataFrame จากข้อมูลที่เป็น list
+        df = pd.DataFrame(data)
     else:
-        st.write("Data from Firebase is not in the expected dictionary format.")
+        st.write("Data from Firebase is not in a format that can be converted to a DataFrame.")
         st.stop()
 
     # กรองค่า NaN และค่าไม่ใช่ตัวเลขในคอลัมน์ PositionID
