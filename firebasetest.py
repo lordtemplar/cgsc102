@@ -38,7 +38,7 @@ except Exception as e:
 
 # ฟังก์ชันการอ่านข้อมูลจาก Firebase
 def get_data():
-    ref = db.reference('/')  # ใช้เส้นทางที่เหมาะสม
+    ref = db.reference('/positions')  # เส้นทางไปยังตำแหน่งข้อมูล
     data = ref.get()
     return data
 
@@ -48,7 +48,7 @@ data = get_data()
 # ตรวจสอบว่ามีข้อมูลหรือไม่
 if data:
     # แปลงข้อมูลเป็น DataFrame
-    df = pd.DataFrame([data]) if isinstance(data, dict) else pd.DataFrame(data)
+    df = pd.DataFrame(data.values(), columns=["PositionID", "PositionName", "Unit", "Specialist", "Branch", "Rank", "Other", "Status"])
     
     # แสดงผลข้อมูลในรูปแบบตาราง
     st.write("Data from Firebase:")
