@@ -19,28 +19,27 @@ firebase_config = {
     "universe_domain": st.secrets["firebase"]["universe_domain"]
 }
 
-# เริ่มการใช้งาน Firebase
 cred = credentials.Certificate(firebase_config)
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://positionchoosing-default-rtdb.asia-southeast1.firebasedatabase.app/'
 })
 
-# ฟังก์ชันเพื่ออ่านข้อมูลจาก Firebase Realtime Database
+# ฟังก์ชันการอ่านข้อมูลจาก Firebase
 def get_data():
-    ref = db.reference('/')
+    ref = db.reference('/')  # ใช้เส้นทางที่เหมาะสม
     data = ref.get()
     return data
 
-# อ่านข้อมูลจาก Firebase
+# ดึงข้อมูลจาก Firebase
 data = get_data()
 
 # ตรวจสอบว่ามีข้อมูลหรือไม่
 if data:
-    # แปลงข้อมูลให้เป็น DataFrame
-    df = pd.DataFrame.from_dict(data, orient='index')
-
-    # แสดงข้อมูลในรูปแบบตารางใน Streamlit
-    st.write("ข้อมูลจาก Firebase Realtime Database:")
+    # แปลงข้อมูลเป็น DataFrame
+    df = pd.DataFrame([data]) if isinstance(data, dict) else pd.DataFrame(data)
+    
+    # แสดงผลข้อมูลในรูปแบบตาราง
+    st.write("Data from Firebase:")
     st.dataframe(df)
 else:
-    st.write("ไม่พบข้อมูลใน Firebase Realtime Database.")
+    st.write("No data found in Firebase.")
