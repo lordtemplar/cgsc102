@@ -1,13 +1,30 @@
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-import pandas as pd
 import streamlit as st
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import db
+import pandas as pd
 import time
 
-# ตั้งค่าข้อมูลรับรองของ Google Sheets API
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-87525a85b092.json', scope)
-client = gspread.authorize(creds)
+# โหลด Credential จาก Secrets
+firebase_config = {
+    "type": st.secrets["firebase"]["type"],
+    "project_id": st.secrets["firebase"]["project_id"],
+    "private_key_id": st.secrets["firebase"]["private_key_id"],
+    "private_key": st.secrets["firebase"]["private_key"].replace('\\n', '\n'),
+    "client_email": st.secrets["firebase"]["client_email"],
+    "client_id": st.secrets["firebase"]["client_id"],
+    "auth_uri": st.secrets["firebase"]["auth_uri"],
+    "token_uri": st.secrets["firebase"]["token_uri"],
+    "auth_provider_x509_cert_url": st.secrets["firebase"]["auth_provider_x509_cert_url"],
+    "client_x509_cert_url": st.secrets["firebase"]["client_x509_cert_url"],
+    "universe_domain": st.secrets["firebase"]["universe_domain"]
+}
+
+# ตั้งค่า Firebase Admin SDK ด้วย Credential ที่โหลดจาก Secrets
+cred = credentials.Certificate(firebase_config)
+firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://positionchoosing-default-rtdb.asia-southeast1.firebasedatabase.app/'
+})
 
 # เปลี่ยน Title บน browser tab
 st.set_page_config(page_title="LIVE Position")
@@ -23,11 +40,14 @@ st.title("Live Positions")
 placeholder = st.empty()
 
 def load_data_and_render_table():
-    # เปิดไฟล์ Google Sheets และดึงข้อมูลจาก external_position_db
-    position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1A7yP-Nufd_gy8oWW9ZbJ7zk0lyZ3zC13H4ki_1st4Lo/edit?usp=drive_link').sheet1
-    df_positions = pd.DataFrame(position_sheet.get_all_records())
+    # อ่านข้อมูลจาก Firebase Realtime Database
+    ref = db.reference('/positions')  # สมมุติว่าโหนดที่เก็บข้อมูลตำแหน่งใน Firebase คือ '/positions'
+    data = ref.get()
 
-    # ปรับ ID เป็นเลข 3 ตำแหน่ง
+    # แปลงข้อมูลเป็น DataFrame
+    df_positions = pd.DataFrame(data)
+
+    # ปรับค่า ID เป็นเลข 3 ตำแหน่ง
     df_positions['PositionID'] = df_positions['PositionID'].apply(lambda x: f"{int(x):03d}")
 
     def get_bg_color(status):
@@ -51,7 +71,7 @@ def load_data_and_render_table():
 
     # กรองข้อมูลตามคำค้นหา
     if st.session_state.search_term:
-        filtered_positions = df_positions[df_positions.apply(lambda row: st.session_state.search_term.lower() in row['PositionID'].lower() or st.session_state.search_term.lower() in row['PositionName'].lower() or st.session_state.search_term.lower() in row['Unit'].lower() or st.session_state.search_term.lower() in row['Specialist'].lower() or st.session_state.search_term.lower() in row['Rank'].lower() or st.session_state.search_term.lower() in row['Branch'].lower() or st.session_state.search_term.lower() in row['Other'].lower(), axis=1)]
+        filtered_positions = df_positions[df_positions.apply(lambda row: st.session_state.search_term.lower() in str(row['PositionID']).lower() or st.session_state.search_term.lower() in row['PositionName'].lower() or st.session_state.search_term.lower() in row['Unit'].lower() or st.session_state.search_term.lower() in row['Specialist'].lower() or st.session_state.search_term.lower() in row['Rank'].lower() or st.session_state.search_term.lower() in row['Branch'].lower() or st.session_state.search_term.lower() in row['Other'].lower(), axis=1)]
     else:
         filtered_positions = df_positions
 
