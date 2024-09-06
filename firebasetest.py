@@ -2,7 +2,6 @@ import streamlit as st
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
-import pandas as pd
 
 # โหลด Credential จาก Secrets
 firebase_config = {
@@ -26,20 +25,20 @@ firebase_admin.initialize_app(cred, {
 
 # ฟังก์ชันการอ่านข้อมูลจาก Firebase
 def get_data():
-    ref = db.reference('/')  # ใช้เส้นทางที่เหมาะสม
+    ref = db.reference('/')
     data = ref.get()
     return data
 
-# ดึงข้อมูลจาก Firebase
-data = get_data()
+# ฟังก์ชันการเขียนข้อมูลไปยัง Firebase
+def write_data(path, data):
+    ref = db.reference(path)
+    ref.set(data)
 
-# ตรวจสอบว่ามีข้อมูลหรือไม่
-if data:
-    # แปลงข้อมูลเป็น DataFrame
-    df = pd.DataFrame([data]) if isinstance(data, dict) else pd.DataFrame(data)
-    
-    # แสดงผลข้อมูลในรูปแบบตาราง
-    st.write("Data from Firebase:")
-    st.dataframe(df)
-else:
-    st.write("No data found in Firebase.")
+# การเรียกใช้งานใน Streamlit
+st.write('Reading data from Firebase:')
+data = get_data()
+st.write(data)
+
+st.write('Writing data to Firebase:')
+write_data('/example_path', {'name': 'John Doe', 'age': 30})
+st.write('Data written!')
