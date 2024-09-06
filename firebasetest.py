@@ -48,14 +48,20 @@ data = get_data('/')
 # ตรวจสอบว่ามีข้อมูลหรือไม่
 if data:
     # สร้าง DataFrame จากข้อมูล
-    # แปลงข้อมูลเป็น DataFrame โดยการแปลง dict เป็น list of dicts
     df = pd.DataFrame(data.values())
 
     # เรียงลำดับคอลัมน์ตามที่ต้องการ
     df = df[["PositionID", "PositionName", "Unit", "Specialist", "Branch", "Rank", "Other", "Status"]]
 
-    # แสดงผลข้อมูลในรูปแบบตาราง
+    # ฟังก์ชันการเปลี่ยนสีพื้นหลังของเซลล์ตามเงื่อนไข
+    def highlight_status(status):
+        return ['background-color: darkred' if s == 'ไม่ว่าง' else '' for s in status]
+
+    # ใช้ Styler เพื่อเปลี่ยนสีพื้นหลัง
+    styled_df = df.style.apply(highlight_status, subset=['Status'])
+
+    # แสดงผลข้อมูลในรูปแบบตารางที่สามารถขยายขนาดได้
     st.write("Data from Firebase:")
-    st.dataframe(df)
+    st.dataframe(styled_df, use_container_width=True)
 else:
     st.write("No data found in Firebase.")
