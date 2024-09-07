@@ -119,6 +119,9 @@ if rank_query:
 
     if st.session_state['student_data'] is not None:
         student_info = st.session_state['student_data']
+        # Ensure StudentID is treated as a string without unwanted characters
+        student_id = str(student_info['StudentID']).strip()
+
         st.session_state.update({
             'rank_name': student_info['RankName'],
             'branch': student_info['Branch'],
@@ -138,7 +141,7 @@ if rank_query:
         table_placeholder = st.empty()
         table_placeholder.write(f"""
         <table>
-            <tr><th>รหัสนักเรียน</th><td>{student_info['StudentID']}</td></tr>
+            <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
             <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
             <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
             <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
@@ -172,19 +175,19 @@ if rank_query:
             if st.button("Submit"):
                 try:
                     # Update data in internal-student-db for the student
-                    ref = db.reference(f"/{student_info['StudentID']}", app=None)
+                    ref = db.reference(f"/{student_id}", app=None)
                     ref.update({
                         'Position1': st.session_state['position1'],
                         'Position2': st.session_state['position2'],
                         'Position3': st.session_state['position3']
                     })
 
-                    st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
+                    st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
 
                     # Update displayed table
                     table_placeholder.write(f"""
                     <table>
-                        <tr><th>รหัสนักเรียน</th><td>{student_info['StudentID']}</td></tr>
+                        <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
                         <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
                         <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
                         <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
