@@ -16,27 +16,29 @@ def fetch_data():
 
     # Fetch data from the first database: confirm-student-db
     try:
-        student_data_ref = db.reference('confirm-student-db', app=app1)
+        # Updated reference to 'Rank'
+        student_data_ref = db.reference('Rank', app=app1)
         student_data = student_data_ref.get()
 
         if student_data:
             # Convert student data to DataFrame
             student_df = pd.DataFrame.from_dict(student_data, orient='index')
         else:
-            st.warning("ไม่มีข้อมูลนักเรียนในฐานข้อมูลแรก (confirm-student-db).")
+            st.warning("ไม่มีข้อมูลนักเรียนในฐานข้อมูลแรก (Rank).")
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการดึงข้อมูลจากฐานข้อมูลแรก: {e}")
 
     # Fetch data from the second database: internal-position-db
     try:
-        position_data_ref = db.reference('internal-position-db', app=app2)
+        # Updated reference to 'PositionID'
+        position_data_ref = db.reference('PositionID', app=app2)
         position_data = position_data_ref.get()
 
         if position_data:
             # Convert position data to DataFrame
             position_df = pd.DataFrame.from_dict(position_data, orient='index')
         else:
-            st.warning("ไม่มีข้อมูลตำแหน่งในฐานข้อมูลที่สอง (internal-position-db).")
+            st.warning("ไม่มีข้อมูลตำแหน่งในฐานข้อมูลที่สอง (PositionID).")
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการดึงข้อมูลจากฐานข้อมูลที่สอง: {e}")
 
@@ -45,11 +47,11 @@ def fetch_data():
 # Function to display data from DataFrames
 def display_data(student_df, position_df):
     if not student_df.empty:
-        st.header("รายงานข้อมูลนักเรียน (Confirm Student DB)")
+        st.header("รายงานข้อมูลนักเรียน (Rank)")
         st.dataframe(student_df)  # Display student data DataFrame
 
     if not position_df.empty:
-        st.header("รายงานข้อมูลตำแหน่ง (Internal Position DB)")
+        st.header("รายงานข้อมูลตำแหน่ง (PositionID)")
         st.dataframe(position_df)  # Display position data DataFrame
 
 # Streamlit app layout
