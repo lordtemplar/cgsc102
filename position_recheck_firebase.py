@@ -44,6 +44,7 @@ def initialize_firebase():
             firebase_admin.initialize_app(cred1, {
                 'databaseURL': 'https://internal-student-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
             })
+            st.write("Firebase app 1 initialized successfully.")
         except ValueError as e:
             st.error(f"Error initializing the first Firebase app: {e}")
 
@@ -55,6 +56,7 @@ def initialize_firebase():
             firebase_admin.initialize_app(cred2, {
                 'databaseURL': 'https://internal-position-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
             }, name='second_app')
+            st.write("Firebase app 2 initialized successfully.")
         except ValueError as e:
             st.error(f"Error initializing the second Firebase app: {e}")
 
@@ -197,8 +199,11 @@ if rank_query:
 
             # Submit button to update data in Firebase
             if st.button("Submit"):
-                update_firebase_data(f"/{rank_query}", {
+                update_path = f"/{student_id}"
+                update_data = {
                     'Position1': st.session_state['position1'],
                     'Position2': st.session_state['position2'],
                     'Position3': st.session_state['position3']
-                })
+                }
+                st.write(f"Updating data at path: {update_path} with data: {update_data}")
+                update_firebase_data(update_path, update_data)
