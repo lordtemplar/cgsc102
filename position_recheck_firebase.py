@@ -36,53 +36,19 @@ firebase_config_2 = {
 
 # Initialize Firebase Admin SDK for the first database
 if not firebase_admin._apps:
-    cred1 = credentials.Certificate(firebase_config_1)
-    firebase_admin.initialize_app(cred1, {
-        'databaseURL': 'https://internal-student-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
-    })
+    try:
+        cred1 = credentials.Certificate(firebase_config_1)
+        firebase_admin.initialize_app(cred1, {
+            'databaseURL': 'https://internal-student-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
+        })
+    except ValueError as e:
+        st.error(f"Error initializing the first Firebase app: {e}")
 
 # Initialize Firebase Admin SDK for the second database as a named app
-cred2 = credentials.Certificate(firebase_config_2)
-app2 = firebase_admin.initialize_app(cred2, {
-    'databaseURL': 'https://internal-position-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
-}, name='second_app')
-
-# Function to fetch data from the first Firebase database
-def fetch_data_from_first_db(path='/'):
-    try:
-        ref = db.reference(path)
-        data = ref.get()
-        if data is None:
-            st.write("No data found at the specified path in the first database.")
-            return pd.DataFrame()  # Return empty DataFrame if no data
-        else:
-            # Convert the data into a DataFrame
-            return pd.DataFrame.from_dict(data, orient='index')
-    except firebase_admin.exceptions.FirebaseError as e:
-        st.error(f"Firebase error during data retrieval from the first database: {e}")
-        return pd.DataFrame()  # Return empty DataFrame in case of error
-
-# Function to fetch data from the second Firebase database
-def fetch_data_from_second_db(path='/'):
-    try:
-        ref = db.reference(path, app=app2)
-        data = ref.get()
-        if data is None:
-            st.write("No data found at the specified path in the second database.")
-            return pd.DataFrame()  # Return empty DataFrame if no data
-        else:
-            # Convert the data into a DataFrame
-            return pd.DataFrame.from_dict(data, orient='index')
-    except firebase_admin.exceptions.FirebaseError as e:
-        st.error(f"Firebase error during data retrieval from the second database: {e}")
-        return pd.DataFrame()  # Return empty DataFrame in case of error
-
-# Fetch data from both databases
-df1 = fetch_data_from_first_db('/')
-df2 = fetch_data_from_second_db('/')
-
-st.write("Data from the first database:")
-st.dataframe(df1)
-
-st.write("Data from the second database:")
-st.dataframe(df2)
+try:
+    cred2 = credentials.Certificate(firebase_config_2)
+    app2 = firebase_admin.initialize_app(cred2, {
+        'databaseURL': 'https://internal-position-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
+    }, name='second_app')
+except ValueError as e:
+    st.error(f"Error initializing the second Firebase app: {e}")
