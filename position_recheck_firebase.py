@@ -2,6 +2,7 @@ import streamlit as st
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
+import pandas as pd
 
 # Set the title of the Streamlit app
 st.set_page_config(page_title="Firebase Data Viewer")
@@ -59,102 +60,66 @@ except ValueError:
         st.error(f"Error initializing the second Firebase app: {e}")
 
 # Initialize session state variables
-if 'student_data' not in st.session_state:
-    st.session_state.student_data = {}
-if 'position_data' not in st.session_state:
-    st.session_state.position_data = {}
+if 'student_df' not in st.session_state:
+    st.session_state.student_df = pd.DataFrame()
+if 'position_df' not in st.session_state:
+    st.session_state.position_df = pd.DataFrame()
 
-# Function to search for student data by rank in the first Firebase database
-def search_student_by_rank(rank):
+# Function to fetch student data and load it into a DataFrame
+def fetch_student_data():
     try:
         ref = db.reference('/', firebase_admin.get_app())
         data = ref.get()
         if data:
-            # Searching through the data for the given rank
-            found = False
-            for key, value in data.items():
-                if 'Rank' in value and str(value['Rank']) == str(rank):
-                    st.write(f"Student data with Rank {rank}:")
-                    st.json(value)
-                    found = True
-
-                    # Store the fetched data in session state
-                    st.session_state.student_data = {
-                        'key': key,
-                        'RankName': value.get('RankName', ''),
-                        'Branch': value.get('Branch', ''),
-                        'OfficerType': value.get('OfficerType', ''),
-                        'Position1': value.get('Position1', ''),
-                        'Position2': value.get('Position2', ''),
-                        'Position3': value.get('Position3', ''),
-                        'Other': value.get('Other', ''),
-                        'StudentID': value.get('StudentID', '')
-                    }
-                    break
-            if not found:
-                st.write(f"No student found with Rank {rank}.")
+            st.session_state.student_df = pd.DataFrame.from_dict(data, orient='index')
+            st.write("Fetched all student data from Firebase.")
         else:
             st.write("No data found in the first Firebase database.")
     except Exception as e:
-        st.error(f"Error searching for student data: {e}")
+        st.error(f"Error fetching student data: {e}")
 
-# Function to search for position data by PositionID in the second Firebase database
-def search_position_by_id(position_id):
+# Function to fetch position data and load it into a DataFrame
+def fetch_position_data():
     try:
         ref = db.reference('/', app=app2)
         data = ref.get()
         if data:
-            # Check if the data is a dictionary or a list
-            if isinstance(data, dict):
-                # Handle the dictionary format
-                found = False
-                for key, value in data.items():
-                    if 'PositionID' in value and str(value['PositionID']) == str(position_id):
-                        st.write(f"Position data with PositionID {position_id}:")
-                        st.json(value)
-                        found = True
-
-                        # Store the fetched data in session state
-                        st.session_state.position_data = {
-                            'key': key,
-                            'PositionName': value.get('PositionName', ''),
-                            'Branch': value.get('Branch', ''),
-                            'Other': value.get('Other', ''),
-                            'Specialist': value.get('Specialist', ''),
-                            'Status': value.get('Status', ''),
-                            'Unit': value.get('Unit', '')
-                        }
-                        break
-                if not found:
-                    st.write(f"No position found with PositionID {position_id}.")
-            elif isinstance(data, list):
-                # Handle the list format
-                found = False
-                for index, item in enumerate(data):
-                    if isinstance(item, dict) and 'PositionID' in item and str(item['PositionID']) == str(position_id):
-                        st.write(f"Position data with PositionID {position_id}:")
-                        st.json(item)
-                        found = True
-
-                        # Store the fetched data in session state
-                        st.session_state.position_data = {
-                            'key': str(index),
-                            'PositionName': item.get('PositionName', ''),
-                            'Branch': item.get('Branch', ''),
-                            'Other': item.get('Other', ''),
-                            'Specialist': item.get('Specialist', ''),
-                            'Status': item.get('Status', ''),
-                            'Unit': item.get('Unit', '')
-                        }
-                        break
-                if not found:
-                    st.write(f"No position found with PositionID {position_id}.")
-            else:
-                st.write("Unexpected data format received from Firebase.")
+            st.session_state.position_df = pd.DataFrame.from_dict(data, orient='index')
+            st.write("Fetched all position data from Firebase.")
         else:
             st.write("No data found in the second Firebase database.")
     except Exception as e:
-        st.error(f"Error searching for position data: {e}")
+        st.error(f"Error fetching position data: {e}")
+
+# Function to search for a student by rank
+def search_student_by_rank(rank):
+    if st.session_state.student_df.empty:
+        fetch_student_data()
+    
+    student_data = st.session_state.student_df[st.session_state.student_df['Rank'].astype(str) == str(rank)]
+    
+    if not student_data.empty:
+        st.session_state.student_data = student_data.iloc[0].to_dict()
+        st.write(f"Student data with Rank {rank}:")
+        st.json(st.session_state.student_data)
+    else:
+        st.write(f"No student found with Rank {rank}.")
+        st.session_state.student_data = {}
+
+# Function to search for a position by PositionID
+def search_position_by_id(position_id):
+    if st.session_state.position_df.empty:
+        fetch_position_data()
+    
+    position_data = st.session_state.position_df[st.session_state.position_df['PositionID'].astype(str) == str(position_id)]
+    
+    if not position_data.empty:
+        st.session_state.position_data = position_data.iloc[0].to_dict()
+        st.write(f"Position data with PositionID {position_id}:")
+        st.json(st.session_state.position_data)
+    else:
+        st.write(f"No position found with PositionID {position_id}.")
+        st.session_state.position_data = {}
 
 # Function to update student data in the first Firebase database
 def update_student_data(student_key, update_data):
@@ -188,7 +153,7 @@ if st.button("Search Student by Rank"):
 # Display editable fields if student data is loaded
 if 'student_data' in st.session_state and st.session_state.student_data:
     st.write("### Edit Student Data")
-    student_key = st.session_state.student_data['key']
+    student_key = st.session_state.student_df.index[st.session_state.student_df['Rank'] == st.session_state.student_data['Rank']].tolist()[0]
     updated_rank_name = st.text_input("RankName", st.session_state.student_data['RankName'])
     updated_branch = st.text_input("Branch", st.session_state.student_data['Branch'])
     updated_officer_type = st.text_input("OfficerType", st.session_state.student_data['OfficerType'])
@@ -222,7 +187,7 @@ if st.button("Search Position by ID"):
 # Display editable fields if position data is loaded
 if 'position_data' in st.session_state and st.session_state.position_data:
     st.write("### Edit Position Data")
-    position_key = st.session_state.position_data['key']
+    position_key = st.session_state.position_df.index[st.session_state.position_df['PositionID'] == st.session_state.position_data['PositionID']].tolist()[0]
     updated_position_name = st.text_input("PositionName", st.session_state.position_data['PositionName'])
     updated_branch = st.text_input("Branch", st.session_state.position_data['Branch'])
     updated_other = st.text_input("Other", st.session_state.position_data['Other'])
