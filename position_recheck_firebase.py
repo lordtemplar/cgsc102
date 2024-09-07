@@ -58,6 +58,12 @@ except ValueError:
     except ValueError as e:
         st.error(f"Error initializing the second Firebase app: {e}")
 
+# Initialize session state variables
+if 'student_data' not in st.session_state:
+    st.session_state.student_data = {}
+if 'position_data' not in st.session_state:
+    st.session_state.position_data = {}
+
 # Function to search for student data by rank in the first Firebase database
 def search_student_by_rank(rank):
     try:
@@ -72,29 +78,18 @@ def search_student_by_rank(rank):
                     st.json(value)
                     found = True
 
-                    # Editing functionality after search
-                    st.write("### Edit Student Data")
-                    updated_rank_name = st.text_input("RankName", value.get('RankName', ''))
-                    updated_branch = st.text_input("Branch", value.get('Branch', ''))
-                    updated_officer_type = st.text_input("OfficerType", value.get('OfficerType', ''))
-                    updated_position1 = st.text_input("Position1", value.get('Position1', ''))
-                    updated_position2 = st.text_input("Position2", value.get('Position2', ''))
-                    updated_position3 = st.text_input("Position3", value.get('Position3', ''))
-                    updated_other = st.text_input("Other", value.get('Other', ''))
-                    updated_student_id = st.text_input("StudentID", value.get('StudentID', ''))
-
-                    if st.button("Update Student Data"):
-                        update_data = {
-                            'RankName': updated_rank_name,
-                            'Branch': updated_branch,
-                            'OfficerType': updated_officer_type,
-                            'Position1': updated_position1,
-                            'Position2': updated_position2,
-                            'Position3': updated_position3,
-                            'Other': updated_other,
-                            'StudentID': updated_student_id
-                        }
-                        update_student_data(key, update_data)  # Use 'key' as the path to update
+                    # Store the fetched data in session state
+                    st.session_state.student_data = {
+                        'key': key,
+                        'RankName': value.get('RankName', ''),
+                        'Branch': value.get('Branch', ''),
+                        'OfficerType': value.get('OfficerType', ''),
+                        'Position1': value.get('Position1', ''),
+                        'Position2': value.get('Position2', ''),
+                        'Position3': value.get('Position3', ''),
+                        'Other': value.get('Other', ''),
+                        'StudentID': value.get('StudentID', '')
+                    }
                     break
             if not found:
                 st.write(f"No student found with Rank {rank}.")
@@ -102,15 +97,6 @@ def search_student_by_rank(rank):
             st.write("No data found in the first Firebase database.")
     except Exception as e:
         st.error(f"Error searching for student data: {e}")
-
-# Function to update student data in the first Firebase database
-def update_student_data(student_key, update_data):
-    try:
-        ref = db.reference(f"/{student_key}", firebase_admin.get_app())
-        ref.update(update_data)
-        st.success(f"Data successfully updated for Student with key {student_key}.")
-    except Exception as e:
-        st.error(f"Error updating student data: {e}")
 
 # Function to search for position data by PositionID in the second Firebase database
 def search_position_by_id(position_id):
@@ -128,25 +114,16 @@ def search_position_by_id(position_id):
                         st.json(value)
                         found = True
 
-                        # Editing functionality after search
-                        st.write("### Edit Position Data")
-                        updated_position_name = st.text_input("PositionName", value.get('PositionName', ''))
-                        updated_branch = st.text_input("Branch", value.get('Branch', ''))
-                        updated_other = st.text_input("Other", value.get('Other', ''))
-                        updated_specialist = st.text_input("Specialist", value.get('Specialist', ''))
-                        updated_status = st.text_input("Status", value.get('Status', ''))
-                        updated_unit = st.text_input("Unit", value.get('Unit', ''))
-
-                        if st.button("Update Position Data"):
-                            update_data = {
-                                'PositionName': updated_position_name,
-                                'Branch': updated_branch,
-                                'Other': updated_other,
-                                'Specialist': updated_specialist,
-                                'Status': updated_status,
-                                'Unit': updated_unit
-                            }
-                            update_position_data(key, update_data)  # Use 'key' as the path to update
+                        # Store the fetched data in session state
+                        st.session_state.position_data = {
+                            'key': key,
+                            'PositionName': value.get('PositionName', ''),
+                            'Branch': value.get('Branch', ''),
+                            'Other': value.get('Other', ''),
+                            'Specialist': value.get('Specialist', ''),
+                            'Status': value.get('Status', ''),
+                            'Unit': value.get('Unit', '')
+                        }
                         break
                 if not found:
                     st.write(f"No position found with PositionID {position_id}.")
@@ -159,25 +136,16 @@ def search_position_by_id(position_id):
                         st.json(item)
                         found = True
 
-                        # Editing functionality after search
-                        st.write("### Edit Position Data")
-                        updated_position_name = st.text_input("PositionName", item.get('PositionName', ''))
-                        updated_branch = st.text_input("Branch", item.get('Branch', ''))
-                        updated_other = st.text_input("Other", item.get('Other', ''))
-                        updated_specialist = st.text_input("Specialist", item.get('Specialist', ''))
-                        updated_status = st.text_input("Status", item.get('Status', ''))
-                        updated_unit = st.text_input("Unit", item.get('Unit', ''))
-
-                        if st.button("Update Position Data"):
-                            update_data = {
-                                'PositionName': updated_position_name,
-                                'Branch': updated_branch,
-                                'Other': updated_other,
-                                'Specialist': updated_specialist,
-                                'Status': updated_status,
-                                'Unit': updated_unit
-                            }
-                            update_position_data(str(index), update_data)  # Use index as the path for list
+                        # Store the fetched data in session state
+                        st.session_state.position_data = {
+                            'key': str(index),
+                            'PositionName': item.get('PositionName', ''),
+                            'Branch': item.get('Branch', ''),
+                            'Other': item.get('Other', ''),
+                            'Specialist': item.get('Specialist', ''),
+                            'Status': item.get('Status', ''),
+                            'Unit': item.get('Unit', '')
+                        }
                         break
                 if not found:
                     st.write(f"No position found with PositionID {position_id}.")
@@ -187,6 +155,15 @@ def search_position_by_id(position_id):
             st.write("No data found in the second Firebase database.")
     except Exception as e:
         st.error(f"Error searching for position data: {e}")
+
+# Function to update student data in the first Firebase database
+def update_student_data(student_key, update_data):
+    try:
+        ref = db.reference(f"/{student_key}", firebase_admin.get_app())
+        ref.update(update_data)
+        st.success(f"Data successfully updated for Student with key {student_key}.")
+    except Exception as e:
+        st.error(f"Error updating student data: {e}")
 
 # Function to update position data in the second Firebase database
 def update_position_data(position_key, update_data):
@@ -208,6 +185,32 @@ if st.button("Search Student by Rank"):
     else:
         st.error("Please enter a Rank to search.")
 
+# Display editable fields if student data is loaded
+if 'student_data' in st.session_state and st.session_state.student_data:
+    st.write("### Edit Student Data")
+    student_key = st.session_state.student_data['key']
+    updated_rank_name = st.text_input("RankName", st.session_state.student_data['RankName'])
+    updated_branch = st.text_input("Branch", st.session_state.student_data['Branch'])
+    updated_officer_type = st.text_input("OfficerType", st.session_state.student_data['OfficerType'])
+    updated_position1 = st.text_input("Position1", st.session_state.student_data['Position1'])
+    updated_position2 = st.text_input("Position2", st.session_state.student_data['Position2'])
+    updated_position3 = st.text_input("Position3", st.session_state.student_data['Position3'])
+    updated_other = st.text_input("Other", st.session_state.student_data['Other'])
+    updated_student_id = st.text_input("StudentID", st.session_state.student_data['StudentID'])
+
+    if st.button("Update Student Data"):
+        update_data = {
+            'RankName': updated_rank_name,
+            'Branch': updated_branch,
+            'OfficerType': updated_officer_type,
+            'Position1': updated_position1,
+            'Position2': updated_position2,
+            'Position3': updated_position3,
+            'Other': updated_other,
+            'StudentID': updated_student_id
+        }
+        update_student_data(student_key, update_data)
+
 # Search position by PositionID
 position_id_query = st.text_input("Enter PositionID to search in the internal-position-db:")
 if st.button("Search Position by ID"):
@@ -215,3 +218,25 @@ if st.button("Search Position by ID"):
         search_position_by_id(position_id_query)
     else:
         st.error("Please enter a PositionID to search.")
+
+# Display editable fields if position data is loaded
+if 'position_data' in st.session_state and st.session_state.position_data:
+    st.write("### Edit Position Data")
+    position_key = st.session_state.position_data['key']
+    updated_position_name = st.text_input("PositionName", st.session_state.position_data['PositionName'])
+    updated_branch = st.text_input("Branch", st.session_state.position_data['Branch'])
+    updated_other = st.text_input("Other", st.session_state.position_data['Other'])
+    updated_specialist = st.text_input("Specialist", st.session_state.position_data['Specialist'])
+    updated_status = st.text_input("Status", st.session_state.position_data['Status'])
+    updated_unit = st.text_input("Unit", st.session_state.position_data['Unit'])
+
+    if st.button("Update Position Data"):
+        update_data = {
+            'PositionName': updated_position_name,
+            'Branch': updated_branch,
+            'Other': updated_other,
+            'Specialist': updated_specialist,
+            'Status': updated_status,
+            'Unit': updated_unit
+        }
+        update_position_data(position_key, update_data)
