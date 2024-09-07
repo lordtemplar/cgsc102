@@ -3,7 +3,7 @@
 import streamlit as st
 import pandas as pd
 from firebase_admin import db
-from reportdb_connection import initialize_firebase  # Updated import to reflect the new file name
+from reportdb_connection import initialize_firebase  # Import connection script
 
 # Initialize Firebase connections
 app1, app2 = initialize_firebase()
@@ -16,15 +16,15 @@ def fetch_data():
 
     # Fetch data from the first database: confirm-student-db
     try:
-        # Updated reference to 'Rank'
-        student_data_ref = db.reference('Rank', app=app1)
+        # Reference the root node containing the entries
+        student_data_ref = db.reference('/', app=app1)
         student_data = student_data_ref.get()
 
         if student_data:
             # Convert student data to DataFrame
             student_df = pd.DataFrame.from_dict(student_data, orient='index')
         else:
-            st.warning("ไม่มีข้อมูลนักเรียนในฐานข้อมูลแรก (Rank).")
+            st.warning("ไม่มีข้อมูลนักเรียนในฐานข้อมูลแรก (confirm-student-db).")
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการดึงข้อมูลจากฐานข้อมูลแรก: {e}")
 
@@ -47,7 +47,7 @@ def fetch_data():
 # Function to display data from DataFrames
 def display_data(student_df, position_df):
     if not student_df.empty:
-        st.header("รายงานข้อมูลนักเรียน (Rank)")
+        st.header("รายงานข้อมูลนักเรียน (Confirm Student DB)")
         st.dataframe(student_df)  # Display student data DataFrame
 
     if not position_df.empty:
