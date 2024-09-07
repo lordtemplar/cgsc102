@@ -1,6 +1,7 @@
 import streamlit as st
 from db_connections import firebase_apps  # Import initialized Firebase apps
 from firebase_admin import db
+import requests
 
 # Set the title of the Streamlit app
 st.set_page_config(page_title="Position Confirm")
@@ -49,6 +50,13 @@ def fetch_position_data(position_ids):
     except Exception as e:
         st.error(f"Error fetching position data: {e}")
         return {}
+
+# Function to send Line Notify message
+def send_line_notify(message, token):
+    url = 'https://notify-api.line.me/api/notify'
+    headers = {'Authorization': f'Bearer {token}'}
+    data = {'message': message}
+    requests.post(url, headers=headers, data=data)
 
 # Layout of the Streamlit app
 st.title("ระบบเลือกที่ลง CGSC102")
@@ -136,10 +144,28 @@ if rank_query:
         # Button to confirm selection
         if st.button("ยืนยัน"):
             try:
-                update_data = {
-                    'ConfirmedPosition': confirmed_position[0]
-                }
+                # Update the confirmed position in the Firebase database
+                selected_position_id = confirmed_position[0]
+                update_data = {'ConfirmedPosition': selected_position_id}
                 update_student_data(st.session_state['student_key'], update_data)
+
+                # Update position status in internal and external position databases
+                internal_position_ref = db.reference(f"/{selected_position_id}", firebase_apps['firebase2'])
+                internal_position_ref.update({'Status': "ไม่ว่าง"})
+
+                external_position_ref = db.reference(f"/{selected_position_id}", firebase_apps['firebase4'])
+                external_position_ref.update({'Status': "ไม่ว่าง"})
+
+                # Update the internal student database
+                student_ref = db.reference(f"/{st.session_state['student_key']}", firebase_apps['firebase1'])
+                student_ref.update({'Position1': selected_position_id})
+
+                # Send Line Notify with the new token
+                next_rank = int(student_info['Rank']) + 1
+                line_token = "snH08HhuKeu11DAgQmyUyYeDcnqgHVlcfRP8Fdqz4db"
+                message = f"ลำดับที่ {student_info['Rank']}, รหัสนักเรียน {student_info['StudentID']}, {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {matching_positions[selected_position_id]} ต่อไปเชิญลำดับที่ {next_rank} เลือกที่ลงต่อครับ"
+                send_line_notify(message, line_token)
+
                 st.success(f"ยืนยันข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
 
                 # Refresh the existing table with new data
