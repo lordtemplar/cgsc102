@@ -3,7 +3,7 @@ from db_connections import firebase_apps  # Import initialized Firebase apps
 from firebase_admin import db
 
 # Set the title of the Streamlit app
-st.set_page_config(page_title="Position Confirm")
+st.set_page_config(page_title="Position Choose")
 
 # Function to fetch student data by rank from the first Firebase database
 def fetch_student_by_rank(rank):
@@ -121,30 +121,41 @@ if rank_query:
         # Display the initial student information
         display_student_info()
 
-        # Input field for confirming the selected position
-        st.write("### ยืนยัน 'รหัสตำแหน่ง' ที่เลือก")
-        confirmed_position_input = st.text_input("ยืนยันตำแหน่งที่เลือก", "")
+        # Input fields for editing positions
+        st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
+        position1_input = st.text_input("ตำแหน่งลำดับ 1", str(st.session_state['position1']))
+        position2_input = st.text_input("ตำแหน่งลำดับ 2", str(st.session_state['position2']))
+        position3_input = st.text_input("ตำแหน่งลำดับ 3", str(st.session_state['position3']))
 
         # Validate and update positions
-        if confirmed_position_input:
-            if not confirmed_position_input.isdigit():
-                st.error("กรุณากรอกรหัสด้วยตัวเลขสำหรับตำแหน่งที่เลือก")
-            else:
-                confirmed_position = int(confirmed_position_input)
-                if confirmed_position not in [st.session_state['position1'], st.session_state['position2'], st.session_state['position3']]:
-                    st.error("ตำแหน่งที่เลือกไม่ถูกต้อง กรุณาเลือกจากตำแหน่งที่ระบุไว้")
-                else:
-                    # Submit button to confirm selection
-                    if st.button("Confirm Selection"):
-                        try:
-                            update_data = {
-                                'ConfirmedPosition': confirmed_position
-                            }
-                            update_student_data(st.session_state['student_key'], update_data)
-                            st.success(f"ยืนยันข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
+        filled_positions = [position1_input, position2_input, position3_input]
+        valid_positions = all(pos.isdigit() for pos in filled_positions)
 
-                            # Refresh the existing table with new data
-                            display_student_info()
+        if not valid_positions:
+            st.error("กรุณากรอกรหัสด้วยตัวเลขอย่างน้อย 1 ตำแหน่งที่เลือก")
+        else:
+            st.session_state.update({
+                'position1': int(position1_input),
+                'position2': int(position2_input),
+                'position3': int(position3_input)
+            })
 
-                        except Exception as e:
-                            st.error(f"ไม่สามารถยืนยันข้อมูลได้: {e}")
+            # Submit button to update data
+            if st.button("Submit"):
+                try:
+                    update_data = {
+                        'Position1': st.session_state['position1'],
+                        'Position2': st.session_state['position2'],
+                        'Position3': st.session_state['position3']
+                    }
+                    update_student_data(st.session_state['student_key'], update_data)
+                    st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
+
+                    # Refresh position data after update
+                    matching_positions = refresh_position_data()
+
+                    # Refresh the existing table with new data
+                    display_student_info()
+
+                except Exception as e:
+                    st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
