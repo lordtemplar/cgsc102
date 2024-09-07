@@ -1,6 +1,7 @@
 import streamlit as st
 from firebase_admin import db
 from firebase_connection import initialize_firebase
+import pandas as pd
 
 # Set the title of the Streamlit app
 st.set_page_config(page_title="Position Choose")
@@ -8,50 +9,37 @@ st.set_page_config(page_title="Position Choose")
 # Initialize Firebase connections
 app1, app2 = initialize_firebase()
 
-# Function to fetch student data by rank from the first Firebase database
-def fetch_student_by_rank(rank):
+# Function to fetch all student data from the first Firebase database
+def fetch_all_students():
     try:
         ref = db.reference('/', app=app1)
         data = ref.get()
         if data:
+            student_data = []
             for key, value in data.items():
-                if 'Rank' in value and str(value['Rank']) == str(rank):
-                    return key, value  # Return both the key and the student data
-        return None, None
+                # Extract required fields and append them to the list
+                student_info = {
+                    "Rank": value.get('Rank'),
+                    "StudentID": value.get('StudentID'),
+                    "RankName": value.get('RankName'),
+                    "Branch": value.get('Branch'),
+                    "OfficerType": value.get('OfficerType'),
+                    "Other": value.get('Other'),
+                    "ConfirmedPosition": value.get('ConfirmedPosition', 'Not Confirmed')
+                }
+                student_data.append(student_info)
+            
+            # Convert to a DataFrame for sorting
+            df = pd.DataFrame(student_data)
+            # Sort the DataFrame by 'Rank'
+            df.sort_values(by='Rank', inplace=True)
+            return df
+        else:
+            st.warning("No student data found in the database.")
+            return pd.DataFrame()  # Return an empty DataFrame if no data
     except Exception as e:
-        st.error(f"Error fetching student data: {e}")
-        return None, None
-
-# Function to update student data in the first Firebase database
-def update_student_data(student_key, update_data):
-    try:
-        ref = db.reference(f"/{student_key}", app=app1)
-        ref.update(update_data)
-    except Exception as e:
-        st.error(f"Error updating student data: {e}")
-
-# Function to fetch position data from the second Firebase database
-def fetch_position_data(position_ids):
-    try:
-        ref = db.reference('/', app=app2)
-        data = ref.get()
-        matching_positions = {}
-
-        # Check if data is a list or dictionary and process accordingly
-        if isinstance(data, dict):
-            for key, value in data.items():
-                if 'PositionID' in value and int(value['PositionID']) in position_ids:
-                    matching_positions[int(value['PositionID'])] = value['PositionName']
-        elif isinstance(data, list):
-            for item in data:
-                if isinstance(item, dict) and 'PositionID' in item and int(item['PositionID']) in position_ids:
-                    matching_positions[int(item['PositionID'])] = item['PositionName']
-
-        return matching_positions
-
-    except Exception as e:
-        st.error(f"Error fetching position data: {e}")
-        return {}
+        st.error(f"Error fetching all student data: {e}")
+        return pd.DataFrame()  # Return an empty DataFrame on error
 
 # Function to generate the report by merging data from both databases
 def generate_report(rank):
@@ -75,7 +63,7 @@ def generate_report(rank):
     report_data = {
         "StudentID": student_data.get('StudentID'),
         "Rank": student_data.get('Rank'),
-        "Name": student_data.get('Name'),
+        "Name": student_data.get('RankName'),
         "Selected Positions": {pos_id: positions.get(pos_id, 'Unknown') for pos_id in selected_positions}
     }
 
@@ -85,6 +73,12 @@ def generate_report(rank):
 
 # Layout of the Streamlit app
 st.title("ระบบเลือกที่ลง CGSC102")
+
+# Display the table with all student information sorted by rank
+st.write("### Student Information")
+students_df = fetch_all_students()
+if not students_df.empty:
+    st.dataframe(students_df)
 
 # Input field for rank
 rank = st.number_input("Enter Rank to generate report:", min_value=1)
