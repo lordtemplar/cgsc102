@@ -84,6 +84,63 @@ def fetch_and_display_data_from_second_db():
     except Exception as e:
         st.error(f"Error fetching data from the second Firebase database: {e}")
 
-# Display data from both Firebase databases
-fetch_and_display_data_from_first_db()
-fetch_and_display_data_from_second_db()
+# Function to search for student data by rank in the first Firebase database
+def search_student_by_rank(rank):
+    try:
+        ref = db.reference('/', firebase_admin.get_app())
+        data = ref.get()
+        if data:
+            # Searching through the data for the given rank
+            found = False
+            for key, value in data.items():
+                if 'Rank' in value and str(value['Rank']) == str(rank):
+                    st.write(f"Student data with Rank {rank}:")
+                    st.json(value)
+                    found = True
+                    break
+            if not found:
+                st.write(f"No student found with Rank {rank}.")
+        else:
+            st.write("No data found in the first Firebase database.")
+    except Exception as e:
+        st.error(f"Error searching for student data: {e}")
+
+# Function to search for position data by PositionID in the second Firebase database
+def search_position_by_id(position_id):
+    try:
+        ref = db.reference('/', app=app2)
+        data = ref.get()
+        if data:
+            # Searching through the data for the given PositionID
+            found = False
+            for key, value in data.items():
+                if 'PositionID' in value and str(value['PositionID']) == str(position_id):
+                    st.write(f"Position data with PositionID {position_id}:")
+                    st.json(value)
+                    found = True
+                    break
+            if not found:
+                st.write(f"No position found with PositionID {position_id}.")
+        else:
+            st.write("No data found in the second Firebase database.")
+    except Exception as e:
+        st.error(f"Error searching for position data: {e}")
+
+# User interface for searching data
+st.title("Search Firebase Data")
+
+# Search student by rank
+rank_query = st.text_input("Enter Rank to search in the first database:")
+if st.button("Search Student by Rank"):
+    if rank_query:
+        search_student_by_rank(rank_query)
+    else:
+        st.error("Please enter a Rank to search.")
+
+# Search position by PositionID
+position_id_query = st.text_input("Enter PositionID to search in the second database:")
+if st.button("Search Position by ID"):
+    if position_id_query:
+        search_position_by_id(position_id_query)
+    else:
+        st.error("Please enter a PositionID to search.")
