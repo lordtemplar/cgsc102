@@ -69,8 +69,10 @@ def merge_and_display_data(student_df, position_df):
         # Merge DataFrames on PositionID
         merged_df = pd.merge(student_df, position_df, on="PositionID", suffixes=('_student', '_position'))
 
+        # Print merged DataFrame to console
+        print(merged_df)
+
         # Display merged DataFrame
-        st.header("รายงานผลการเลือกตำแหน่ง (ข้อมูลรวม)")
         st.dataframe(merged_df, use_container_width=True, hide_index=True)
 
 # Streamlit app layout
