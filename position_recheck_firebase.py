@@ -71,6 +71,30 @@ def search_student_by_rank(rank):
                     st.write(f"Student data with Rank {rank}:")
                     st.json(value)
                     found = True
+
+                    # Editing functionality after search
+                    st.write("### Edit Student Data")
+                    updated_rank_name = st.text_input("RankName", value.get('RankName', ''))
+                    updated_branch = st.text_input("Branch", value.get('Branch', ''))
+                    updated_officer_type = st.text_input("OfficerType", value.get('OfficerType', ''))
+                    updated_position1 = st.text_input("Position1", value.get('Position1', ''))
+                    updated_position2 = st.text_input("Position2", value.get('Position2', ''))
+                    updated_position3 = st.text_input("Position3", value.get('Position3', ''))
+                    updated_other = st.text_input("Other", value.get('Other', ''))
+                    updated_student_id = st.text_input("StudentID", value.get('StudentID', ''))
+
+                    if st.button("Update Student Data"):
+                        update_data = {
+                            'RankName': updated_rank_name,
+                            'Branch': updated_branch,
+                            'OfficerType': updated_officer_type,
+                            'Position1': updated_position1,
+                            'Position2': updated_position2,
+                            'Position3': updated_position3,
+                            'Other': updated_other,
+                            'StudentID': updated_student_id
+                        }
+                        update_student_data(key, update_data)  # Use 'key' as the path to update
                     break
             if not found:
                 st.write(f"No student found with Rank {rank}.")
@@ -78,6 +102,15 @@ def search_student_by_rank(rank):
             st.write("No data found in the first Firebase database.")
     except Exception as e:
         st.error(f"Error searching for student data: {e}")
+
+# Function to update student data in the first Firebase database
+def update_student_data(student_key, update_data):
+    try:
+        ref = db.reference(f"/{student_key}", firebase_admin.get_app())
+        ref.update(update_data)
+        st.success(f"Data successfully updated for Student with key {student_key}.")
+    except Exception as e:
+        st.error(f"Error updating student data: {e}")
 
 # Function to search for position data by PositionID in the second Firebase database
 def search_position_by_id(position_id):
@@ -94,17 +127,57 @@ def search_position_by_id(position_id):
                         st.write(f"Position data with PositionID {position_id}:")
                         st.json(value)
                         found = True
+
+                        # Editing functionality after search
+                        st.write("### Edit Position Data")
+                        updated_position_name = st.text_input("PositionName", value.get('PositionName', ''))
+                        updated_branch = st.text_input("Branch", value.get('Branch', ''))
+                        updated_other = st.text_input("Other", value.get('Other', ''))
+                        updated_specialist = st.text_input("Specialist", value.get('Specialist', ''))
+                        updated_status = st.text_input("Status", value.get('Status', ''))
+                        updated_unit = st.text_input("Unit", value.get('Unit', ''))
+
+                        if st.button("Update Position Data"):
+                            update_data = {
+                                'PositionName': updated_position_name,
+                                'Branch': updated_branch,
+                                'Other': updated_other,
+                                'Specialist': updated_specialist,
+                                'Status': updated_status,
+                                'Unit': updated_unit
+                            }
+                            update_position_data(key, update_data)  # Use 'key' as the path to update
                         break
                 if not found:
                     st.write(f"No position found with PositionID {position_id}.")
             elif isinstance(data, list):
                 # Handle the list format
                 found = False
-                for item in data:
+                for index, item in enumerate(data):
                     if isinstance(item, dict) and 'PositionID' in item and str(item['PositionID']) == str(position_id):
                         st.write(f"Position data with PositionID {position_id}:")
                         st.json(item)
                         found = True
+
+                        # Editing functionality after search
+                        st.write("### Edit Position Data")
+                        updated_position_name = st.text_input("PositionName", item.get('PositionName', ''))
+                        updated_branch = st.text_input("Branch", item.get('Branch', ''))
+                        updated_other = st.text_input("Other", item.get('Other', ''))
+                        updated_specialist = st.text_input("Specialist", item.get('Specialist', ''))
+                        updated_status = st.text_input("Status", item.get('Status', ''))
+                        updated_unit = st.text_input("Unit", item.get('Unit', ''))
+
+                        if st.button("Update Position Data"):
+                            update_data = {
+                                'PositionName': updated_position_name,
+                                'Branch': updated_branch,
+                                'Other': updated_other,
+                                'Specialist': updated_specialist,
+                                'Status': updated_status,
+                                'Unit': updated_unit
+                            }
+                            update_position_data(str(index), update_data)  # Use index as the path for list
                         break
                 if not found:
                     st.write(f"No position found with PositionID {position_id}.")
@@ -115,8 +188,17 @@ def search_position_by_id(position_id):
     except Exception as e:
         st.error(f"Error searching for position data: {e}")
 
+# Function to update position data in the second Firebase database
+def update_position_data(position_key, update_data):
+    try:
+        ref = db.reference(f"/{position_key}", app=app2)
+        ref.update(update_data)
+        st.success(f"Data successfully updated for Position with key {position_key}.")
+    except Exception as e:
+        st.error(f"Error updating position data: {e}")
+
 # User interface for searching data
-st.title("Search Firebase Data")
+st.title("Search and Edit Firebase Data")
 
 # Search student by rank
 rank_query = st.text_input("Enter Rank to search in the internal-student-db:")
