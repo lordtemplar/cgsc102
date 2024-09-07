@@ -92,11 +92,11 @@ def fetch_position_data(position_ids):
         if isinstance(data, dict):
             for key, value in data.items():
                 if 'PositionID' in value and int(value['PositionID']) in position_ids:
-                    matching_positions[int(value['PositionID'])] = value
+                    matching_positions[int(value['PositionID'])] = value['PositionName']
         elif isinstance(data, list):
             for item in data:
                 if isinstance(item, dict) and 'PositionID' in item and int(item['PositionID']) in position_ids:
-                    matching_positions[int(item['PositionID'])] = item
+                    matching_positions[int(item['PositionID'])] = item['PositionName']
 
         st.write("Fetched matching position data from Firebase.")
         return matching_positions
@@ -146,7 +146,11 @@ if rank_query:
             'position3': int(student_info['Position3'])
         })
 
-        # Display student information in a table format
+        # Fetch position data matching the PositionIDs in the student data
+        position_ids = [st.session_state['position1'], st.session_state['position2'], st.session_state['position3']]
+        matching_positions = fetch_position_data(position_ids)
+
+        # Display student information with position names in a table format
         st.write("### ข้อมูลนายทหารนักเรียน")
         st.write(f"""
         <table>
@@ -156,28 +160,11 @@ if rank_query:
             <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
             <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
             <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-            <tr><th>ตำแหน่งลำดับ 1</th><td>{st.session_state['position1']}</td></tr>
-            <tr><th>ตำแหน่งลำดับ 2</th><td>{st.session_state['position2']}</td></tr>
-            <tr><th>ตำแหน่งลำดับ 3</th><td>{st.session_state['position3']}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 1</th><td>{st.session_state['position1']} - {matching_positions.get(st.session_state['position1'], 'N/A')}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 2</th><td>{st.session_state['position2']} - {matching_positions.get(st.session_state['position2'], 'N/A')}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 3</th><td>{st.session_state['position3']} - {matching_positions.get(st.session_state['position3'], 'N/A')}</td></tr>
         </table>
         """, unsafe_allow_html=True)
-
-        # Fetch position data matching the PositionIDs in the student data
-        position_ids = [st.session_state['position1'], st.session_state['position2'], st.session_state['position3']]
-        matching_positions = fetch_position_data(position_ids)
-
-        # Display matching position data
-        if matching_positions:
-            st.write("### ข้อมูลตำแหน่งที่เลือก")
-            for pos_id, pos_data in matching_positions.items():
-                st.write(f"""
-                <table>
-                    <tr><th>รหัสตำแหน่ง</th><td>{pos_id}</td></tr>
-                    <tr><th>ชื่อ</th><td>{pos_data.get('PositionName', 'N/A')}</td></tr>
-                    <tr><th>สังกัด</th><td>{pos_data.get('Unit', 'N/A')}</td></tr>
-                    <tr><th>อื่นๆ</th><td>{pos_data.get('OtherDetails', 'N/A')}</td></tr>
-                </table>
-                """, unsafe_allow_html=True)
 
         # Input fields for editing positions
         st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
@@ -218,9 +205,9 @@ if rank_query:
                         <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
                         <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
                         <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 1</th><td>{st.session_state['position1']}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 2</th><td>{st.session_state['position2']}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 3</th><td>{st.session_state['position3']}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 1</th><td>{st.session_state['position1']} - {matching_positions.get(st.session_state['position1'], 'N/A')}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 2</th><td>{st.session_state['position2']} - {matching_positions.get(st.session_state['position2'], 'N/A')}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 3</th><td>{st.session_state['position3']} - {matching_positions.get(st.session_state['position3'], 'N/A')}</td></tr>
                     </table>
                     """, unsafe_allow_html=True)
                 except Exception as e:
