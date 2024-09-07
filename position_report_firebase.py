@@ -20,8 +20,12 @@ def fetch_data():
         student_data_ref = db.reference('/', app=app1)
         student_data = student_data_ref.get()
 
-        if student_data:
-            # Convert student data to DataFrame
+        # Check if the fetched data is a list or dictionary
+        if isinstance(student_data, list):
+            # Convert list of dictionaries to DataFrame
+            student_df = pd.DataFrame(student_data)
+        elif isinstance(student_data, dict):
+            # Convert dictionary to DataFrame
             student_df = pd.DataFrame.from_dict(student_data, orient='index')
         else:
             st.warning("ไม่มีข้อมูลนักเรียนในฐานข้อมูลแรก (confirm-student-db).")
@@ -30,15 +34,19 @@ def fetch_data():
 
     # Fetch data from the second database: internal-position-db
     try:
-        # Updated reference to 'PositionID'
-        position_data_ref = db.reference('PositionID', app=app2)
+        # Reference the root node containing the entries
+        position_data_ref = db.reference('/', app=app2)
         position_data = position_data_ref.get()
 
-        if position_data:
-            # Convert position data to DataFrame
+        # Check if the fetched data is a list or dictionary
+        if isinstance(position_data, list):
+            # Convert list of dictionaries to DataFrame
+            position_df = pd.DataFrame(position_data)
+        elif isinstance(position_data, dict):
+            # Convert dictionary to DataFrame
             position_df = pd.DataFrame.from_dict(position_data, orient='index')
         else:
-            st.warning("ไม่มีข้อมูลตำแหน่งในฐานข้อมูลที่สอง (PositionID).")
+            st.warning("ไม่มีข้อมูลตำแหน่งในฐานข้อมูลที่สอง (internal-position-db).")
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการดึงข้อมูลจากฐานข้อมูลที่สอง: {e}")
 
@@ -51,7 +59,7 @@ def display_data(student_df, position_df):
         st.dataframe(student_df)  # Display student data DataFrame
 
     if not position_df.empty:
-        st.header("รายงานข้อมูลตำแหน่ง (PositionID)")
+        st.header("รายงานข้อมูลตำแหน่ง (Internal Position DB)")
         st.dataframe(position_df)  # Display position data DataFrame
 
 # Streamlit app layout
