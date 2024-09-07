@@ -147,14 +147,13 @@ if rank_query:
     if st.session_state['student_data'] is not None:
         student_info = st.session_state['student_data']
         student_id = format_student_id(student_info['StudentID'])
-        rank = str(student_info['Rank'])  # Use the Rank as a key for updating
 
         st.session_state.update({
             'rank_name': student_info['RankName'],
             'branch': student_info['Branch'],
             'officer_type': student_info['OfficerType'],
             'other': student_info['Other'],
-            'rank': rank,
+            'rank': str(student_info['Rank']),
             'position1': str(student_info['Position1']).zfill(3),
             'position2': str(student_info['Position2']).zfill(3),
             'position3': str(student_info['Position3']).zfill(3)
@@ -170,7 +169,7 @@ if rank_query:
         <table>
             <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
             <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
-            <tr><th>ลำดับ</th><td>{rank}</td></tr>
+            <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
             <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
             <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
             <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
@@ -200,8 +199,8 @@ if rank_query:
 
             # Submit button to update data in Firebase
             if st.button("Submit"):
-                # Use the Rank as the key to update the correct place
-                update_path = f"/{rank}"
+                # Use the correct student_id to construct the Firebase path
+                update_path = f"/{student_id}"
                 update_data = {
                     'Position1': st.session_state['position1'],
                     'Position2': st.session_state['position2'],
