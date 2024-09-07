@@ -64,13 +64,21 @@ def fetch_position_name(position_id):
         ref = db.reference('/', app=app2)
         data = ref.get()
         if data:
-            for key, value in data.items():
-                if 'PositionID' in value and value['PositionID'] == position_id:
-                    return value['PositionName']
-        return None
+            # Check if the data is a list
+            if isinstance(data, list):
+                # Iterate through the list to find the matching PositionID
+                for value in data:
+                    if isinstance(value, dict) and 'PositionID' in value and value['PositionID'] == position_id:
+                        return value.get('PositionName', position_id)
+            # If the data is a dictionary
+            elif isinstance(data, dict):
+                for key, value in data.items():
+                    if 'PositionID' in value and value['PositionID'] == position_id:
+                        return value.get('PositionName', position_id)
+        return position_id  # Return PositionID if PositionName is not found
     except Exception as e:
         st.error(f"Error fetching position data: {e}")
-        return None
+        return position_id
 
 # Function to fetch student data by rank from the first Firebase database
 def fetch_student_by_rank(rank):
