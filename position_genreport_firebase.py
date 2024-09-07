@@ -16,24 +16,46 @@ def fetch_all_students():
         data = ref.get()
         if data:
             student_data = []
-            for key, value in data.items():
-                # Extract required fields and append them to the list
-                student_info = {
-                    "ลำดับ": int(value.get('Rank', 0)),  # Convert to integer to remove decimal
-                    "รหัสนักเรียน": value.get('StudentID'),
-                    "ยศ ชื่อ สกุล": value.get('RankName'),
-                    "เหล่า": value.get('Branch'),
-                    "กำเนิด": value.get('OfficerType'),
-                    "เงื่อนไข": value.get('Other'),
-                    "ตำแหน่งที่เลือก": value.get('ConfirmedPosition', 'Not Confirmed')
-                }
-                student_data.append(student_info)
+            
+            # Check if the data is a list or a dictionary and process accordingly
+            if isinstance(data, list):
+                # If data is a list, iterate directly over it
+                for value in data:
+                    if isinstance(value, dict):  # Ensure each item is a dictionary
+                        student_info = {
+                            "ลำดับ": int(value.get('Rank', 0)),  # Convert to integer to remove decimal
+                            "รหัสนักเรียน": value.get('StudentID'),
+                            "ยศ ชื่อ สกุล": value.get('RankName'),
+                            "เหล่า": value.get('Branch'),
+                            "กำเนิด": value.get('OfficerType'),
+                            "เงื่อนไข": value.get('Other'),
+                            "ตำแหน่งที่เลือก": value.get('ConfirmedPosition', 'Not Confirmed')
+                        }
+                        student_data.append(student_info)
+            elif isinstance(data, dict):
+                # If data is a dictionary, iterate using items()
+                for key, value in data.items():
+                    if isinstance(value, dict):  # Ensure each item is a dictionary
+                        student_info = {
+                            "ลำดับ": int(value.get('Rank', 0)),  # Convert to integer to remove decimal
+                            "รหัสนักเรียน": value.get('StudentID'),
+                            "ยศ ชื่อ สกุล": value.get('RankName'),
+                            "เหล่า": value.get('Branch'),
+                            "กำเนิด": value.get('OfficerType'),
+                            "เงื่อนไข": value.get('Other'),
+                            "ตำแหน่งที่เลือก": value.get('ConfirmedPosition', 'Not Confirmed')
+                        }
+                        student_data.append(student_info)
             
             # Convert to a DataFrame for sorting
-            df = pd.DataFrame(student_data)
-            # Sort the DataFrame by 'ลำดับ'
-            df.sort_values(by='ลำดับ', inplace=True)
-            return df
+            if student_data:
+                df = pd.DataFrame(student_data)
+                # Sort the DataFrame by 'ลำดับ'
+                df.sort_values(by='ลำดับ', inplace=True)
+                return df
+            else:
+                st.warning("No valid student data found in the database.")
+                return pd.DataFrame()  # Return an empty DataFrame if no valid data
         else:
             st.warning("No student data found in the database.")
             return pd.DataFrame()  # Return an empty DataFrame if no data
