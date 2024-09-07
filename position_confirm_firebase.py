@@ -3,17 +3,9 @@ import streamlit as st
 # Set the page configuration at the very beginning
 st.set_page_config(page_title="Position Confirm")
 
-from db_connections import firebase_apps  # Import initialized Firebase apps with debug info
+from db_connections import firebase_apps  # Import initialized Firebase apps
 from firebase_admin import db
 import requests
-
-# Debugging: Display information about the Firebase connections
-st.write("Firebase Connection Status:")
-for i, app in enumerate(firebase_apps):
-    if app:
-        st.write(f"App {i + 1}: Connected")
-    else:
-        st.write(f"App {i + 1}: Not Connected")
 
 # Function to fetch student data by rank from the first Firebase database
 def fetch_student_by_rank(rank):
