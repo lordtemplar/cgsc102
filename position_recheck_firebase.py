@@ -57,42 +57,61 @@ except ValueError:
     except ValueError as e:
         st.error(f"Error initializing the second Firebase app: {e}")
 
-# Example function to fetch data from the first Firebase database
-def fetch_data_from_first_db(path='/'):
+# Function to load data from Firebase into a DataFrame
+def load_data_from_firebase(path='/', app=None):
     try:
-        ref = db.reference(path)
+        ref = db.reference(path, app=app)
         data = ref.get()
         if data is None:
-            st.write("No data found at the specified path in the first database.")
+            st.write(f"No data found at the specified path: {path}")
             return pd.DataFrame()  # Return empty DataFrame if no data
-        else:
+        elif isinstance(data, dict):
             # Convert the data into a DataFrame
+            st.write(f"Fetched data type: {type(data)}, content: {data}")
             return pd.DataFrame.from_dict(data, orient='index')
+        else:
+            st.write(f"Data fetched is not in dictionary format; attempting to convert directly to DataFrame.")
+            try:
+                return pd.DataFrame(data)  # Attempt to handle non-dict format
+            except Exception as e:
+                st.error(f"Error converting data to DataFrame: {e}")
+                return pd.DataFrame()  # Return empty DataFrame in case of error
     except firebase_admin.exceptions.FirebaseError as e:
-        st.error(f"Firebase error during data retrieval from the first database: {e}")
+        st.error(f"Firebase error during data retrieval: {e}")
         return pd.DataFrame()  # Return empty DataFrame in case of error
+    except Exception as e:
+        st.error(f"Unexpected error during data retrieval: {e}")
+        return pd.DataFrame()  # Return empty DataFrame in case of unexpected error
 
-# Example function to fetch data from the second Firebase database
-def fetch_data_from_second_db(path='/'):
+# Load data from both Firebase databases into DataFrames
+df1 = load_data_from_firebase('/', app=None)  # Load data from the first Firebase database
+df2 = load_data_from_firebase('/', app=app2)  # Load data from the second Firebase database
+
+# Function to fetch data from the loaded DataFrames
+def fetch_data_from_dataframe(df, filter_condition=None):
     try:
-        ref = db.reference(path, app=app2)
-        data = ref.get()
-        if data is None:
-            st.write("No data found at the specified path in the second database.")
-            return pd.DataFrame()  # Return empty DataFrame if no data
+        if df.empty:
+            st.write("The DataFrame is empty. No data to fetch.")
+            return df
+        if filter_condition:
+            # Apply filter condition if provided
+            filtered_df = df.query(filter_condition)
+            st.write("Filtered data based on the condition:")
+            return filtered_df
         else:
-            # Convert the data into a DataFrame
-            return pd.DataFrame.from_dict(data, orient='index')
-    except firebase_admin.exceptions.FirebaseError as e:
-        st.error(f"Firebase error during data retrieval from the second database: {e}")
+            st.write("Fetched data from the DataFrame:")
+            return df
+    except Exception as e:
+        st.error(f"Error fetching data from DataFrame: {e}")
         return pd.DataFrame()  # Return empty DataFrame in case of error
 
-# Fetch data from both databases
-df1 = fetch_data_from_first_db('/')
-df2 = fetch_data_from_second_db('/')
+# Fetch data from the loaded DataFrames
+fetched_data1 = fetch_data_from_dataframe(df1)
+fetched_data2 = fetch_data_from_dataframe(df2)
 
+# Display data in Streamlit
 st.write("Data from the first database:")
-st.dataframe(df1)
+st.dataframe(fetched_data1)
 
 st.write("Data from the second database:")
-st.dataframe(df2)
+st.dataframe(fetched_data2)
