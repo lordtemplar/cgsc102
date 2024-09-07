@@ -120,7 +120,7 @@ if rank_query:
     if st.session_state['student_data'] is not None:
         student_info = st.session_state['student_data']
         # Ensure StudentID is treated as a string without unwanted characters
-        student_id = str(int(float(student_info['StudentID']))).strip()  # Convert to integer first, then to string
+        student_id = str(int(student_info['StudentID']))  # Convert to integer and then to string
 
         st.session_state.update({
             'rank_name': student_info['RankName'],
@@ -175,7 +175,7 @@ if rank_query:
             if st.button("Submit"):
                 try:
                     # Update data in internal-student-db for the student
-                    ref = db.reference(f"/{student_id}", app=None)
+                    ref = db.reference(f"/{rank_query}", app=None)  # Use the correct reference path
                     ref.update({
                         'Position1': st.session_state['position1'],
                         'Position2': st.session_state['position2'],
