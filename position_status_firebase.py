@@ -43,7 +43,6 @@ placeholder = st.empty()
 def load_data_and_render_table():
     # Fetch data from Firebase
     try:
-        st.write("Fetching data from Firebase...")
         ref = db.reference('/')
         data = ref.get()
         if data is None:
