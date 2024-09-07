@@ -83,11 +83,15 @@ def fetch_position_mapping():
         if isinstance(data, dict):
             for key, value in data.items():
                 if 'PositionID' in value and 'PositionName' in value:
-                    position_mapping[value['PositionID']] = value['PositionName']
+                    position_mapping[value['PositionID'].strip()] = value['PositionName'].strip()
         elif isinstance(data, list):
             for item in data:
                 if 'PositionID' in item and 'PositionName' in item:
-                    position_mapping[item['PositionID']] = item['PositionName']
+                    position_mapping[item['PositionID'].strip()] = item['PositionName'].strip()
+
+        # Debugging print to check if position_mapping is correctly populated
+        st.write("Position Mapping:", position_mapping)
+
     except Exception as e:
         st.error(f"Error fetching position data: {e}")
     return position_mapping
@@ -145,10 +149,15 @@ if rank_query:
         # Fetch position names mapping from Firebase
         position_mapping = fetch_position_mapping()
 
+        # Log to verify if the position_mapping has been fetched correctly
+        st.write("Fetched Position Mapping:", position_mapping)
+
         # Map PositionIDs to PositionNames
-        position1_name = position_mapping.get(st.session_state['position1'], st.session_state['position1'])
-        position2_name = position_mapping.get(st.session_state['position2'], st.session_state['position2'])
-        position3_name = position_mapping.get(st.session_state['position3'], st.session_state['position3'])
+        position1_name = position_mapping.get(st.session_state['position1'].strip(), st.session_state['position1'])
+        position2_name = position_mapping.get(st.session_state['position2'].strip(), st.session_state['position2'])
+        position3_name = position_mapping.get(st.session_state['position3'].strip(), st.session_state['position3'])
+
+        st.write(f"Position Names: {position1_name}, {position2_name}, {position3_name}")
 
         # Display data in a table format
         table_placeholder = st.empty()
