@@ -19,20 +19,20 @@ def fetch_all_students():
             for key, value in data.items():
                 # Extract required fields and append them to the list
                 student_info = {
-                    "Rank": value.get('Rank'),
-                    "StudentID": value.get('StudentID'),
-                    "RankName": value.get('RankName'),
-                    "Branch": value.get('Branch'),
-                    "OfficerType": value.get('OfficerType'),
-                    "Other": value.get('Other'),
-                    "ConfirmedPosition": value.get('ConfirmedPosition', 'Not Confirmed')
+                    "ลำดับ": int(value.get('Rank', 0)),  # Convert to integer to remove decimal
+                    "รหัสนักเรียน": value.get('StudentID'),
+                    "ยศ ชื่อ สกุล": value.get('RankName'),
+                    "เหล่า": value.get('Branch'),
+                    "กำเนิด": value.get('OfficerType'),
+                    "เงื่อนไข": value.get('Other'),
+                    "ตำแหน่งที่เลือก": value.get('ConfirmedPosition', 'Not Confirmed')
                 }
                 student_data.append(student_info)
             
             # Convert to a DataFrame for sorting
             df = pd.DataFrame(student_data)
-            # Sort the DataFrame by 'Rank'
-            df.sort_values(by='Rank', inplace=True)
+            # Sort the DataFrame by 'ลำดับ'
+            df.sort_values(by='ลำดับ', inplace=True)
             return df
         else:
             st.warning("No student data found in the database.")
@@ -41,15 +41,14 @@ def fetch_all_students():
         st.error(f"Error fetching all student data: {e}")
         return pd.DataFrame()  # Return an empty DataFrame on error
 
-# Function to render a simple table
+# Function to render a simple table without background colors
 def render_simple_table(data):
     """Function to create and display a simple HTML table"""
-    html_table = '<table style="width:100%;">'
-    html_table += '<tr><th>ลำดับ</th><th>ตำแหน่ง</th><th>สังกัด</th><th>ชกท.</th><th>อัตรา</th><th>เหล่า</th><th>เงื่อนไข</th></tr>'
+    html_table = '<table style="width:100%; border-collapse: collapse;">'
+    # Header row
+    html_table += '<tr><th>ลำดับ</th><th>รหัสนักเรียน</th><th>ยศ ชื่อ สกุล</th><th>เหล่า</th><th>กำเนิด</th><th>เงื่อนไข</th><th>ตำแหน่งที่เลือก</th></tr>'
     for _, row in data.iterrows():
-        # Default color is set directly in the row style
-        bg_color = 'green' if row.get('ConfirmedPosition', 'Not Confirmed') == 'ว่าง' else 'darkred'
-        html_table += f'<tr style="background-color:{bg_color}; color:white;"><td>{row["Rank"]}</td><td>{row["StudentID"]}</td><td>{row["RankName"]}</td><td>{row["Branch"]}</td><td>{row["OfficerType"]}</td><td>{row["Other"]}</td><td>{row["ConfirmedPosition"]}</td></tr>'
+        html_table += f'<tr><td>{row["ลำดับ"]}</td><td>{row["รหัสนักเรียน"]}</td><td>{row["ยศ ชื่อ สกุล"]}</td><td>{row["เหล่า"]}</td><td>{row["กำเนิด"]}</td><td>{row["เงื่อนไข"]}</td><td>{row["ตำแหน่งที่เลือก"]}</td></tr>'
     html_table += '</table>'
     st.markdown(html_table, unsafe_allow_html=True)
 
