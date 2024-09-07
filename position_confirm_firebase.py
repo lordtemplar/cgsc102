@@ -1,11 +1,10 @@
 import streamlit as st
-
-# Set the page configuration at the very beginning
-st.set_page_config(page_title="Position Confirm")
-
 from db_connections import firebase_apps  # Import initialized Firebase apps
 from firebase_admin import db
 import requests
+
+# Set the page configuration at the very beginning
+st.set_page_config(page_title="Position Confirm")
 
 # Function to fetch student data by rank from the first Firebase database
 def fetch_student_by_rank(rank):
@@ -27,36 +26,31 @@ def fetch_student_by_rank(rank):
         st.error(f"Error fetching student data: {e}")
         return None, None
 
-# Function to update student data in the first Firebase database
-def update_student_data(student_key, update_data):
+# Function to update data in any Firebase database
+def update_database(ref_path, data, firebase_app_index):
     try:
-        ref = db.reference(f"/{student_key}", firebase_apps[0])  # Use the first Firebase app
-        ref.update(update_data)
+        ref = db.reference(ref_path, firebase_apps[firebase_app_index])
+        ref.update(data)
     except Exception as e:
-        st.error(f"Error updating student data: {e}")
+        st.error(f"Error updating database at {ref_path}: {e}")
 
-# Function to fetch position data from the second Firebase database
-def fetch_position_data(position_ids):
+# Function to fetch position data by PositionID from the second Firebase database
+def fetch_position_data_by_id(position_id):
     try:
-        ref = db.reference('/', app=firebase_apps[1])  # Use the second Firebase app
+        ref = db.reference('/', firebase_apps[1])  # Use the second Firebase app
         data = ref.get()
-        matching_positions = {}
-
-        # Check if data is a list or dictionary and process accordingly
         if isinstance(data, dict):
             for key, value in data.items():
-                if 'PositionID' in value and int(value['PositionID']) in position_ids:
-                    matching_positions[int(value['PositionID'])] = value['PositionName']
+                if 'PositionID' in value and int(value['PositionID']) == position_id:
+                    return value  # Return the position data
         elif isinstance(data, list):
             for item in data:
-                if isinstance(item, dict) and 'PositionID' in item and int(item['PositionID']) in position_ids:
-                    matching_positions[int(item['PositionID'])] = item['PositionName']
-
-        return matching_positions
-
+                if isinstance(item, dict) and 'PositionID' in item and int(item['PositionID']) == position_id:
+                    return item  # Return the position data
+        return None
     except Exception as e:
-        st.error(f"Error fetching position data: {e}")
-        return {}
+        st.error(f"Error fetching position data by ID: {e}")
+        return None
 
 # Function to send Line Notify message
 def send_line_notify(message, token):
@@ -111,7 +105,12 @@ if rank_query:
         # Function to refresh position data
         def refresh_position_data():
             position_ids = [st.session_state['position1'], st.session_state['position2'], st.session_state['position3']]
-            return fetch_position_data(position_ids)
+            matching_positions = {}
+            for pos_id in position_ids:
+                pos_data = fetch_position_data_by_id(pos_id)
+                if pos_data:
+                    matching_positions[pos_id] = pos_data['PositionName']
+            return matching_positions
 
         # Fetch and refresh position data
         matching_positions = refresh_position_data()
@@ -164,28 +163,39 @@ if rank_query:
         # Button to confirm selection
         if st.button("ยืนยัน"):
             try:
-                # Update the confirmed position in the Firebase database
+                # Get confirmed position ID and fetch the corresponding position data
                 selected_position_id = confirmed_position[0]
-                update_data = {'ConfirmedPosition': selected_position_id}
-                update_student_data(st.session_state['student_key'], update_data)
-
-                # Calculate the key using (selected_position_id - 1)
-                position_key = selected_position_id - 1
-
-                # Update position status in internal and external position databases using (selected_position_id - 1) as key
-                internal_position_ref = db.reference(f"/{position_key}", firebase_apps[1])
-                internal_position_ref.update({'Status': "ไม่ว่าง"})
-
-                external_position_ref = db.reference(f"/{position_key}", firebase_apps[3])
-                external_position_ref.update({'Status': "ไม่ว่าง"})
-
-                # Update the internal student database
-                student_ref = db.reference(f"/{st.session_state['student_key']}", firebase_apps[0])
-                student_ref.update({'Position1': selected_position_id})
+                position_data = fetch_position_data_by_id(selected_position_id)
+                
+                # Fetch student data
+                student_data = st.session_state['student_data']
+                
+                # Prepare data to update
+                update_data = {
+                    'Branch': student_data['Branch'],
+                    'Branch_1': position_data['Branch'] if position_data else None,
+                    'OfficerType': student_data['OfficerType'],
+                    'Other': student_data['Other'],
+                    'PositionID': selected_position_id,
+                    'PositionName': position_data['PositionName'] if position_data else None,
+                    'Rank': student_data['Rank'],
+                    'RankName': position_data['RankName'] if position_data else None,
+                    'Rank_1': position_data['Rank'] if position_data else None,
+                    'Specialist': position_data['Specialist'] if position_data else None,
+                    'StudentID': student_data['StudentID'],
+                    'Unit': position_data['Unit'] if position_data else None
+                }
 
                 # Update the confirm student database
-                confirm_student_ref = db.reference(f"/{st.session_state['student_key']}", firebase_apps[2])
-                confirm_student_ref.update({'Position1': selected_position_id})
+                update_database(f"/{st.session_state['student_key']}", update_data, 2)
+
+                # Update position status in internal and external position databases
+                position_key = selected_position_id - 1
+                update_database(f"/{position_key}", {'Status': "ไม่ว่าง"}, 1)  # Internal position DB
+                update_database(f"/{position_key}", {'Status': "ไม่ว่าง"}, 3)  # External position DB
+
+                # Update the internal student database
+                update_database(f"/{st.session_state['student_key']}", {'Position1': selected_position_id}, 0)
 
                 # Set the confirmed position in session state
                 st.session_state['confirmed_position'] = selected_position_id
