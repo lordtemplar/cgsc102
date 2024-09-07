@@ -52,34 +52,34 @@ def fetch_data():
 
     return student_df, position_df
 
-# Function to display data from DataFrames
-def display_data(student_df, position_df):
-    if not student_df.empty:
+# Function to merge and display data from DataFrames
+def merge_and_display_data(student_df, position_df):
+    if not student_df.empty and not position_df.empty:
+        # Convert StudentID to string to avoid comma formatting
+        student_df["StudentID"] = student_df["StudentID"].astype(str)
+        
         # Reorder columns for the student DataFrame
         student_columns_order = ["Rank", "StudentID", "StudentName", "Branch", "OfficerType", "Other", "PositionID"]
         student_df = student_df.reindex(columns=student_columns_order)
-        
-        # Convert StudentID to string to avoid comma formatting
-        student_df["StudentID"] = student_df["StudentID"].astype(str)
 
-        st.header("รายงานผลการเลือกตำแหน่ง (ข้อมูลนักเรียน)")
-        st.dataframe(student_df, use_container_width=True, hide_index=True)  # Display student data DataFrame without index
-
-    if not position_df.empty:
         # Reorder columns for the position DataFrame
         position_columns_order = ["PositionID", "PositionName", "Unit", "Specialist", "Rank", "Branch", "Other"]
         position_df = position_df.reindex(columns=position_columns_order)
 
-        st.header("รายงานผลการเลือกตำแหน่ง (ข้อมูลตำแหน่ง)")
-        st.dataframe(position_df, use_container_width=True, hide_index=True)  # Display position data DataFrame without index
+        # Merge DataFrames on PositionID
+        merged_df = pd.merge(student_df, position_df, on="PositionID", suffixes=('_student', '_position'))
+
+        # Display merged DataFrame
+        st.header("รายงานผลการเลือกตำแหน่ง (ข้อมูลรวม)")
+        st.dataframe(merged_df, use_container_width=True, hide_index=True)
 
 # Streamlit app layout
 def main():
     st.title("รายงานผลการเลือกตำแหน่ง")
-    
+
     # Fetch and display data automatically
     student_df, position_df = fetch_data()  # Fetch data and load into DataFrames
-    display_data(student_df, position_df)  # Display the data
+    merge_and_display_data(student_df, position_df)  # Merge and display the data
 
 if __name__ == "__main__":
     main()
