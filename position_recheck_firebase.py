@@ -81,6 +81,25 @@ def update_student_data(student_key, update_data):
     except Exception as e:
         st.error(f"Error updating student data: {e}")
 
+# Function to fetch position data from the second Firebase database
+def fetch_position_data(position_ids):
+    try:
+        ref = db.reference('/', app=app2)
+        data = ref.get()
+        matching_positions = {}
+        if data:
+            for key, value in data.items():
+                if 'PositionID' in value and value['PositionID'] in position_ids:
+                    matching_positions[value['PositionID']] = value
+            st.write("Fetched matching position data from Firebase.")
+            return matching_positions
+        else:
+            st.write("No position data found in Firebase.")
+            return {}
+    except Exception as e:
+        st.error(f"Error fetching position data: {e}")
+        return {}
+
 # Layout of the Streamlit app
 st.title("ระบบเลือกที่ลง CGSC102")
 
@@ -122,9 +141,9 @@ if rank_query:
             'position3': str(student_info['Position3']).zfill(3)
         })
 
-        # Display data in a table format
-        table_placeholder = st.empty()
-        table_placeholder.write(f"""
+        # Display student information in a table format
+        st.write("### ข้อมูลนายทหารนักเรียน")
+        st.write(f"""
         <table>
             <tr><th>รหัสนักเรียน</th><td>{student_info['StudentID']}</td></tr>
             <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
@@ -137,6 +156,23 @@ if rank_query:
             <tr><th>ตำแหน่งลำดับ 3</th><td>{st.session_state['position3']}</td></tr>
         </table>
         """, unsafe_allow_html=True)
+
+        # Fetch position data matching the PositionIDs in the student data
+        position_ids = [st.session_state['position1'], st.session_state['position2'], st.session_state['position3']]
+        matching_positions = fetch_position_data(position_ids)
+
+        # Display matching position data
+        if matching_positions:
+            st.write("### ข้อมูลตำแหน่งที่เลือก")
+            for pos_id, pos_data in matching_positions.items():
+                st.write(f"""
+                <table>
+                    <tr><th>รหัสตำแหน่ง</th><td>{pos_id}</td></tr>
+                    <tr><th>ชื่อ</th><td>{pos_data.get('PositionName', 'N/A')}</td></tr>
+                    <tr><th>สังกัด</th><td>{pos_data.get('Unit', 'N/A')}</td></tr>
+                    <tr><th>อื่นๆ</th><td>{pos_data.get('OtherDetails', 'N/A')}</td></tr>
+                </table>
+                """, unsafe_allow_html=True)
 
         # Input fields for editing positions
         st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
@@ -169,7 +205,7 @@ if rank_query:
                     st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
 
                     # Update displayed table with new data
-                    table_placeholder.write(f"""
+                    st.write(f"""
                     <table>
                         <tr><th>รหัสนักเรียน</th><td>{student_info['StudentID']}</td></tr>
                         <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
