@@ -157,28 +157,30 @@ if rank_query:
                 selected_position_id = confirmed_position[0]
                 update_data = {'ConfirmedPosition': selected_position_id}
                 update_student_data(st.session_state['student_key'], update_data)
-
+        
                 # Update position status in internal and external position databases
-                internal_position_ref = db.reference(f"/{selected_position_id}", firebase_apps[1])
+                # Adjust the reference paths if necessary, depending on your database structure
+                internal_position_ref = db.reference(f"positions/{selected_position_id}", firebase_apps[1])
                 internal_position_ref.update({'Status': "ไม่ว่าง"})
-
-                external_position_ref = db.reference(f"/{selected_position_id}", firebase_apps[3])
+        
+                external_position_ref = db.reference(f"positions/{selected_position_id}", firebase_apps[3])
                 external_position_ref.update({'Status': "ไม่ว่าง"})
-
+        
                 # Update the internal student database
-                student_ref = db.reference(f"/{st.session_state['student_key']}", firebase_apps[0])
+                student_ref = db.reference(f"students/{st.session_state['student_key']}", firebase_apps[0])
                 student_ref.update({'Position1': selected_position_id})
-
+        
                 # Send Line Notify with the new token
                 next_rank = int(student_info['Rank']) + 1
                 line_token = "snH08HhuKeu11DAgQmyUyYeDcnqgHVlcfRP8Fdqz4db"
                 message = f"ลำดับที่ {student_info['Rank']}, รหัสนักเรียน {student_info['StudentID']}, {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {matching_positions[selected_position_id]} ต่อไปเชิญลำดับที่ {next_rank} เลือกที่ลงต่อครับ"
                 send_line_notify(message, line_token)
-
+        
                 st.success(f"ยืนยันข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
-
+        
                 # Refresh the existing table with new data
                 display_student_info()
-
+        
             except Exception as e:
                 st.error(f"ไม่สามารถยืนยันข้อมูลได้: {e}")
+
