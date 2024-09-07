@@ -79,7 +79,10 @@ def fetch_all_positions():
         data = ref.get()
         if data:
             st.write("Fetched all position data from Firebase.")
-            return pd.DataFrame.from_dict(data, orient='index')  # Convert to DataFrame for easier processing
+            if isinstance(data, dict):  # If data is a dictionary
+                return pd.DataFrame.from_dict(data, orient='index')
+            elif isinstance(data, list):  # If data is a list
+                return pd.DataFrame(data)
         else:
             st.write("No position data found in Firebase.")
             return pd.DataFrame()
@@ -120,7 +123,9 @@ if st.button("Search by Rank"):
                 student_id = student_data.index[0]
                 
                 # Create a dictionary to map PositionID to PositionName
-                position_id_to_name = {row['PositionID']: row['PositionName'] for index, row in df_positions.iterrows()}
+                position_id_to_name = {}
+                for index, row in df_positions.iterrows():
+                    position_id_to_name[row['PositionID']] = row['PositionName']
 
                 # Input fields to edit data
                 position1 = st.text_input("Position 1", student_data.iloc[0].get('Position1', ''))
