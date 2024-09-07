@@ -1,6 +1,6 @@
 import streamlit as st
 from firebase_admin import db
-from 2firebase_connection import initialize_firebase
+from firebase_connection import initialize_firebase
 
 # Set the title of the Streamlit app
 st.set_page_config(page_title="Position Choose")
