@@ -64,11 +64,7 @@ def fetch_all_students():
         data = ref.get()
         if data:
             st.write("Fetched all student data from Firebase.")
-            if isinstance(data, dict):  # Ensure data is a dictionary
-                return pd.DataFrame.from_dict(data, orient='index')  # Convert to DataFrame for easier processing
-            else:
-                st.error("Unexpected data format: Expected dictionary.")
-                return pd.DataFrame()
+            return pd.DataFrame.from_dict(data, orient='index')  # Convert to DataFrame for easier processing
         else:
             st.write("No student data found in Firebase.")
             return pd.DataFrame()
@@ -83,11 +79,7 @@ def fetch_all_positions():
         data = ref.get()
         if data:
             st.write("Fetched all position data from Firebase.")
-            if isinstance(data, dict):  # Ensure data is a dictionary
-                return pd.DataFrame.from_dict(data, orient='index')  # Convert to DataFrame for easier processing
-            else:
-                st.error("Unexpected data format: Expected dictionary.")
-                return pd.DataFrame()
+            return pd.DataFrame.from_dict(data, orient='index')  # Convert to DataFrame for easier processing
         else:
             st.write("No position data found in Firebase.")
             return pd.DataFrame()
