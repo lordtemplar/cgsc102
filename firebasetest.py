@@ -18,11 +18,12 @@ firebase_config = {
     "universe_domain": st.secrets["firebase"]["universe_domain"]
 }
 
-# Initialize Firebase Admin SDK
-cred = credentials.Certificate(firebase_config)
-firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://your-database-name.firebaseio.com/'  # Replace with your Firebase Realtime Database URL
-})
+# Ensure Firebase Admin SDK is initialized only once
+if not firebase_admin._apps:
+    cred = credentials.Certificate(firebase_config)
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': 'https://external-position-db-default-rtdb.asia-southeast1.firebasedatabase.app/'  # Correct Database URL
+    })
 
 # Function to fetch data from Firebase
 def get_data(path='/'):
@@ -30,6 +31,6 @@ def get_data(path='/'):
     data = ref.get()
     return data
 
-# Get data from Firebase
+# Fetch data from Firebase
 data = get_data('/')
 st.write(data)
