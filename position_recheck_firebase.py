@@ -201,36 +201,44 @@ if rank_query:
         </table>
         """, unsafe_allow_html=True)
 
-        # Input fields for updating positions
-        st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
-        position1_input = st.text_input("ตำแหน่งลำดับ 1", st.session_state['position1'])
-        position2_input = st.text_input("ตำแหน่งลำดับ 2", st.session_state['position2'])
-        position3_input = st.text_input("ตำแหน่งลำดับ 3", st.session_state['position3'])
-
-        filled_positions = [position1_input, position2_input, position3_input]
-        valid_positions = any(len(pos) == 3 and pos.isdigit() for pos in filled_positions)
-
-        if not valid_positions:
-            st.error("กรุณากรอกรหัสด้วยเลข 3 หลักอย่างน้อย 1 ตำแหน่งที่เลือก")
-        else:
-            st.session_state.update({
-                'position1': position1_input.zfill(3),
-                'position2': position2_input.zfill(3),
-                'position3': position3_input.zfill(3)
-            })
-
-            # Submit button to update data in Firebase
-            if st.button("Submit"):
-                rank = st.session_state['rank']
-                # Ensure that rank is a numeric value
-                if rank.isdigit():
-                    index = int(rank) - 1
-                    update_data = {
-                        'Position1': st.session_state['position1'],
-                        'Position2': st.session_state['position2'],
-                        'Position3': st.session_state['position3']
-                    }
-                    st.write(f"Updating data for Index: {index} with data: {update_data}")
-                    update_firebase_data(index, update_data)
-                else:
-                    st.error("Rank is not a valid integer. Please check the data.")
+        # Convert Position IDs to Position Names for Dropdown
+        position_id_to_name = {row['PositionID']: row['PositionName'] for index, row in df_positions.iterrows()}
+        
+        # Display the dropdown lists with position names
+        st.write("### เลือกตำแหน่งจากรายการ")
+        
+        position1_name = position_id_to_name.get(st.session_state['position1'], "Unknown Position")
+        position2_name = position_id_to_name.get(st.session_state['position2'], "Unknown Position")
+        position3_name = position_id_to_name.get(st.session_state['position3'], "Unknown Position")
+        
+        # Dropdowns for selecting positions by name
+        position1_input = st.selectbox("ตำแหน่งลำดับ 1", list(position_id_to_name.values()), index=list(position_id_to_name.values()).index(position1_name))
+        position2_input = st.selectbox("ตำแหน่งลำดับ 2", list(position_id_to_name.values()), index=list(position_id_to_name.values()).index(position2_name))
+        position3_input = st.selectbox("ตำแหน่งลำดับ 3", list(position_id_to_name.values()), index=list(position_id_to_name.values()).index(position3_name))
+        
+        # Reverse mapping from position name back to ID
+        name_to_position_id = {v: k for k, v in position_id_to_name.items()}
+        position1_id = name_to_position_id.get(position1_input)
+        position2_id = name_to_position_id.get(position2_input)
+        position3_id = name_to_position_id.get(position3_input)
+        
+        # Update data in Firebase using StudentID as the key
+        if st.button("Submit"):
+            student_id = format_student_id(st.session_state['student_data']['StudentID'])
+        
+            if student_id:  # Ensure student_id is valid
+                update_path = f"/{student_id}"  # Construct the path using StudentID
+                update_data = {
+                    'Position1': position1_id,
+                    'Position2': position2_id,
+                    'Position3': position3_id
+                }
+                st.write(f"Updating data for Student ID: {student_id} with data: {update_data}")
+                try:
+                    ref = db.reference(update_path)
+                    ref.update(update_data)
+                    st.success(f"Data successfully updated for Student ID: {student_id}.")
+                except Exception as e:
+                    st.error(f"Failed to update data: {e}")
+            else:
+                st.error("Invalid Student ID. Cannot update data.")
