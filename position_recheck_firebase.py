@@ -77,11 +77,16 @@ def get_position_name(position_id):
     try:
         ref = db.reference('/', app=app2)
         data = ref.get()
-        # Check the data format and retrieve the corresponding PositionName
-        if data:
+
+        # Handle both dictionary and list formats
+        if isinstance(data, dict):
             for key, value in data.items():
                 if 'PositionID' in value and value['PositionID'] == position_id:
                     return value['PositionName']
+        elif isinstance(data, list):
+            for item in data:
+                if 'PositionID' in item and item['PositionID'] == position_id:
+                    return item['PositionName']
     except Exception as e:
         st.error(f"Error fetching position name: {e}")
     return position_id
