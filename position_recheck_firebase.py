@@ -120,7 +120,7 @@ if rank_query:
     if st.session_state['student_data'] is not None:
         student_info = st.session_state['student_data']
         # Ensure StudentID is treated as a string without unwanted characters
-        student_id = str(student_info['StudentID']).strip()
+        student_id = str(int(float(student_info['StudentID']))).strip()  # Convert to integer first, then to string
 
         st.session_state.update({
             'rank_name': student_info['RankName'],
