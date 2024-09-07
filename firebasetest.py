@@ -18,11 +18,11 @@ firebase_config = {
     "universe_domain": st.secrets["firebase"]["universe_domain"]
 }
 
-# Ensure Firebase Admin SDK is initialized only once
+# Initialize Firebase Admin SDK only once
 if not firebase_admin._apps:
     cred = credentials.Certificate(firebase_config)
     firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://external-position-db-default-rtdb.asia-southeast1.firebasedatabase.app/'  # Correct Database URL
+        'databaseURL': 'https://external-position-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
     })
 
 # Function to fetch data from Firebase
