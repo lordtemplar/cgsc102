@@ -3,12 +3,12 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 import pandas as pd
-import re  # Import regular expressions
+import re  # Import regular expressions for rank extraction
 
-# Set the title bar of the app in the browser
+# Set the page title in the browser
 st.set_page_config(page_title="Position Choose")
 
-# Load Firebase credentials from secrets for the first and second databases
+# Load Firebase credentials from Streamlit secrets
 firebase_config_1 = {
     "type": st.secrets["firebase1"]["type"],
     "project_id": st.secrets["firebase1"]["project_id"],
@@ -45,10 +45,10 @@ def initialize_firebase():
             firebase_admin.initialize_app(cred1, {
                 'databaseURL': 'https://internal-student-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
             })
-            st.write("Firebase app 1 initialized successfully.")
         except ValueError as e:
             st.error(f"Error initializing the first Firebase app: {e}")
 
+    # Initialize second Firebase app only if it hasn't been initialized already
     try:
         firebase_admin.get_app('second_app')
     except ValueError:
@@ -57,13 +57,12 @@ def initialize_firebase():
             firebase_admin.initialize_app(cred2, {
                 'databaseURL': 'https://internal-position-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
             }, name='second_app')
-            st.write("Firebase app 2 initialized successfully.")
         except ValueError as e:
             st.error(f"Error initializing the second Firebase app: {e}")
 
 initialize_firebase()
 
-# Function to load data from Firebase into DataFrame
+# Function to load data from Firebase into a DataFrame
 def load_data_from_firebase(path='/', app=None):
     try:
         ref = db.reference(path, app=app)
@@ -79,39 +78,16 @@ def load_data_from_firebase(path='/', app=None):
         st.error(f"Error loading data from Firebase: {e}")
         return pd.DataFrame()
 
-# Helper function to update Firebase database
-def update_firebase_data(index, data, app=None):
-    try:
-        # Use the index to construct the path
-        path = f"/{index}"  # Update using the index directly
-        ref = db.reference(path, app=app)
-        ref.update(data)
-        st.success(f"Data successfully updated for Index: {index}.")
-    except Exception as e:
-        st.error(f"Failed to update data for Index: {index}: {e}")
+# Fetch data from both Firebase databases
+df_students = load_data_from_firebase('/', app=None)  # Fetch from the first database
+df_positions = load_data_from_firebase('/', app=firebase_admin.get_app('second_app'))  # Fetch from the second database
+df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)  # Format Position IDs
 
-# Helper function to handle student ID conversion
-def format_student_id(student_id):
-    try:
-        # Remove any decimal point and convert to string
-        return str(student_id).split(".")[0].strip()
-    except Exception as e:
-        st.error(f"Error formatting student ID: {e}")
-        return ""
-
-# Helper function to fetch student data
+# Function to fetch student data based on rank
 def fetch_student_data(rank_query):
-    # Search for student data by "Rank"
     df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
     student_data = df_students[df_students['Rank'].astype(str).str.contains(rank_query.strip(), case=False, na=False)]
     return student_data.iloc[0] if not student_data.empty else None
-
-# Load data from both Firebase databases into DataFrames
-df_students = load_data_from_firebase('/', app=None)  # Load data from the first Firebase database
-df_positions = load_data_from_firebase('/', app=firebase_admin.get_app('second_app'))  # Load data from the second Firebase database
-
-# Ensure PositionID is in the correct format
-df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)
 
 # Function to get position name from PositionDB by PositionID
 def get_position_name(position_id):
@@ -121,23 +97,24 @@ def get_position_name(position_id):
             return position.iloc[0]['PositionName']
     return position_id
 
-# Streamlit App Layout
+# Display title
 st.title("ระบบเลือกที่ลง CGSC102")
 
-# Initialize session state
+# Initialize session state for student data and search queries
 if 'student_data' not in st.session_state:
     st.session_state['student_data'] = None
 if 'last_search_query' not in st.session_state:
     st.session_state['last_search_query'] = ""
 
-# Search box to search by "Rank"
+# Search box to allow user to input the rank
 rank_query = st.text_input("กรุณาใส่ลำดับผลการเรียน:")
 
-# Check if the new search query is different from the last one
+# If the search query changes, reset the session state
 if rank_query and rank_query != st.session_state['last_search_query']:
     st.session_state['student_data'] = None
     st.session_state['last_search_query'] = rank_query
 
+# Fetch and display student data
 if rank_query:
     if st.session_state['student_data'] is None:
         student_data = fetch_student_data(rank_query)
@@ -149,83 +126,45 @@ if rank_query:
 
     if st.session_state['student_data'] is not None:
         student_info = st.session_state['student_data']
-        student_id = format_student_id(student_info['StudentID'])
+        student_id = str(student_info['StudentID']).split(".")[0].strip()
 
+        # Prepare the data for display
         st.session_state.update({
             'rank_name': student_info['RankName'],
             'branch': student_info['Branch'],
             'officer_type': student_info['OfficerType'],
             'other': student_info['Other'],
-            'rank': str(student_info['Rank']).strip(),  # Strip any extra whitespace
+            'rank': str(student_info['Rank']).strip(),  # Clean up rank value
             'position1': str(student_info['Position1']).zfill(3),
             'position2': str(student_info['Position2']).zfill(3),
             'position3': str(student_info['Position3']).zfill(3)
         })
 
-        # Print the raw value of rank for debugging
-        st.write(f"Raw Rank Value: '{st.session_state['rank']}'")
-
-        # Use regular expressions to extract only the numeric part of the rank
-        rank_match = re.search(r'\d+', st.session_state['rank'])
-        if rank_match:
-            rank = rank_match.group()
-            st.write(f"Extracted Numeric Rank: {rank}")
-            index = int(rank) - 1
-            update_data = {
-                'Position1': st.session_state['position1'],
-                'Position2': st.session_state['position2'],
-                'Position3': st.session_state['position3']
-            }
-            st.write(f"Updating data for Index: {index} with data: {update_data}")
-            update_firebase_data(index, update_data)
-        else:
-            st.error("Rank is not a valid integer. Please check the data.")
-
-        position1_name = get_position_name(st.session_state['position1'])
-        position2_name = get_position_name(st.session_state['position2'])
-        position3_name = get_position_name(st.session_state['position3'])
-
-        # Display student information
-        table_placeholder = st.empty()
-        table_placeholder.write(f"""
-        <table>
-            <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
-            <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
-            <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
-            <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
-            <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
-            <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-            <tr><th>ตำแหน่งลำดับ 1</th><td>{position1_name}</td></tr>
-            <tr><th>ตำแหน่งลำดับ 2</th><td>{position2_name}</td></tr>
-            <tr><th>ตำแหน่งลำดับ 3</th><td>{position3_name}</td></tr>
-        </table>
-        """, unsafe_allow_html=True)
-
         # Convert Position IDs to Position Names for Dropdown
         position_id_to_name = {row['PositionID']: row['PositionName'] for index, row in df_positions.iterrows()}
-        
+
         # Display the dropdown lists with position names
         st.write("### เลือกตำแหน่งจากรายการ")
-        
+
         position1_name = position_id_to_name.get(st.session_state['position1'], "Unknown Position")
         position2_name = position_id_to_name.get(st.session_state['position2'], "Unknown Position")
         position3_name = position_id_to_name.get(st.session_state['position3'], "Unknown Position")
-        
+
         # Dropdowns for selecting positions by name
         position1_input = st.selectbox("ตำแหน่งลำดับ 1", list(position_id_to_name.values()), index=list(position_id_to_name.values()).index(position1_name))
         position2_input = st.selectbox("ตำแหน่งลำดับ 2", list(position_id_to_name.values()), index=list(position_id_to_name.values()).index(position2_name))
         position3_input = st.selectbox("ตำแหน่งลำดับ 3", list(position_id_to_name.values()), index=list(position_id_to_name.values()).index(position3_name))
-        
+
         # Reverse mapping from position name back to ID
         name_to_position_id = {v: k for k, v in position_id_to_name.items()}
         position1_id = name_to_position_id.get(position1_input)
         position2_id = name_to_position_id.get(position2_input)
         position3_id = name_to_position_id.get(position3_input)
-        
+
         # Update data in Firebase using StudentID as the key
         if st.button("Submit"):
             student_id = format_student_id(st.session_state['student_data']['StudentID'])
-        
+
             if student_id:  # Ensure student_id is valid
                 update_path = f"/{student_id}"  # Construct the path using StudentID
                 update_data = {
