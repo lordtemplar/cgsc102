@@ -3,6 +3,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 import pandas as pd
+import re  # Import regular expressions
 
 # Set the title bar of the app in the browser
 st.set_page_config(page_title="Position Choose")
@@ -160,6 +161,25 @@ if rank_query:
             'position2': str(student_info['Position2']).zfill(3),
             'position3': str(student_info['Position3']).zfill(3)
         })
+
+        # Print the raw value of rank for debugging
+        st.write(f"Raw Rank Value: '{st.session_state['rank']}'")
+
+        # Use regular expressions to extract only the numeric part of the rank
+        rank_match = re.search(r'\d+', st.session_state['rank'])
+        if rank_match:
+            rank = rank_match.group()
+            st.write(f"Extracted Numeric Rank: {rank}")
+            index = int(rank) - 1
+            update_data = {
+                'Position1': st.session_state['position1'],
+                'Position2': st.session_state['position2'],
+                'Position3': st.session_state['position3']
+            }
+            st.write(f"Updating data for Index: {index} with data: {update_data}")
+            update_firebase_data(index, update_data)
+        else:
+            st.error("Rank is not a valid integer. Please check the data.")
 
         position1_name = get_position_name(st.session_state['position1'])
         position2_name = get_position_name(st.session_state['position2'])
