@@ -185,31 +185,35 @@ if rank_query:
                     'StudentID': student_data['StudentID'],
                     'Unit': position_data['Unit'] if position_data else None
                 }
-
+        
+                # Print update_data for debugging
+                st.write("Data to be updated in confirm_student_db:", update_data)
+        
                 # Update the confirm student database
                 update_database(f"/{st.session_state['student_key']}", update_data, 2)
-
+        
                 # Update position status in internal and external position databases
                 position_key = selected_position_id - 1
                 update_database(f"/{position_key}", {'Status': "ไม่ว่าง"}, 1)  # Internal position DB
                 update_database(f"/{position_key}", {'Status': "ไม่ว่าง"}, 3)  # External position DB
-
+        
                 # Update the internal student database
                 update_database(f"/{st.session_state['student_key']}", {'Position1': selected_position_id}, 0)
-
+        
                 # Set the confirmed position in session state
                 st.session_state['confirmed_position'] = selected_position_id
-
+        
                 # Send Line Notify with the new token
                 next_rank = int(student_info['Rank']) + 1
                 line_token = "snH08HhuKeu11DAgQmyUyYeDcnqgHVlcfRP8Fdqz4db"
                 message = f"ลำดับที่ {student_info['Rank']}, รหัสนักเรียน {student_info['StudentID']}, {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {matching_positions[selected_position_id]} ต่อไปเชิญลำดับที่ {next_rank} เลือกที่ลงต่อครับ"
                 send_line_notify(message, line_token)
-
+        
                 st.success(f"ยืนยันข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
-
+        
                 # Refresh the table to show only the confirmed position
                 display_student_info(show_confirmed_only=True)
-
+        
             except Exception as e:
                 st.error(f"ไม่สามารถยืนยันข้อมูลได้: {e}")
+
