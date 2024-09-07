@@ -77,7 +77,6 @@ def update_student_data(student_key, update_data):
     try:
         ref = db.reference(f"/{student_key}", firebase_admin.get_app())
         ref.update(update_data)
-        st.success("Data successfully updated for the student.")
     except Exception as e:
         st.error(f"Error updating student data: {e}")
 
@@ -98,7 +97,6 @@ def fetch_position_data(position_ids):
                 if isinstance(item, dict) and 'PositionID' in item and int(item['PositionID']) in position_ids:
                     matching_positions[int(item['PositionID'])] = item['PositionName']
 
-        st.write("Fetched matching position data from Firebase.")
         return matching_positions
 
     except Exception as e:
