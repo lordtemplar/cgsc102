@@ -159,11 +159,22 @@ if rank_query:
                 update_student_data(st.session_state['student_key'], update_data)
 
                 # Update position status in internal and external position databases using PositionID as key
-                internal_position_ref = db.reference(f"/{selected_position_id}", firebase_apps[1])
-                internal_position_ref.update({'Status': "ไม่ว่าง"})
 
-                external_position_ref = db.reference(f"/{selected_position_id}", firebase_apps[3])
-                external_position_ref.update({'Status': "ไม่ว่าง"})
+                # Fetch data from internal position database to find the matching PositionID
+                internal_positions_data = db.reference('/', firebase_apps[1]).get()
+                for key, value in internal_positions_data.items():
+                    if value.get('PositionID') == str(selected_position_id):
+                        internal_position_ref = db.reference(f"/{key}", firebase_apps[1])
+                        internal_position_ref.update({'Status': "ไม่ว่าง"})
+                        break
+
+                # Fetch data from external position database to find the matching PositionID
+                external_positions_data = db.reference('/', firebase_apps[3]).get()
+                for key, value in external_positions_data.items():
+                    if value.get('PositionID') == str(selected_position_id):
+                        external_position_ref = db.reference(f"/{key}", firebase_apps[3])
+                        external_position_ref.update({'Status': "ไม่ว่าง"})
+                        break
 
                 # Update the internal student database
                 student_ref = db.reference(f"/{st.session_state['student_key']}", firebase_apps[0])
