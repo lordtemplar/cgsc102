@@ -4,7 +4,10 @@ from firebase_admin import credentials
 from firebase_admin import db
 import pandas as pd
 
-# Load Firebase credentials from secrets for the first database
+# Set the title bar of the app in the browser
+st.set_page_config(page_title="Position Choose")
+
+# Load Firebase credentials from secrets for the first and second databases
 firebase_config_1 = {
     "type": st.secrets["firebase1"]["type"],
     "project_id": st.secrets["firebase1"]["project_id"],
@@ -19,7 +22,6 @@ firebase_config_1 = {
     "universe_domain": st.secrets["firebase1"]["universe_domain"]
 }
 
-# Load Firebase credentials from secrets for the second database
 firebase_config_2 = {
     "type": st.secrets["firebase2"]["type"],
     "project_id": st.secrets["firebase2"]["project_id"],
@@ -34,7 +36,7 @@ firebase_config_2 = {
     "universe_domain": st.secrets["firebase2"]["universe_domain"]
 }
 
-# Initialize Firebase Admin SDK for the first database
+# Initialize Firebase Admin SDK for both databases
 if not firebase_admin._apps:
     try:
         cred1 = credentials.Certificate(firebase_config_1)
@@ -44,11 +46,9 @@ if not firebase_admin._apps:
     except ValueError as e:
         st.error(f"Error initializing the first Firebase app: {e}")
 
-# Check if the second app is already initialized
 try:
     app2 = firebase_admin.get_app('second_app')
 except ValueError:
-    # If the app is not initialized, initialize it
     try:
         cred2 = credentials.Certificate(firebase_config_2)
         app2 = firebase_admin.initialize_app(cred2, {
@@ -57,7 +57,7 @@ except ValueError:
     except ValueError as e:
         st.error(f"Error initializing the second Firebase app: {e}")
 
-# Function to load data from Firebase into a DataFrame
+# Function to load data from Firebase into DataFrame
 def load_data_from_firebase(path='/', app=None):
     try:
         ref = db.reference(path, app=app)
@@ -66,52 +66,134 @@ def load_data_from_firebase(path='/', app=None):
             st.write(f"No data found at the specified path: {path}")
             return pd.DataFrame()  # Return empty DataFrame if no data
         elif isinstance(data, dict):
-            # Convert the data into a DataFrame
-            st.write(f"Fetched data type: {type(data)}, content: {data}")
             return pd.DataFrame.from_dict(data, orient='index')
         else:
-            st.write(f"Data fetched is not in dictionary format; attempting to convert directly to DataFrame.")
-            try:
-                return pd.DataFrame(data)  # Attempt to handle non-dict format
-            except Exception as e:
-                st.error(f"Error converting data to DataFrame: {e}")
-                return pd.DataFrame()  # Return empty DataFrame in case of error
-    except firebase_admin.exceptions.FirebaseError as e:
-        st.error(f"Firebase error during data retrieval: {e}")
-        return pd.DataFrame()  # Return empty DataFrame in case of error
+            return pd.DataFrame(data)  # Attempt to handle non-dict format
     except Exception as e:
-        st.error(f"Unexpected error during data retrieval: {e}")
-        return pd.DataFrame()  # Return empty DataFrame in case of unexpected error
+        st.error(f"Error loading data from Firebase: {e}")
+        return pd.DataFrame()  # Return empty DataFrame in case of error
 
 # Load data from both Firebase databases into DataFrames
-df1 = load_data_from_firebase('/', app=None)  # Load data from the first Firebase database
-df2 = load_data_from_firebase('/', app=app2)  # Load data from the second Firebase database
+df_students = load_data_from_firebase('/', app=None)  # Load data from the first Firebase database
+df_positions = load_data_from_firebase('/', app=app2)  # Load data from the second Firebase database
 
-# Function to fetch data from the loaded DataFrames
-def fetch_data_from_dataframe(df, filter_condition=None):
-    try:
-        if df.empty:
-            st.write("The DataFrame is empty. No data to fetch.")
-            return df
-        if filter_condition:
-            # Apply filter condition if provided
-            filtered_df = df.query(filter_condition)
-            st.write("Filtered data based on the condition:")
-            return filtered_df
+# Ensure PositionID is in the correct format
+df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)
+
+# Function to get position name from PositionDB by PositionID
+def get_position_name(position_id):
+    if position_id.isdigit() and len(position_id) == 3:
+        position = df_positions[df_positions['PositionID'] == position_id]
+        if not position.empty:
+            return position.iloc[0]['PositionName']
+    return position_id
+
+# Streamlit App Layout
+st.title("ระบบเลือกที่ลง CGSC102")
+
+# Initialize session state
+if 'student_data' not in st.session_state:
+    st.session_state['student_data'] = None
+if 'last_search_query' not in st.session_state:
+    st.session_state['last_search_query'] = ""
+
+# Search box to search by "Rank"
+rank_query = st.text_input("กรุณาใส่ลำดับผลการเรียน:")
+
+# Check if the new search query is different from the last one
+if rank_query and rank_query != st.session_state['last_search_query']:
+    st.session_state['student_data'] = None  # Reset data
+    st.session_state['last_search_query'] = rank_query  # Update with new query
+
+if rank_query:
+    if st.session_state['student_data'] is None:
+        # Search for student data by "Rank"
+        df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
+        student_data = df_students[df_students['Rank'].astype(str).str.contains(rank_query.strip(), case=False, na=False)]
+
+        if not student_data.empty:
+            st.session_state['student_data'] = student_data.iloc[0]
         else:
-            st.write("Fetched data from the DataFrame:")
-            return df
-    except Exception as e:
-        st.error(f"Error fetching data from DataFrame: {e}")
-        return pd.DataFrame()  # Return empty DataFrame in case of error
+            st.error("ไม่พบข้อมูลที่ค้นหา")
+            st.session_state['student_data'] = None
 
-# Fetch data from the loaded DataFrames
-fetched_data1 = fetch_data_from_dataframe(df1)
-fetched_data2 = fetch_data_from_dataframe(df2)
+    if st.session_state['student_data'] is not None:
+        student_info = st.session_state['student_data']
+        st.session_state.update({
+            'rank_name': student_info['RankName'],
+            'branch': student_info['Branch'],
+            'officer_type': student_info['OfficerType'],
+            'other': student_info['Other'],
+            'rank': str(student_info['Rank']),
+            'position1': str(student_info['Position1']).zfill(3),
+            'position2': str(student_info['Position2']).zfill(3),
+            'position3': str(student_info['Position3']).zfill(3)
+        })
 
-# Display data in Streamlit
-st.write("Data from the first database:")
-st.dataframe(fetched_data1)
+        position1_name = get_position_name(st.session_state['position1'])
+        position2_name = get_position_name(st.session_state['position2'])
+        position3_name = get_position_name(st.session_state['position3'])
 
-st.write("Data from the second database:")
-st.dataframe(fetched_data2)
+        # Display student information
+        table_placeholder = st.empty()
+        table_placeholder.write(f"""
+        <table>
+            <tr><th>รหัสนักเรียน</th><td>{student_info['StudentID']}</td></tr>
+            <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
+            <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
+            <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
+            <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
+            <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 1</th><td>{position1_name}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 2</th><td>{position2_name}</td></tr>
+            <tr><th>ตำแหน่งลำดับ 3</th><td>{position3_name}</td></tr>
+        </table>
+        """, unsafe_allow_html=True)
+
+        # Input fields for updating positions
+        st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
+        position1_input = st.text_input("ตำแหน่งลำดับ 1", st.session_state['position1'])
+        position2_input = st.text_input("ตำแหน่งลำดับ 2", st.session_state['position2'])
+        position3_input = st.text_input("ตำแหน่งลำดับ 3", st.session_state['position3'])
+
+        filled_positions = [position1_input, position2_input, position3_input]
+        valid_positions = any(len(pos) == 3 and pos.isdigit() for pos in filled_positions)
+
+        if not valid_positions:
+            st.error("กรุณากรอกรหัสด้วยเลข 3 หลักอย่างน้อย 1 ตำแหน่งที่เลือก")
+        else:
+            st.session_state.update({
+                'position1': position1_input.zfill(3),
+                'position2': position2_input.zfill(3),
+                'position3': position3_input.zfill(3)
+            })
+
+            # Submit button to update data in Firebase
+            if st.button("Submit"):
+                try:
+                    # Update data in Firebase for the student
+                    ref = db.reference(f"/{student_info['StudentID']}")
+                    ref.update({
+                        'Position1': st.session_state['position1'],
+                        'Position2': st.session_state['position2'],
+                        'Position3': st.session_state['position3']
+                    })
+
+                    st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
+
+                    # Update displayed table
+                    table_placeholder.write(f"""
+                    <table>
+                        <tr><th>รหัสนักเรียน</th><td>{student_info['StudentID']}</td></tr>
+                        <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
+                        <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
+                        <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
+                        <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
+                        <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 1</th><td>{get_position_name(st.session_state['position1'])}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 2</th><td>{get_position_name(st.session_state['position2'])}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 3</th><td>{get_position_name(st.session_state['position3'])}</td></tr>
+                    </table>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
