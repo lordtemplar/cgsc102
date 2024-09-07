@@ -55,8 +55,8 @@ def load_data_and_render_table():
         else:
             df_positions = pd.DataFrame(data)
         
-        # Format PositionID as 3 digits
-        df_positions['PositionID'] = df_positions['PositionID'].apply(lambda x: f"{int(x):03d}")
+        # Handle NaN values and format PositionID as 3 digits
+        df_positions['PositionID'] = df_positions['PositionID'].fillna(0).astype(int).apply(lambda x: f"{x:03d}")
 
         # Function to get background color based on Status
         def get_bg_color(status):
