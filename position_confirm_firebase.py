@@ -185,7 +185,7 @@ if rank_query:
 
                 # Update the confirm student database
                 confirm_student_ref = db.reference(f"/{st.session_state['student_key']}", firebase_apps[2])
-                confirm_student_ref.update({'Position1': selected_position_id})
+                confirm_student_ref.update({'PositionID': selected_position_id})
 
                 # Set the confirmed position in session state
                 st.session_state['confirmed_position'] = selected_position_id
