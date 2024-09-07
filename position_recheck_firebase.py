@@ -87,15 +87,20 @@ def fetch_position_data(position_ids):
         ref = db.reference('/', app=app2)
         data = ref.get()
         matching_positions = {}
-        if data:
+        
+        # Check if data is a list or dictionary and process accordingly
+        if isinstance(data, dict):
             for key, value in data.items():
                 if 'PositionID' in value and value['PositionID'] in position_ids:
                     matching_positions[value['PositionID']] = value
-            st.write("Fetched matching position data from Firebase.")
-            return matching_positions
-        else:
-            st.write("No position data found in Firebase.")
-            return {}
+        elif isinstance(data, list):
+            for item in data:
+                if isinstance(item, dict) and 'PositionID' in item and item['PositionID'] in position_ids:
+                    matching_positions[item['PositionID']] = item
+
+        st.write("Fetched matching position data from Firebase.")
+        return matching_positions
+
     except Exception as e:
         st.error(f"Error fetching position data: {e}")
         return {}
