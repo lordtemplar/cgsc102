@@ -79,15 +79,15 @@ def load_data_from_firebase(path='/', app=None):
         return pd.DataFrame()
 
 # Helper function to update Firebase database
-def update_firebase_data(student_id, data, app=None):
+def update_firebase_data(index, data, app=None):
     try:
-        # Use the full path including the parent node (e.g., "students/")
-        path = f"/students/{student_id}"
+        # Use the index to construct the path
+        path = f"/{index}"  # Update using the index directly
         ref = db.reference(path, app=app)
         ref.update(data)
-        st.success(f"Data successfully updated for Student ID: {student_id}.")
+        st.success(f"Data successfully updated for Index: {index}.")
     except Exception as e:
-        st.error(f"Failed to update data for Student ID: {student_id}: {e}")
+        st.error(f"Failed to update data for Index: {index}: {e}")
 
 # Helper function to handle student ID conversion
 def format_student_id(student_id):
@@ -201,10 +201,12 @@ if rank_query:
 
             # Submit button to update data in Firebase
             if st.button("Submit"):
+                # Calculate the index from the rank
+                index = int(st.session_state['rank']) - 1
                 update_data = {
                     'Position1': st.session_state['position1'],
                     'Position2': st.session_state['position2'],
                     'Position3': st.session_state['position3']
                 }
-                st.write(f"Updating data for Student ID: {student_id} with data: {update_data}")
-                update_firebase_data(student_id, update_data)
+                st.write(f"Updating data for Index: {index} with data: {update_data}")
+                update_firebase_data(index, update_data)
