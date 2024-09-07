@@ -171,8 +171,8 @@ if rank_query:
             # Submit button to update data in Firebase
             if st.button("Submit"):
                 try:
-                    # Update data in Firebase for the student
-                    ref = db.reference(f"/{student_info['StudentID']}")
+                    # Update data in internal-student-db for the student
+                    ref = db.reference(f"/{student_info['StudentID']}", app=None)
                     ref.update({
                         'Position1': st.session_state['position1'],
                         'Position2': st.session_state['position2'],
