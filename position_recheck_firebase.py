@@ -37,25 +37,28 @@ firebase_config_2 = {
 }
 
 # Initialize Firebase Admin SDK for both databases
-if not firebase_admin._apps:
-    try:
-        cred1 = credentials.Certificate(firebase_config_1)
-        firebase_admin.initialize_app(cred1, {
-            'databaseURL': 'https://internal-student-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
-        })
-    except ValueError as e:
-        st.error(f"Error initializing the first Firebase app: {e}")
+def initialize_firebase():
+    if not firebase_admin._apps:
+        try:
+            cred1 = credentials.Certificate(firebase_config_1)
+            firebase_admin.initialize_app(cred1, {
+                'databaseURL': 'https://internal-student-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
+            })
+        except ValueError as e:
+            st.error(f"Error initializing the first Firebase app: {e}")
 
-try:
-    app2 = firebase_admin.get_app('second_app')
-except ValueError:
     try:
-        cred2 = credentials.Certificate(firebase_config_2)
-        app2 = firebase_admin.initialize_app(cred2, {
-            'databaseURL': 'https://internal-position-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
-        }, name='second_app')
-    except ValueError as e:
-        st.error(f"Error initializing the second Firebase app: {e}")
+        firebase_admin.get_app('second_app')
+    except ValueError:
+        try:
+            cred2 = credentials.Certificate(firebase_config_2)
+            firebase_admin.initialize_app(cred2, {
+                'databaseURL': 'https://internal-position-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
+            }, name='second_app')
+        except ValueError as e:
+            st.error(f"Error initializing the second Firebase app: {e}")
+
+initialize_firebase()
 
 # Function to load data from Firebase into DataFrame
 def load_data_from_firebase(path='/', app=None):
@@ -64,18 +67,43 @@ def load_data_from_firebase(path='/', app=None):
         data = ref.get()
         if data is None:
             st.write(f"No data found at the specified path: {path}")
-            return pd.DataFrame()  # Return empty DataFrame if no data
+            return pd.DataFrame()
         elif isinstance(data, dict):
             return pd.DataFrame.from_dict(data, orient='index')
         else:
-            return pd.DataFrame(data)  # Attempt to handle non-dict format
+            return pd.DataFrame(data)
     except Exception as e:
         st.error(f"Error loading data from Firebase: {e}")
-        return pd.DataFrame()  # Return empty DataFrame in case of error
+        return pd.DataFrame()
+
+# Helper function to update Firebase database
+def update_firebase_data(path, data, app=None):
+    try:
+        ref = db.reference(path, app=app)
+        ref.update(data)
+        st.success(f"Data successfully updated at {path}.")
+    except Exception as e:
+        st.error(f"Failed to update data at {path}: {e}")
+
+# Helper function to handle student ID conversion
+def format_student_id(student_id):
+    try:
+        # Remove any decimal point and convert to string
+        return str(student_id).split(".")[0].strip()
+    except Exception as e:
+        st.error(f"Error formatting student ID: {e}")
+        return ""
+
+# Helper function to fetch student data
+def fetch_student_data(rank_query):
+    # Search for student data by "Rank"
+    df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
+    student_data = df_students[df_students['Rank'].astype(str).str.contains(rank_query.strip(), case=False, na=False)]
+    return student_data.iloc[0] if not student_data.empty else None
 
 # Load data from both Firebase databases into DataFrames
 df_students = load_data_from_firebase('/', app=None)  # Load data from the first Firebase database
-df_positions = load_data_from_firebase('/', app=app2)  # Load data from the second Firebase database
+df_positions = load_data_from_firebase('/', app=firebase_admin.get_app('second_app'))  # Load data from the second Firebase database
 
 # Ensure PositionID is in the correct format
 df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)
@@ -102,25 +130,21 @@ rank_query = st.text_input("กรุณาใส่ลำดับผลกา�
 
 # Check if the new search query is different from the last one
 if rank_query and rank_query != st.session_state['last_search_query']:
-    st.session_state['student_data'] = None  # Reset data
-    st.session_state['last_search_query'] = rank_query  # Update with new query
+    st.session_state['student_data'] = None
+    st.session_state['last_search_query'] = rank_query
 
 if rank_query:
     if st.session_state['student_data'] is None:
-        # Search for student data by "Rank"
-        df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
-        student_data = df_students[df_students['Rank'].astype(str).str.contains(rank_query.strip(), case=False, na=False)]
-
-        if not student_data.empty:
-            st.session_state['student_data'] = student_data.iloc[0]
+        student_data = fetch_student_data(rank_query)
+        if student_data is not None:
+            st.session_state['student_data'] = student_data
         else:
             st.error("ไม่พบข้อมูลที่ค้นหา")
             st.session_state['student_data'] = None
 
     if st.session_state['student_data'] is not None:
         student_info = st.session_state['student_data']
-        # Ensure StudentID is treated as a string without unwanted characters
-        student_id = str(int(student_info['StudentID']))  # Convert to integer and then to string
+        student_id = format_student_id(student_info['StudentID'])
 
         st.session_state.update({
             'rank_name': student_info['RankName'],
@@ -173,30 +197,8 @@ if rank_query:
 
             # Submit button to update data in Firebase
             if st.button("Submit"):
-                try:
-                    # Update data in internal-student-db for the student
-                    ref = db.reference(f"/{rank_query}", app=None)  # Use the correct reference path
-                    ref.update({
-                        'Position1': st.session_state['position1'],
-                        'Position2': st.session_state['position2'],
-                        'Position3': st.session_state['position3']
-                    })
-
-                    st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_id} สำเร็จแล้ว")
-
-                    # Update displayed table
-                    table_placeholder.write(f"""
-                    <table>
-                        <tr><th>รหัสนักเรียน</th><td>{student_id}</td></tr>
-                        <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
-                        <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
-                        <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
-                        <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
-                        <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 1</th><td>{get_position_name(st.session_state['position1'])}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 2</th><td>{get_position_name(st.session_state['position2'])}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 3</th><td>{get_position_name(st.session_state['position3'])}</td></tr>
-                    </table>
-                    """, unsafe_allow_html=True)
-                except Exception as e:
-                    st.error(f"ไม่สามารถอัปเดตข้อมูลได้: {e}")
+                update_firebase_data(f"/{rank_query}", {
+                    'Position1': st.session_state['position1'],
+                    'Position2': st.session_state['position2'],
+                    'Position3': st.session_state['position3']
+                })
