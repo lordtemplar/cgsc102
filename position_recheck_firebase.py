@@ -85,16 +85,31 @@ def search_position_by_id(position_id):
         ref = db.reference('/', app=app2)
         data = ref.get()
         if data:
-            # Searching through the data for the given PositionID
-            found = False
-            for key, value in data.items():
-                if 'PositionID' in value and str(value['PositionID']) == str(position_id):
-                    st.write(f"Position data with PositionID {position_id}:")
-                    st.json(value)
-                    found = True
-                    break
-            if not found:
-                st.write(f"No position found with PositionID {position_id}.")
+            # Check if the data is a dictionary or a list
+            if isinstance(data, dict):
+                # Handle the dictionary format
+                found = False
+                for key, value in data.items():
+                    if 'PositionID' in value and str(value['PositionID']) == str(position_id):
+                        st.write(f"Position data with PositionID {position_id}:")
+                        st.json(value)
+                        found = True
+                        break
+                if not found:
+                    st.write(f"No position found with PositionID {position_id}.")
+            elif isinstance(data, list):
+                # Handle the list format
+                found = False
+                for item in data:
+                    if isinstance(item, dict) and 'PositionID' in item and str(item['PositionID']) == str(position_id):
+                        st.write(f"Position data with PositionID {position_id}:")
+                        st.json(item)
+                        found = True
+                        break
+                if not found:
+                    st.write(f"No position found with PositionID {position_id}.")
+            else:
+                st.write("Unexpected data format received from Firebase.")
         else:
             st.write("No data found in the second Firebase database.")
     except Exception as e:
