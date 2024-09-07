@@ -59,43 +59,45 @@ def update_confirm_student_db(position_df):
         student_data_ref = db.reference('/', app=app1)
         student_data = student_data_ref.get()
 
-        # Check if the fetched data is a list or dictionary
-        if isinstance(student_data, list):
-            # Iterate over student data list
-            for i, student in enumerate(student_data):
-                position_id = student.get('PositionID')
-                if position_id and str(position_id) in position_df.index:
-                    # Find the corresponding position data using PositionID
-                    position_info = position_df.loc[str(position_id)]
+        # Display spinner while updating
+        with st.spinner("กำลังอัปเดตข้อมูล..."):
+            # Check if the fetched data is a list or dictionary
+            if isinstance(student_data, list):
+                # Iterate over student data list
+                for i, student in enumerate(student_data):
+                    position_id = student.get('PositionID')
+                    if position_id and str(position_id) in position_df.index:
+                        # Find the corresponding position data using PositionID
+                        position_info = position_df.loc[str(position_id)]
 
-                    # Update fields in confirm-student-db
-                    student_data_ref.child(str(i)).update({
-                        'PositionName': position_info['PositionName'],
-                        'BranchLimit': position_info['Branch'],
-                        'Other': position_info['Other'],
-                        'PositionRank': position_info['Rank'],
-                        'Specialist': position_info['Specialist'],
-                        'Unit': position_info['Unit']
-                    })
+                        # Update fields in confirm-student-db
+                        student_data_ref.child(str(i)).update({
+                            'PositionName': position_info['PositionName'],
+                            'BranchLimit': position_info['Branch'],
+                            'Other': position_info['Other'],
+                            'PositionRank': position_info['Rank'],
+                            'Specialist': position_info['Specialist'],
+                            'Unit': position_info['Unit']
+                        })
 
-        elif isinstance(student_data, dict):
-            # Iterate over student data dictionary
-            for key, student in student_data.items():
-                position_id = student.get('PositionID')
-                if position_id and str(position_id) in position_df.index:
-                    # Find the corresponding position data using PositionID
-                    position_info = position_df.loc[str(position_id)]
+            elif isinstance(student_data, dict):
+                # Iterate over student data dictionary
+                for key, student in student_data.items():
+                    position_id = student.get('PositionID')
+                    if position_id and str(position_id) in position_df.index:
+                        # Find the corresponding position data using PositionID
+                        position_info = position_df.loc[str(position_id)]
 
-                    # Update fields in confirm-student-db
-                    student_data_ref.child(key).update({
-                        'PositionName': position_info['PositionName'],
-                        'BranchLimit': position_info['Branch'],
-                        'Other': position_info['Other'],
-                        'PositionRank': position_info['Rank'],
-                        'Specialist': position_info['Specialist'],
-                        'Unit': position_info['Unit']
-                    })
-
+                        # Update fields in confirm-student-db
+                        student_data_ref.child(key).update({
+                            'PositionName': position_info['PositionName'],
+                            'BranchLimit': position_info['Branch'],
+                            'Other': position_info['Other'],
+                            'PositionRank': position_info['Rank'],
+                            'Specialist': position_info['Specialist'],
+                            'Unit': position_info['Unit']
+                        })
+        st.success("การอัปเดตข้อมูลเสร็จสมบูรณ์!")
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการอัปเดตฐานข้อมูล: {e}")
 
