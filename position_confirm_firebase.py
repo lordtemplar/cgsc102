@@ -52,6 +52,35 @@ def fetch_data():
 
     return student_df, position_df
 
+# Function to create a DataFrame of data to be updated
+def prepare_update_dataframe(student_df, position_df):
+    update_data = []
+    if not student_df.empty and not position_df.empty:
+        for index, student in student_df.iterrows():
+            position_id = str(student['PositionID'])
+            if position_id in position_df.index:
+                position_info = position_df.loc[position_id]
+                update_data.append({
+                    'StudentID': student['StudentID'],
+                    'PositionID': position_id,
+                    'Current PositionName': student['PositionName'],
+                    'New PositionName': position_info['PositionName'],
+                    'Current BranchLimit': student['BranchLimit'],
+                    'New BranchLimit': position_info['Branch'],
+                    'Current Other': student['Other'],
+                    'New Other': position_info['Other'],
+                    'Current PositionRank': student['PositionRank'],
+                    'New PositionRank': position_info['Rank'],
+                    'Current Specialist': student['Specialist'],
+                    'New Specialist': position_info['Specialist'],
+                    'Current Unit': student['Unit'],
+                    'New Unit': position_info['Unit']
+                })
+
+    # Convert to DataFrame for display
+    update_df = pd.DataFrame(update_data)
+    return update_df
+
 # Function to update confirm-student-db with data from internal-position-db
 def update_confirm_student_db(position_df):
     try:
@@ -117,6 +146,12 @@ def main():
 
     # Fetch data from both databases
     student_df, position_df = fetch_data()  
+
+    # Prepare the DataFrame to show what will be updated
+    update_df = prepare_update_dataframe(student_df, position_df)
+    if not update_df.empty:
+        st.header("ข้อมูลที่เตรียมสำหรับการอัปเดต")
+        st.dataframe(update_df)  # Display what will be updated
 
     # Update confirm-student-db with data from internal-position-db
     update_confirm_student_db(position_df)
