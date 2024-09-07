@@ -1,17 +1,14 @@
 import streamlit as st
+from db_connections import firebase_apps  # Import initialized Firebase apps
 from firebase_admin import db
-from firebase_connection import initialize_firebase
 
 # Set the title of the Streamlit app
 st.set_page_config(page_title="Position Choose")
 
-# Initialize Firebase
-app1, app2 = initialize_firebase()
-
 # Function to fetch student data by rank from the first Firebase database
 def fetch_student_by_rank(rank):
     try:
-        ref = db.reference('/', app=app1)
+        ref = db.reference('/', firebase_apps['firebase1'])
         data = ref.get()
         if data:
             for key, value in data.items():
@@ -25,7 +22,7 @@ def fetch_student_by_rank(rank):
 # Function to update student data in the first Firebase database
 def update_student_data(student_key, update_data):
     try:
-        ref = db.reference(f"/{student_key}", app=app1)
+        ref = db.reference(f"/{student_key}", firebase_apps['firebase1'])
         ref.update(update_data)
     except Exception as e:
         st.error(f"Error updating student data: {e}")
@@ -33,10 +30,10 @@ def update_student_data(student_key, update_data):
 # Function to fetch position data from the second Firebase database
 def fetch_position_data(position_ids):
     try:
-        ref = db.reference('/', app=app2)
+        ref = db.reference('/', app=firebase_apps['firebase2'])
         data = ref.get()
         matching_positions = {}
-        
+
         # Check if data is a list or dictionary and process accordingly
         if isinstance(data, dict):
             for key, value in data.items():
