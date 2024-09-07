@@ -172,6 +172,10 @@ if rank_query:
                 student_ref = db.reference(f"/{st.session_state['student_key']}", firebase_apps[0])
                 student_ref.update({'Position1': selected_position_id})
 
+                # Update the confirm student database
+                confirm_student_ref = db.reference(f"/{st.session_state['student_key']}", firebase_apps[2])
+                confirm_student_ref.update({'Position1': selected_position_id})
+
                 # Send Line Notify with the new token
                 next_rank = int(student_info['Rank']) + 1
                 line_token = "snH08HhuKeu11DAgQmyUyYeDcnqgHVlcfRP8Fdqz4db"
