@@ -201,12 +201,16 @@ if rank_query:
 
             # Submit button to update data in Firebase
             if st.button("Submit"):
-                # Calculate the index from the rank
-                index = int(st.session_state['rank']) - 1
-                update_data = {
-                    'Position1': st.session_state['position1'],
-                    'Position2': st.session_state['position2'],
-                    'Position3': st.session_state['position3']
-                }
-                st.write(f"Updating data for Index: {index} with data: {update_data}")
-                update_firebase_data(index, update_data)
+                try:
+                    # Attempt to convert rank to an integer
+                    rank = int(st.session_state['rank'])
+                    index = rank - 1
+                    update_data = {
+                        'Position1': st.session_state['position1'],
+                        'Position2': st.session_state['position2'],
+                        'Position3': st.session_state['position3']
+                    }
+                    st.write(f"Updating data for Index: {index} with data: {update_data}")
+                    update_firebase_data(index, update_data)
+                except ValueError:
+                    st.error("Rank is not a valid integer. Please check the data.")
