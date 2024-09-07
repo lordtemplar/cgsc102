@@ -158,11 +158,14 @@ if rank_query:
                 update_data = {'ConfirmedPosition': selected_position_id}
                 update_student_data(st.session_state['student_key'], update_data)
 
-                # Update position status in internal and external position databases using PositionID as key
-                internal_position_ref = db.reference(f"/{selected_position_id}", firebase_apps[1])
+                # Calculate the key using (selected_position_id - 1)
+                position_key = selected_position_id - 1
+
+                # Update position status in internal and external position databases using (selected_position_id - 1) as key
+                internal_position_ref = db.reference(f"/{position_key}", firebase_apps[1])
                 internal_position_ref.update({'Status': "ไม่ว่าง"})
 
-                external_position_ref = db.reference(f"/{selected_position_id}", firebase_apps[3])
+                external_position_ref = db.reference(f"/{position_key}", firebase_apps[3])
                 external_position_ref.update({'Status': "ไม่ว่าง"})
 
                 # Update the internal student database
@@ -181,4 +184,4 @@ if rank_query:
                 display_student_info()
 
             except Exception as e:
-                st.error(f"ไม่สามารถยืนยันข้อมูลได้: {e}")
+                st.error(f"ไม่สามารถยืนยันข้อมูลได้: {e
