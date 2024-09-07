@@ -121,30 +121,29 @@ if rank_query:
         # Display the initial student information
         display_student_info()
 
-        # Input field for confirming the selected position
+        # Dropdown for confirming the selected position
         st.write("### ยืนยัน 'รหัสตำแหน่ง' ที่เลือก")
-        confirmed_position_input = st.text_input("ยืนยันตำแหน่งที่เลือก", "")
+        confirmed_position = st.selectbox(
+            "เลือกตำแหน่งที่ต้องการยืนยัน", 
+            options=[
+                (st.session_state['position1'], matching_positions.get(st.session_state['position1'], 'N/A')),
+                (st.session_state['position2'], matching_positions.get(st.session_state['position2'], 'N/A')),
+                (st.session_state['position3'], matching_positions.get(st.session_state['position3'], 'N/A'))
+            ], 
+            format_func=lambda x: f"{x[0]} - {x[1]}"
+        )
 
-        # Validate and update positions
-        if confirmed_position_input:
-            if not confirmed_position_input.isdigit():
-                st.error("กรุณากรอกรหัสด้วยตัวเลขสำหรับตำแหน่งที่เลือก")
-            else:
-                confirmed_position = int(confirmed_position_input)
-                if confirmed_position not in [st.session_state['position1'], st.session_state['position2'], st.session_state['position3']]:
-                    st.error("ตำแหน่งที่เลือกไม่ถูกต้อง กรุณาเลือกจากตำแหน่งที่ระบุไว้")
-                else:
-                    # Submit button to confirm selection
-                    if st.button("Confirm Selection"):
-                        try:
-                            update_data = {
-                                'ConfirmedPosition': confirmed_position
-                            }
-                            update_student_data(st.session_state['student_key'], update_data)
-                            st.success(f"ยืนยันข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
+        # Button to confirm selection
+        if st.button("ยืนยัน"):
+            try:
+                update_data = {
+                    'ConfirmedPosition': confirmed_position[0]
+                }
+                update_student_data(st.session_state['student_key'], update_data)
+                st.success(f"ยืนยันข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
 
-                            # Refresh the existing table with new data
-                            display_student_info()
+                # Refresh the existing table with new data
+                display_student_info()
 
-                        except Exception as e:
-                            st.error(f"ไม่สามารถยืนยันข้อมูลได้: {e}")
+            except Exception as e:
+                st.error(f"ไม่สามารถยืนยันข้อมูลได้: {e}")
