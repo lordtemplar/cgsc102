@@ -155,7 +155,7 @@ if rank_query:
             'branch': student_info['Branch'],
             'officer_type': student_info['OfficerType'],
             'other': student_info['Other'],
-            'rank': str(student_info['Rank']),
+            'rank': str(student_info['Rank']).strip(),  # Strip any extra whitespace
             'position1': str(student_info['Position1']).zfill(3),
             'position2': str(student_info['Position2']).zfill(3),
             'position3': str(student_info['Position3']).zfill(3)
@@ -201,10 +201,10 @@ if rank_query:
 
             # Submit button to update data in Firebase
             if st.button("Submit"):
-                try:
-                    # Attempt to convert rank to an integer
-                    rank = int(st.session_state['rank'])
-                    index = rank - 1
+                rank = st.session_state['rank']
+                # Ensure that rank is a numeric value
+                if rank.isdigit():
+                    index = int(rank) - 1
                     update_data = {
                         'Position1': st.session_state['position1'],
                         'Position2': st.session_state['position2'],
@@ -212,5 +212,5 @@ if rank_query:
                     }
                     st.write(f"Updating data for Index: {index} with data: {update_data}")
                     update_firebase_data(index, update_data)
-                except ValueError:
+                else:
                     st.error("Rank is not a valid integer. Please check the data.")
