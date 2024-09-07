@@ -146,9 +146,13 @@ if rank_query:
             'position3': int(student_info['Position3'])
         })
 
-        # Fetch position data matching the PositionIDs in the student data
-        position_ids = [st.session_state['position1'], st.session_state['position2'], st.session_state['position3']]
-        matching_positions = fetch_position_data(position_ids)
+        # Function to refresh position data
+        def refresh_position_data():
+            position_ids = [st.session_state['position1'], st.session_state['position2'], st.session_state['position3']]
+            return fetch_position_data(position_ids)
+
+        # Fetch and refresh position data
+        matching_positions = refresh_position_data()
 
         # Placeholder for the table to dynamically update
         table_placeholder = st.empty()
@@ -201,6 +205,9 @@ if rank_query:
                     }
                     update_student_data(st.session_state['student_key'], update_data)
                     st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
+
+                    # Refresh position data after update
+                    matching_positions = refresh_position_data()
 
                     # Refresh the existing table with new data
                     display_student_info()
