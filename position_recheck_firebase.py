@@ -91,12 +91,12 @@ def fetch_position_data(position_ids):
         # Check if data is a list or dictionary and process accordingly
         if isinstance(data, dict):
             for key, value in data.items():
-                if 'PositionID' in value and value['PositionID'] in position_ids:
-                    matching_positions[value['PositionID']] = value
+                if 'PositionID' in value and int(value['PositionID']) in position_ids:
+                    matching_positions[int(value['PositionID'])] = value
         elif isinstance(data, list):
             for item in data:
-                if isinstance(item, dict) and 'PositionID' in item and item['PositionID'] in position_ids:
-                    matching_positions[item['PositionID']] = item
+                if isinstance(item, dict) and 'PositionID' in item and int(item['PositionID']) in position_ids:
+                    matching_positions[int(item['PositionID'])] = item
 
         st.write("Fetched matching position data from Firebase.")
         return matching_positions
@@ -141,9 +141,9 @@ if rank_query:
             'officer_type': student_info['OfficerType'],
             'other': student_info['Other'],
             'rank': str(student_info['Rank']),
-            'position1': str(student_info['Position1']).zfill(3),
-            'position2': str(student_info['Position2']).zfill(3),
-            'position3': str(student_info['Position3']).zfill(3)
+            'position1': int(student_info['Position1']),
+            'position2': int(student_info['Position2']),
+            'position3': int(student_info['Position3'])
         })
 
         # Display student information in a table format
@@ -181,21 +181,21 @@ if rank_query:
 
         # Input fields for editing positions
         st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
-        position1_input = st.text_input("ตำแหน่งลำดับ 1", st.session_state['position1'])
-        position2_input = st.text_input("ตำแหน่งลำดับ 2", st.session_state['position2'])
-        position3_input = st.text_input("ตำแหน่งลำดับ 3", st.session_state['position3'])
+        position1_input = st.text_input("ตำแหน่งลำดับ 1", str(st.session_state['position1']))
+        position2_input = st.text_input("ตำแหน่งลำดับ 2", str(st.session_state['position2']))
+        position3_input = st.text_input("ตำแหน่งลำดับ 3", str(st.session_state['position3']))
 
         # Validate and update positions
         filled_positions = [position1_input, position2_input, position3_input]
-        valid_positions = any(len(pos) == 3 and pos.isdigit() for pos in filled_positions)
+        valid_positions = all(pos.isdigit() for pos in filled_positions)
 
         if not valid_positions:
-            st.error("กรุณากรอกรหัสด้วยเลข 3 หลักอย่างน้อย 1 ตำแหน่งที่เลือก")
+            st.error("กรุณากรอกรหัสด้วยตัวเลขอย่างน้อย 1 ตำแหน่งที่เลือก")
         else:
             st.session_state.update({
-                'position1': position1_input.zfill(3),
-                'position2': position2_input.zfill(3),
-                'position3': position3_input.zfill(3)
+                'position1': int(position1_input),
+                'position2': int(position2_input),
+                'position3': int(position3_input)
             })
 
             # Submit button to update data
