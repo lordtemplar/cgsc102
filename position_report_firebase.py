@@ -55,22 +55,21 @@ def fetch_data():
 # Function to display data from DataFrames
 def display_data(student_df, position_df):
     if not student_df.empty:
-        st.header("รายงานข้อมูลนักเรียน (Confirm Student DB)")
+        st.header("รายงานผลการเลือกตำแหน่งรับราชการ (ข้อมูลนักเรียน)")
         st.dataframe(student_df)  # Display student data DataFrame
 
     if not position_df.empty:
-        st.header("รายงานข้อมูลตำแหน่ง (Internal Position DB)")
+        st.header("รายงานผลการเลือกตำแหน่งรับราชการ (ข้อมูลตำแหน่ง)")
         st.dataframe(position_df)  # Display position data DataFrame
 
 # Streamlit app layout
 def main():
-    st.title("การเลือกตำแหน่งรับราชการ - ระบบรายงาน")
-    st.write("หน้านี้แสดงรายงานการเลือกตำแหน่งรับราชการโดยเชื่อมต่อกับฐานข้อมูล Firebase Realtime Database")
+    st.title("รายงานผลการเลือกตำแหน่งรับราชการ")
+    st.write("หน้านี้แสดงรายงานผลการเลือกตำแหน่งรับราชการโดยเชื่อมต่อกับฐานข้อมูล Firebase Realtime Database")
 
-    # Button to fetch and display data
-    if st.button('ดึงข้อมูลและแสดงรายงาน'):
-        student_df, position_df = fetch_data()  # Fetch data and load into DataFrames
-        display_data(student_df, position_df)  # Display the data
+    # Fetch and display data automatically
+    student_df, position_df = fetch_data()  # Fetch data and load into DataFrames
+    display_data(student_df, position_df)  # Display the data
 
 if __name__ == "__main__":
     main()
