@@ -58,7 +58,7 @@ except ValueError:
     except ValueError as e:
         st.error(f"Error initializing the second Firebase app: {e}")
 
-# Function to fetch all position data from the second Firebase database
+# Function to fetch position data from the second Firebase database
 def fetch_positions():
     try:
         ref = db.reference('/', app=app2)
@@ -96,17 +96,22 @@ def update_student_data(student_key, update_data):
     except Exception as e:
         st.error(f"Error updating student data: {e}")
 
-# Function to get position name by ID
-def get_position_name(position_id, positions):
-    # Handle both dictionary and list formats
-    if isinstance(positions, dict):
-        for key, value in positions.items():
-            if 'PositionID' in value and value['PositionID'] == position_id:
-                return value['PositionName']
-    elif isinstance(positions, list):
-        for item in positions:
-            if 'PositionID' in item and item['PositionID'] == position_id:
-                return item['PositionName']
+# Function to get position name by ID directly from Firebase
+def get_position_name(position_id):
+    try:
+        ref = db.reference('/', app=app2)
+        data = ref.get()
+        # Handle both dictionary and list formats
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if 'PositionID' in value and value['PositionID'] == position_id:
+                    return value['PositionName']
+        elif isinstance(data, list):
+            for item in data:
+                if 'PositionID' in item and item['PositionID'] == position_id:
+                    return item['PositionName']
+    except Exception as e:
+        st.error(f"Error fetching position name: {e}")
     return position_id
 
 # Load all positions data once
@@ -153,9 +158,10 @@ if rank_query:
             'position3': str(student_info['Position3']).zfill(3)
         })
 
-        position1_name = get_position_name(st.session_state['position1'], positions_data)
-        position2_name = get_position_name(st.session_state['position2'], positions_data)
-        position3_name = get_position_name(st.session_state['position3'], positions_data)
+        # Fetch position names directly from Firebase
+        position1_name = get_position_name(st.session_state['position1'])
+        position2_name = get_position_name(st.session_state['position2'])
+        position3_name = get_position_name(st.session_state['position3'])
 
         # Display data in a table format
         table_placeholder = st.empty()
@@ -212,9 +218,9 @@ if rank_query:
                         <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
                         <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
                         <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 1</th><td>{get_position_name(st.session_state['position1'], positions_data)}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 2</th><td>{get_position_name(st.session_state['position2'], positions_data)}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 3</th><td>{get_position_name(st.session_state['position3'], positions_data)}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 1</th><td>{get_position_name(st.session_state['position1'])}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 2</th><td>{get_position_name(st.session_state['position2'])}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 3</th><td>{get_position_name(st.session_state['position3'])}</td></tr>
                     </table>
                     """, unsafe_allow_html=True)
                 except Exception as e:
