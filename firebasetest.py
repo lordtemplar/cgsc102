@@ -26,7 +26,7 @@ try:
         # ใช้ Credential ที่ถูกต้องในการเชื่อมต่อ
         cred = credentials.Certificate(firebase_config)
         firebase_admin.initialize_app(cred, {
-            'databaseURL': 'https://positionchoosing-default-rtdb.asia-southeast1.firebasedatabase.app/'
+            'databaseURL': 'https://external-position-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
         })
 
 except ValueError as e:
