@@ -52,6 +52,44 @@ def fetch_data():
 
     return student_df, position_df
 
+# Function to create a DataFrame of data to be updated
+def prepare_update_dataframe(student_df, position_df):
+    # Check if 'PositionID' column exists in student_df
+    if 'PositionID' not in student_df.columns:
+        st.error("ไม่พบคอลัมน์ 'PositionID' ในข้อมูลนักเรียนที่ดึงมา กรุณาตรวจสอบฐานข้อมูล.")
+        return pd.DataFrame()  # Return empty DataFrame to prevent further errors
+
+    update_data = []
+    if not student_df.empty and not position_df.empty:
+        for index, student in student_df.iterrows():
+            try:
+                position_id = str(student['PositionID'])
+                if position_id in position_df.index:
+                    position_info = position_df.loc[position_id]
+                    update_data.append({
+                        'StudentID': student.get('StudentID', 'N/A'),
+                        'PositionID': position_id,
+                        'Current PositionName': student.get('PositionName', 'N/A'),
+                        'New PositionName': position_info.get('PositionName', 'N/A'),
+                        'Current BranchLimit': student.get('BranchLimit', 'N/A'),
+                        'New BranchLimit': position_info.get('Branch', 'N/A'),
+                        'Current Other': student.get('Other', 'N/A'),
+                        'New Other': position_info.get('Other', 'N/A'),
+                        'Current PositionRank': student.get('PositionRank', 'N/A'),
+                        'New PositionRank': position_info.get('Rank', 'N/A'),
+                        'Current Specialist': student.get('Specialist', 'N/A'),
+                        'New Specialist': position_info.get('Specialist', 'N/A'),
+                        'Current Unit': student.get('Unit', 'N/A'),
+                        'New Unit': position_info.get('Unit', 'N/A')
+                    })
+            except KeyError as e:
+                st.error(f"เกิดข้อผิดพลาด: {e}")
+                continue
+
+    # Convert to DataFrame for display
+    update_df = pd.DataFrame(update_data)
+    return update_df
+
 # Function to update confirm-student-db with data from internal-position-db
 def update_confirm_student_db(position_df):
     try:
@@ -118,8 +156,17 @@ def main():
     # Fetch data from both databases
     student_df, position_df = fetch_data()  
 
+    # Prepare the DataFrame to show what will be updated
+    update_df = prepare_update_dataframe(student_df, position_df)
+    if not update_df.empty:
+        st.header("ข้อมูลที่เตรียมสำหรับการอัปเดต")
+        st.dataframe(update_df)  # Display what will be updated
+
     # Update confirm-student-db with data from internal-position-db
     update_confirm_student_db(position_df)
+
+    # Fetch updated data after updating to confirm changes
+    student_df, position_df = fetch_data()
 
     # Display the updated data
     display_data(student_df, position_df)
