@@ -184,4 +184,4 @@ if rank_query:
                 display_student_info()
 
             except Exception as e:
-                st.error(f"ไม่สามารถยืนยันข้อมูลได้: {e
+                st.error(f"ไม่สามารถยืนยันข้อมูลได้: {e}")
