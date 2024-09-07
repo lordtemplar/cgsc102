@@ -1,7 +1,15 @@
 import streamlit as st
-from db_connections import firebase_apps  # Import initialized Firebase apps
+from db_connections import firebase_apps  # Import initialized Firebase apps with debug info
 from firebase_admin import db
 import requests
+
+# Debugging: Display information about the Firebase connections
+st.write("Firebase Connection Status:")
+for i, app in enumerate(firebase_apps):
+    if app:
+        st.write(f"App {i + 1}: Connected")
+    else:
+        st.write(f"App {i + 1}: Not Connected")
 
 # Set the title of the Streamlit app
 st.set_page_config(page_title="Position Confirm")
@@ -9,7 +17,7 @@ st.set_page_config(page_title="Position Confirm")
 # Function to fetch student data by rank from the first Firebase database
 def fetch_student_by_rank(rank):
     try:
-        ref = db.reference('/', firebase_apps['firebase1'])
+        ref = db.reference('/', firebase_apps[0])  # Use the first Firebase app
         data = ref.get()
         if data:
             for key, value in data.items():
@@ -23,7 +31,7 @@ def fetch_student_by_rank(rank):
 # Function to update student data in the first Firebase database
 def update_student_data(student_key, update_data):
     try:
-        ref = db.reference(f"/{student_key}", firebase_apps['firebase1'])
+        ref = db.reference(f"/{student_key}", firebase_apps[0])  # Use the first Firebase app
         ref.update(update_data)
     except Exception as e:
         st.error(f"Error updating student data: {e}")
@@ -31,7 +39,7 @@ def update_student_data(student_key, update_data):
 # Function to fetch position data from the second Firebase database
 def fetch_position_data(position_ids):
     try:
-        ref = db.reference('/', app=firebase_apps['firebase2'])
+        ref = db.reference('/', app=firebase_apps[1])  # Use the second Firebase app
         data = ref.get()
         matching_positions = {}
 
@@ -150,14 +158,14 @@ if rank_query:
                 update_student_data(st.session_state['student_key'], update_data)
 
                 # Update position status in internal and external position databases
-                internal_position_ref = db.reference(f"/{selected_position_id}", firebase_apps['firebase2'])
+                internal_position_ref = db.reference(f"/{selected_position_id}", firebase_apps[1])
                 internal_position_ref.update({'Status': "ไม่ว่าง"})
 
-                external_position_ref = db.reference(f"/{selected_position_id}", firebase_apps['firebase4'])
+                external_position_ref = db.reference(f"/{selected_position_id}", firebase_apps[3])
                 external_position_ref.update({'Status': "ไม่ว่าง"})
 
                 # Update the internal student database
-                student_ref = db.reference(f"/{st.session_state['student_key']}", firebase_apps['firebase1'])
+                student_ref = db.reference(f"/{st.session_state['student_key']}", firebase_apps[0])
                 student_ref.update({'Position1': selected_position_id})
 
                 # Send Line Notify with the new token
