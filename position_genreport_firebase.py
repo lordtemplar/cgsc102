@@ -41,48 +41,24 @@ def fetch_all_students():
         st.error(f"Error fetching all student data: {e}")
         return pd.DataFrame()  # Return an empty DataFrame on error
 
-# Function to generate the report by merging data from both databases
-def generate_report(rank):
-    # Fetch student data by rank
-    student_key, student_data = fetch_student_by_rank(rank)
-    if not student_data:
-        st.warning(f"No student found with rank {rank}.")
-        return
-
-    # Extract the position IDs selected by the student
-    selected_positions = student_data.get('SelectedPositions', [])  # Assume it is a list of IDs
-
-    if not selected_positions:
-        st.warning(f"No positions selected by the student with rank {rank}.")
-        return
-
-    # Fetch position data for the selected positions
-    positions = fetch_position_data(selected_positions)
-
-    # Merge student data and positions into a single report
-    report_data = {
-        "StudentID": student_data.get('StudentID'),
-        "Rank": student_data.get('Rank'),
-        "Name": student_data.get('RankName'),
-        "Selected Positions": {pos_id: positions.get(pos_id, 'Unknown') for pos_id in selected_positions}
-    }
-
-    # Display the merged report
-    st.write("## Merged Report")
-    st.json(report_data)
+# Function to render a simple table
+def render_simple_table(data):
+    """Function to create and display a simple HTML table"""
+    html_table = '<table style="width:100%;">'
+    html_table += '<tr><th>ลำดับ</th><th>ตำแหน่ง</th><th>สังกัด</th><th>ชกท.</th><th>อัตรา</th><th>เหล่า</th><th>เงื่อนไข</th></tr>'
+    for _, row in data.iterrows():
+        # Default color is set directly in the row style
+        bg_color = 'green' if row.get('ConfirmedPosition', 'Not Confirmed') == 'ว่าง' else 'darkred'
+        html_table += f'<tr style="background-color:{bg_color}; color:white;"><td>{row["Rank"]}</td><td>{row["StudentID"]}</td><td>{row["RankName"]}</td><td>{row["Branch"]}</td><td>{row["OfficerType"]}</td><td>{row["Other"]}</td><td>{row["ConfirmedPosition"]}</td></tr>'
+    html_table += '</table>'
+    st.markdown(html_table, unsafe_allow_html=True)
 
 # Layout of the Streamlit app
 st.title("ระบบเลือกที่ลง CGSC102")
 
-# Display the table with all student information sorted by rank
-st.write("### Student Information")
+# Fetch and display the table with all student information sorted by rank
 students_df = fetch_all_students()
 if not students_df.empty:
-    st.dataframe(students_df)
-
-# Input field for rank
-rank = st.number_input("Enter Rank to generate report:", min_value=1)
-
-# Button to generate the report
-if st.button("Generate Report"):
-    generate_report(rank)
+    render_simple_table(students_df)
+else:
+    st.write("No data available to display.")
