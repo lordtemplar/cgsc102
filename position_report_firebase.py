@@ -58,6 +58,9 @@ def display_data(student_df, position_df):
         # Reorder columns for the student DataFrame
         student_columns_order = ["Rank", "StudentID", "StudentName", "Branch", "OfficerType", "Other", "PositionID"]
         student_df = student_df.reindex(columns=student_columns_order)
+        
+        # Convert StudentID to string to avoid comma formatting
+        student_df["StudentID"] = student_df["StudentID"].astype(str)
 
         st.header("รายงานผลการเลือกตำแหน่ง (ข้อมูลนักเรียน)")
         st.dataframe(student_df, use_container_width=True, hide_index=True)  # Display student data DataFrame without index
