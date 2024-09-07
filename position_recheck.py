@@ -1,135 +1,64 @@
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import pandas as pd
 import streamlit as st
-import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import db
 
-# Set the title of the Streamlit app
+# ตั้งค่า title bar ของแอพในเบราว์เซอร์
 st.set_page_config(page_title="Position Choose")
 
-# Load Firebase credentials from Streamlit secrets for the first and second databases
-firebase_config_1 = {
-    "type": st.secrets["firebase1"]["type"],
-    "project_id": st.secrets["firebase1"]["project_id"],
-    "private_key_id": st.secrets["firebase1"]["private_key_id"],
-    "private_key": st.secrets["firebase1"]["private_key"].replace('\\n', '\n'),
-    "client_email": st.secrets["firebase1"]["client_email"],
-    "client_id": st.secrets["firebase1"]["client_id"],
-    "auth_uri": st.secrets["firebase1"]["auth_uri"],
-    "token_uri": st.secrets["firebase1"]["token_uri"],
-    "auth_provider_x509_cert_url": st.secrets["firebase1"]["auth_provider_x509_cert_url"],
-    "client_x509_cert_url": st.secrets["firebase1"]["client_x509_cert_url"],
-    "universe_domain": st.secrets["firebase1"]["universe_domain"]
-}
+# ตั้งค่าข้อมูลรับรองของ Google Sheets API
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds = ServiceAccountCredentials.from_json_keyfile_name('boreal-dock-433205-b0-87525a85b092.json', scope)
+client = gspread.authorize(creds)
 
-firebase_config_2 = {
-    "type": st.secrets["firebase2"]["type"],
-    "project_id": st.secrets["firebase2"]["project_id"],
-    "private_key_id": st.secrets["firebase2"]["private_key_id"],
-    "private_key": st.secrets["firebase2"]["private_key"].replace('\\n', '\n'),
-    "client_email": st.secrets["firebase2"]["client_email"],
-    "client_id": st.secrets["firebase2"]["client_id"],
-    "auth_uri": st.secrets["firebase2"]["auth_uri"],
-    "token_uri": st.secrets["firebase2"]["token_uri"],
-    "auth_provider_x509_cert_url": st.secrets["firebase2"]["auth_provider_x509_cert_url"],
-    "client_x509_cert_url": st.secrets["firebase2"]["client_x509_cert_url"],
-    "universe_domain": st.secrets["firebase2"]["universe_domain"]
-}
+# เปิดไฟล์ Google Sheets โดยใช้ลิงก์ใหม่
+student_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw').sheet1
+position_sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1mflUv6jyOqTXplPGiSxCOp7wJ1HHd4lQ4BSIzvuBgoQ').sheet1
 
-# Initialize Firebase Admin SDK for both databases
-if not firebase_admin._apps:
-    try:
-        cred1 = credentials.Certificate(firebase_config_1)
-        firebase_admin.initialize_app(cred1, {
-            'databaseURL': 'https://internal-student-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
-        })
-        st.write("Connected to the first Firebase database (internal-student-db).")
-    except ValueError as e:
-        st.error(f"Error initializing the first Firebase app: {e}")
+# ลิงก์สำหรับการอัปเดตข้อมูล
+update_link_1 = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw'
+update_link_2 = 'https://docs.google.com/spreadsheets/d/1lwfcVb8GwSLN9RSZyiyzaCjS8jywgaNS5Oj8k7Lhemw'
 
-try:
-    app2 = firebase_admin.get_app('second_app')
-except ValueError:
-    try:
-        cred2 = credentials.Certificate(firebase_config_2)
-        app2 = firebase_admin.initialize_app(cred2, {
-            'databaseURL': 'https://internal-position-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
-        }, name='second_app')
-        st.write("Connected to the second Firebase database (internal-position-db).")
-    except ValueError as e:
-        st.error(f"Error initializing the second Firebase app: {e}")
+# โหลดข้อมูลจาก PositionDB
+df_positions = pd.DataFrame(position_sheet.get_all_records())
+df_positions['PositionID'] = df_positions['PositionID'].astype(str).str.zfill(3)
 
-# Function to fetch all position data from the second Firebase database
-def fetch_positions():
-    try:
-        ref = db.reference('/', app=app2)
-        data = ref.get()
-        if data:
-            st.write("Fetched all position data from Firebase.")
-            return data
-        else:
-            st.write("No position data found in Firebase.")
-            return {}
-    except Exception as e:
-        st.error(f"Error fetching position data: {e}")
-        return {}
-
-# Function to fetch student data by rank from the first Firebase database
-def fetch_student_by_rank(rank):
-    try:
-        ref = db.reference('/', firebase_admin.get_app())
-        data = ref.get()
-        if data:
-            for key, value in data.items():
-                if 'Rank' in value and str(value['Rank']) == str(rank):
-                    return key, value  # Return both the key and the student data
-        return None, None
-    except Exception as e:
-        st.error(f"Error fetching student data: {e}")
-        return None, None
-
-# Function to update student data in the first Firebase database
-def update_student_data(student_key, update_data):
-    try:
-        ref = db.reference(f"/{student_key}", firebase_admin.get_app())
-        ref.update(update_data)
-        st.success(f"Data successfully updated for Student with key {student_key}.")
-    except Exception as e:
-        st.error(f"Error updating student data: {e}")
-
-# Function to get position name by ID
-def get_position_name(position_id, positions):
-    for key, value in positions.items():
-        if 'PositionID' in value and value['PositionID'] == position_id:
-            return value['PositionName']
+# Function เพื่อดึงชื่อหน่วยจาก PositionDB โดยอ้างอิงจาก PositionID
+def get_position_name(position_id):
+    if position_id.isdigit() and len(position_id) == 3:
+        position = df_positions[df_positions['PositionID'] == position_id]
+        if not position.empty:
+            return position.iloc[0]['PositionName']
     return position_id
 
-# Load all positions data once
-positions_data = fetch_positions()
-
-# Layout of the Streamlit app
+# Layout ของแอพ Streamlit
 st.title("ระบบเลือกที่ลง CGSC102")
 
-# Initialize session state for storing student data
+# ตั้งค่าเริ่มต้นของ session state เพื่อเก็บข้อมูลที่ใช้ในการแก้ไข
 if 'student_data' not in st.session_state:
     st.session_state['student_data'] = None
 if 'last_search_query' not in st.session_state:
     st.session_state['last_search_query'] = ""
 
-# Input box for searching by rank
+# กล่องค้นหาเพื่อค้นหาจาก "ลำดับผลการเรียน"
 rank_query = st.text_input("กรุณาใส่ลำดับผลการเรียน:")
 
-# Check if the search query has changed
+# ตรวจสอบว่าคำค้นหาใหม่แตกต่างจากคำค้นหาครั้งก่อนหรือไม่
 if rank_query and rank_query != st.session_state['last_search_query']:
-    st.session_state['student_data'] = None
-    st.session_state['last_search_query'] = rank_query
+    st.session_state['student_data'] = None  # รีเซ็ตข้อมูล
+    st.session_state['last_search_query'] = rank_query  # อัพเดตคำค้นหาใหม่
 
 if rank_query:
     if st.session_state['student_data'] is None:
-        # Fetch student data from Firebase
-        student_key, student_data = fetch_student_by_rank(rank_query)
-        if student_data:
-            st.session_state['student_data'] = student_data
-            st.session_state['student_key'] = student_key
+        # โหลดข้อมูลนักเรียนจาก Google Sheets ใหม่โดยใช้ลิงก์ที่ให้มา
+        df_students = pd.DataFrame(student_sheet.get_all_records())
+        df_students['StudentID'] = df_students['StudentID'].astype(str).str.strip()
+
+        # ค้นหาข้อมูลนักเรียนด้วย "ลำดับผลการเรียน"
+        student_data = df_students[df_students['Rank'].astype(str).str.contains(rank_query.strip(), case=False, na=False)]
+
+        if not student_data.empty:
+            st.session_state['student_data'] = student_data.iloc[0]  # เก็บข้อมูลใน session state
         else:
             st.error("ไม่พบข้อมูลที่ค้นหา")
             st.session_state['student_data'] = None
@@ -147,12 +76,12 @@ if rank_query:
             'position3': str(student_info['Position3']).zfill(3)
         })
 
-        position1_name = get_position_name(st.session_state['position1'], positions_data)
-        position2_name = get_position_name(st.session_state['position2'], positions_data)
-        position3_name = get_position_name(st.session_state['position3'], positions_data)
+        position1_name = get_position_name(st.session_state['position1'])
+        position2_name = get_position_name(st.session_state['position2'])
+        position3_name = get_position_name(st.session_state['position3'])
 
-        # Display data in a table format
-        table_placeholder = st.empty()
+        # แสดงข้อมูลในตารางแนวตั้งรวมถึงตำแหน่งที่เลือก
+        table_placeholder = st.empty()  # สร้าง placeholder เพื่ออัพเดทตารางเดิม
         table_placeholder.write(f"""
         <table>
             <tr><th>รหัสนักเรียน</th><td>{student_info['StudentID']}</td></tr>
@@ -167,13 +96,13 @@ if rank_query:
         </table>
         """, unsafe_allow_html=True)
 
-        # Input fields for editing positions
+        # ส่วนกรอกข้อมูลตำแหน่งลำดับ 1, 2, 3
         st.write("### กรอก 'รหัสตำแหน่ง' ที่เลือก")
         position1_input = st.text_input("ตำแหน่งลำดับ 1", st.session_state['position1'])
         position2_input = st.text_input("ตำแหน่งลำดับ 2", st.session_state['position2'])
         position3_input = st.text_input("ตำแหน่งลำดับ 3", st.session_state['position3'])
 
-        # Validate and update positions
+        # ตรวจสอบว่ามีการกรอกข้อมูลอย่างน้อย 1 ตำแหน่งที่ถูกต้อง
         filled_positions = [position1_input, position2_input, position3_input]
         valid_positions = any(len(pos) == 3 and pos.isdigit() for pos in filled_positions)
 
@@ -186,18 +115,25 @@ if rank_query:
                 'position3': position3_input.zfill(3)
             })
 
-            # Submit button to update data
+            # ปุ่ม Submit เพื่ออัพเดทข้อมูล
             if st.button("Submit"):
                 try:
-                    update_data = {
-                        'Position1': st.session_state['position1'],
-                        'Position2': st.session_state['position2'],
-                        'Position3': st.session_state['position3']
-                    }
-                    update_student_data(st.session_state['student_key'], update_data)
+                    row_number = student_sheet.find(str(student_info['StudentID'])).row  # ใช้ str() เพื่อให้เป็นประเภทที่ถูกต้อง
+
+                    # อัปเดตข้อมูลไปยังทั้งสองลิงก์ Google Sheets
+                    student_sheet.update_cell(row_number, student_sheet.find('Position1').col, st.session_state['position1'])
+                    student_sheet.update_cell(row_number, student_sheet.find('Position2').col, st.session_state['position2'])
+                    student_sheet.update_cell(row_number, student_sheet.find('Position3').col, st.session_state['position3'])
+
+                    # อัปเดตข้อมูลไปยังลิงก์ที่สอง
+                    update_sheet_2 = client.open_by_url(update_link_2).sheet1
+                    update_sheet_2.update_cell(row_number, update_sheet_2.find('Position1').col, st.session_state['position1'])
+                    update_sheet_2.update_cell(row_number, update_sheet_2.find('Position2').col, st.session_state['position2'])
+                    update_sheet_2.update_cell(row_number, update_sheet_2.find('Position3').col, st.session_state['position3'])
+
                     st.success(f"อัปเดตข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
 
-                    # Update displayed table with new data
+                    # อัพเดทข้อมูลในตารางเดิมที่แสดงผล
                     table_placeholder.write(f"""
                     <table>
                         <tr><th>รหัสนักเรียน</th><td>{student_info['StudentID']}</td></tr>
@@ -206,9 +142,9 @@ if rank_query:
                         <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
                         <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
                         <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 1</th><td>{get_position_name(st.session_state['position1'], positions_data)}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 2</th><td>{get_position_name(st.session_state['position2'], positions_data)}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 3</th><td>{get_position_name(st.session_state['position3'], positions_data)}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 1</th><td>{get_position_name(st.session_state['position1'])}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 2</th><td>{get_position_name(st.session_state['position2'])}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 3</th><td>{get_position_name(st.session_state['position3'])}</td></tr>
                     </table>
                     """, unsafe_allow_html=True)
                 except Exception as e:
