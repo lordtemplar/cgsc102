@@ -55,12 +55,20 @@ def fetch_data():
 # Function to display data from DataFrames
 def display_data(student_df, position_df):
     if not student_df.empty:
-        st.header("รายงานผลการเลือกตำแหน่ง")
-        st.dataframe(student_df)  # Display student data DataFrame
+        # Reorder columns for the student DataFrame
+        student_columns_order = ["Rank", "StudentID", "StudentName", "Branch", "OfficerType", "Other", "PositionID"]
+        student_df = student_df.reindex(columns=student_columns_order)
+
+        st.header("รายงานผลการเลือกตำแหน่ง (ข้อมูลนักเรียน)")
+        st.dataframe(student_df, use_container_width=True, hide_index=True)  # Display student data DataFrame without index
 
     if not position_df.empty:
+        # Reorder columns for the position DataFrame
+        position_columns_order = ["PositionID", "PositionName", "Unit", "Specialist", "Rank", "Branch", "Other"]
+        position_df = position_df.reindex(columns=position_columns_order)
+
         st.header("รายงานผลการเลือกตำแหน่ง (ข้อมูลตำแหน่ง)")
-        st.dataframe(position_df)  # Display position data DataFrame
+        st.dataframe(position_df, use_container_width=True, hide_index=True)  # Display position data DataFrame without index
 
 # Streamlit app layout
 def main():
