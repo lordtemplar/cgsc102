@@ -42,7 +42,7 @@ if not firebase_admin._apps:
         firebase_admin.initialize_app(cred1, {
             'databaseURL': 'https://internal-student-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
         })
-        st.write("Connected to the first Firebase database.")
+        st.write("Connected to the first Firebase database (internal-student-db).")
     except ValueError as e:
         st.error(f"Error initializing the first Firebase app: {e}")
 
@@ -54,35 +54,9 @@ except ValueError:
         app2 = firebase_admin.initialize_app(cred2, {
             'databaseURL': 'https://internal-position-db-default-rtdb.asia-southeast1.firebasedatabase.app/'
         }, name='second_app')
-        st.write("Connected to the second Firebase database.")
+        st.write("Connected to the second Firebase database (internal-position-db).")
     except ValueError as e:
         st.error(f"Error initializing the second Firebase app: {e}")
-
-# Function to fetch and display all data from the first Firebase database
-def fetch_and_display_data_from_first_db():
-    try:
-        ref = db.reference('/', firebase_admin.get_app())
-        data = ref.get()
-        if data:
-            st.write("Data from the first Firebase database:")
-            st.json(data)
-        else:
-            st.write("No data found in the first Firebase database.")
-    except Exception as e:
-        st.error(f"Error fetching data from the first Firebase database: {e}")
-
-# Function to fetch and display all data from the second Firebase database
-def fetch_and_display_data_from_second_db():
-    try:
-        ref = db.reference('/', app=app2)
-        data = ref.get()
-        if data:
-            st.write("Data from the second Firebase database:")
-            st.json(data)
-        else:
-            st.write("No data found in the second Firebase database.")
-    except Exception as e:
-        st.error(f"Error fetching data from the second Firebase database: {e}")
 
 # Function to search for student data by rank in the first Firebase database
 def search_student_by_rank(rank):
@@ -130,7 +104,7 @@ def search_position_by_id(position_id):
 st.title("Search Firebase Data")
 
 # Search student by rank
-rank_query = st.text_input("Enter Rank to search in the first database:")
+rank_query = st.text_input("Enter Rank to search in the internal-student-db:")
 if st.button("Search Student by Rank"):
     if rank_query:
         search_student_by_rank(rank_query)
@@ -138,7 +112,7 @@ if st.button("Search Student by Rank"):
         st.error("Please enter a Rank to search.")
 
 # Search position by PositionID
-position_id_query = st.text_input("Enter PositionID to search in the second database:")
+position_id_query = st.text_input("Enter PositionID to search in the internal-position-db:")
 if st.button("Search Position by ID"):
     if position_id_query:
         search_position_by_id(position_id_query)
