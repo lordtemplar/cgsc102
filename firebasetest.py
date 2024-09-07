@@ -2,9 +2,8 @@ import streamlit as st
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
-import json
 
-# Debug: Print Firebase credentials from secrets
+# Debug: Load Firebase credentials from secrets
 try:
     st.write("Loading Firebase credentials from secrets...")
     firebase_config = {
@@ -21,9 +20,7 @@ try:
         "universe_domain": st.secrets["firebase"]["universe_domain"]
     }
 
-    # Debug: Print the loaded credentials
-    st.write("Firebase credentials loaded successfully:")
-    st.json(firebase_config)
+    st.write("Firebase credentials loaded successfully.")
 
 except Exception as e:
     st.error(f"Error loading Firebase credentials: {e}")
@@ -48,20 +45,28 @@ except Exception as e:
     st.error(f"Unexpected error during Firebase initialization: {e}")
     st.stop()
 
-# Function to fetch data from Firebase
-def get_data(path='/'):
+# Function to check the structure of Firebase data
+def check_structure(path='/'):
     try:
-        st.write(f"Attempting to fetch data from Firebase at path: {path}")
+        st.write(f"Checking structure at path: {path}")
         ref = db.reference(path)
         data = ref.get()
-        st.write("Data fetched successfully.")
-        return data
+        
+        if data is None:
+            st.write("No data found at the specified path.")
+        else:
+            # Show only the keys or top-level structure
+            if isinstance(data, dict):
+                st.write("Top-level keys in the database:")
+                st.json(list(data.keys()))  # Display keys of the dictionary
+            else:
+                st.write("Data is not in dictionary format.")
+                st.json(data)  # Show the actual data
+        
     except firebase_admin.exceptions.FirebaseError as e:
-        st.error(f"Firebase error during data retrieval: {e}")
+        st.error(f"Firebase error during structure check: {e}")
     except Exception as e:
-        st.error(f"Unexpected error during data retrieval: {e}")
+        st.error(f"Unexpected error during structure check: {e}")
 
-# Fetch data from Firebase
-data = get_data('/')
-st.write("Data from Firebase:")
-st.write(data)
+# Check the structure of Firebase data
+check_structure('/')
