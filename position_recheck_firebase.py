@@ -72,8 +72,9 @@ def fetch_student_by_rank(rank):
         st.error(f"Error fetching student data: {e}")
         return None, None
 
-# Function to fetch position name from the second Firebase database by position ID
-def get_position_name(position_id):
+# Function to fetch position data from the second Firebase database and return a mapping of PositionID to PositionName
+def fetch_position_mapping():
+    position_mapping = {}
     try:
         ref = db.reference('/', app=app2)
         data = ref.get()
@@ -81,15 +82,15 @@ def get_position_name(position_id):
         # Handle both dictionary and list formats
         if isinstance(data, dict):
             for key, value in data.items():
-                if 'PositionID' in value and value['PositionID'] == position_id:
-                    return value['PositionName']
+                if 'PositionID' in value and 'PositionName' in value:
+                    position_mapping[value['PositionID']] = value['PositionName']
         elif isinstance(data, list):
             for item in data:
-                if 'PositionID' in item and item['PositionID'] == position_id:
-                    return item['PositionName']
+                if 'PositionID' in item and 'PositionName' in item:
+                    position_mapping[item['PositionID']] = item['PositionName']
     except Exception as e:
-        st.error(f"Error fetching position name: {e}")
-    return position_id
+        st.error(f"Error fetching position data: {e}")
+    return position_mapping
 
 # Function to update student data in the first Firebase database
 def update_student_data(student_key, update_data):
@@ -141,10 +142,13 @@ if rank_query:
             'position3': str(student_info['Position3']).zfill(3)
         })
 
-        # Fetch position names from Firebase
-        position1_name = get_position_name(st.session_state['position1'])
-        position2_name = get_position_name(st.session_state['position2'])
-        position3_name = get_position_name(st.session_state['position3'])
+        # Fetch position names mapping from Firebase
+        position_mapping = fetch_position_mapping()
+
+        # Map PositionIDs to PositionNames
+        position1_name = position_mapping.get(st.session_state['position1'], st.session_state['position1'])
+        position2_name = position_mapping.get(st.session_state['position2'], st.session_state['position2'])
+        position3_name = position_mapping.get(st.session_state['position3'], st.session_state['position3'])
 
         # Display data in a table format
         table_placeholder = st.empty()
@@ -201,9 +205,9 @@ if rank_query:
                         <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
                         <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
                         <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 1</th><td>{get_position_name(st.session_state['position1'])}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 2</th><td>{get_position_name(st.session_state['position2'])}</td></tr>
-                        <tr><th>ตำแหน่งลำดับ 3</th><td>{get_position_name(st.session_state['position3'])}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 1</th><td>{position_mapping.get(st.session_state['position1'], st.session_state['position1'])}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 2</th><td>{position_mapping.get(st.session_state['position2'], st.session_state['position2'])}</td></tr>
+                        <tr><th>ตำแหน่งลำดับ 3</th><td>{position_mapping.get(st.session_state['position3'], st.session_state['position3'])}</td></tr>
                     </table>
                     """, unsafe_allow_html=True)
                 except Exception as e:
