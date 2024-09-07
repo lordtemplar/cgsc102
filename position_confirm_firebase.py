@@ -12,10 +12,16 @@ def fetch_student_by_rank(rank):
     try:
         ref = db.reference('/', firebase_apps[0])  # Use the first Firebase app
         data = ref.get()
-        if data:
+
+        # Check if data is a dictionary or a list
+        if isinstance(data, dict):
             for key, value in data.items():
                 if 'Rank' in value and str(value['Rank']) == str(rank):
                     return key, value  # Return both the key and the student data
+        elif isinstance(data, list):
+            for index, value in enumerate(data):
+                if isinstance(value, dict) and 'Rank' in value and str(value['Rank']) == str(rank):
+                    return index, value  # Return index (acting as key) and the student data
         return None, None
     except Exception as e:
         st.error(f"Error fetching student data: {e}")
