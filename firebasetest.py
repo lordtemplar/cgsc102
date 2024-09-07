@@ -41,12 +41,12 @@ def fetch_data_to_dataframe(path='/'):
             if isinstance(data, dict):
                 df = pd.DataFrame.from_dict(data, orient='index')  # Convert dict to DataFrame
                 st.write("Data fetched successfully and converted to DataFrame:")
-                st.dataframe(df)  # Display DataFrame in Streamlit
+                st.dataframe(df, use_container_width=True)  # Display DataFrame with full container width
                 return df
             else:
                 st.write("Data is not in dictionary format, converting directly to DataFrame.")
                 df = pd.DataFrame(data)  # Handle non-dict format
-                st.dataframe(df)
+                st.dataframe(df, use_container_width=True)  # Display DataFrame with full container width
                 return df
 
     except firebase_admin.exceptions.FirebaseError as e:
