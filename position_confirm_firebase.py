@@ -158,7 +158,7 @@ if rank_query:
                 update_data = {'ConfirmedPosition': selected_position_id}
                 update_student_data(st.session_state['student_key'], update_data)
 
-                # Update position status in internal and external position databases
+                # Update position status in internal and external position databases using PositionID as key
                 internal_position_ref = db.reference(f"/{selected_position_id}", firebase_apps[1])
                 internal_position_ref.update({'Status': "ไม่ว่าง"})
 
