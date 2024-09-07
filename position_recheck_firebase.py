@@ -98,9 +98,15 @@ def update_student_data(student_key, update_data):
 
 # Function to get position name by ID
 def get_position_name(position_id, positions):
-    for key, value in positions.items():
-        if 'PositionID' in value and value['PositionID'] == position_id:
-            return value['PositionName']
+    # Handle both dictionary and list formats
+    if isinstance(positions, dict):
+        for key, value in positions.items():
+            if 'PositionID' in value and value['PositionID'] == position_id:
+                return value['PositionName']
+    elif isinstance(positions, list):
+        for item in positions:
+            if 'PositionID' in item and item['PositionID'] == position_id:
+                return item['PositionName']
     return position_id
 
 # Load all positions data once
