@@ -92,7 +92,7 @@ def update_student_data(student_key, update_data):
     try:
         ref = db.reference(f"/{student_key}", firebase_admin.get_app())
         ref.update(update_data)
-        st.success(f"Data successfully updated for Student with key {student_key}.")
+        st.success("Data successfully updated for the student.")
     except Exception as e:
         st.error(f"Error updating student data: {e}")
 
