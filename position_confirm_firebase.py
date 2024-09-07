@@ -75,6 +75,8 @@ if 'student_data' not in st.session_state:
     st.session_state['student_data'] = None
 if 'last_search_query' not in st.session_state:
     st.session_state['last_search_query'] = ""
+if 'confirmed_position' not in st.session_state:
+    st.session_state['confirmed_position'] = None
 
 # Input box for searching by rank
 rank_query = st.text_input("กรุณาใส่ลำดับผลการเรียน:")
@@ -119,21 +121,32 @@ if rank_query:
         # Placeholder for the table to dynamically update
         table_placeholder = st.empty()
 
-        def display_student_info():
-            # Display student information with position names in a table format
-            table_placeholder.markdown(f"""
-            <table>
-                <tr><th>รหัสนักเรียน</th><td>{student_info['StudentID']}</td></tr>
-                <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
-                <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
-                <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
-                <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
-                <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
-                <tr><th>ตำแหน่งลำดับ 1</th><td>{st.session_state['position1']} - {matching_positions.get(st.session_state['position1'], 'N/A')}</td></tr>
-                <tr><th>ตำแหน่งลำดับ 2</th><td>{st.session_state['position2']} - {matching_positions.get(st.session_state['position2'], 'N/A')}</td></tr>
-                <tr><th>ตำแหน่งลำดับ 3</th><td>{st.session_state['position3']} - {matching_positions.get(st.session_state['position3'], 'N/A')}</td></tr>
-            </table>
-            """, unsafe_allow_html=True)
+        def display_student_info(show_confirmed_only=False):
+            if show_confirmed_only and st.session_state['confirmed_position']:
+                # Display only the confirmed position
+                table_placeholder.markdown(f"""
+                <table>
+                    <tr><th>รหัสนักเรียน</th><td>{student_info['StudentID']}</td></tr>
+                    <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
+                    <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
+                    <tr><th>ตำแหน่งที่ยืนยัน</th><td>{st.session_state['confirmed_position']} - {matching_positions.get(st.session_state['confirmed_position'], 'N/A')}</td></tr>
+                </table>
+                """, unsafe_allow_html=True)
+            else:
+                # Display full student information with position names
+                table_placeholder.markdown(f"""
+                <table>
+                    <tr><th>รหัสนักเรียน</th><td>{student_info['StudentID']}</td></tr>
+                    <tr><th>ยศ ชื่อ สกุล</th><td>{st.session_state['rank_name']}</td></tr>
+                    <tr><th>ลำดับ</th><td>{st.session_state['rank']}</td></tr>
+                    <tr><th>เหล่า</th><td>{st.session_state['branch']}</td></tr>
+                    <tr><th>กำเนิด</th><td>{st.session_state['officer_type']}</td></tr>
+                    <tr><th>อื่นๆ</th><td>{st.session_state['other']}</td></tr>
+                    <tr><th>ตำแหน่งลำดับ 1</th><td>{st.session_state['position1']} - {matching_positions.get(st.session_state['position1'], 'N/A')}</td></tr>
+                    <tr><th>ตำแหน่งลำดับ 2</th><td>{st.session_state['position2']} - {matching_positions.get(st.session_state['position2'], 'N/A')}</td></tr>
+                    <tr><th>ตำแหน่งลำดับ 3</th><td>{st.session_state['position3']} - {matching_positions.get(st.session_state['position3'], 'N/A')}</td></tr>
+                </table>
+                """, unsafe_allow_html=True)
 
         # Display the initial student information
         display_student_info()
@@ -176,6 +189,9 @@ if rank_query:
                 confirm_student_ref = db.reference(f"/{st.session_state['student_key']}", firebase_apps[2])
                 confirm_student_ref.update({'Position1': selected_position_id})
 
+                # Set the confirmed position in session state
+                st.session_state['confirmed_position'] = selected_position_id
+
                 # Send Line Notify with the new token
                 next_rank = int(student_info['Rank']) + 1
                 line_token = "snH08HhuKeu11DAgQmyUyYeDcnqgHVlcfRP8Fdqz4db"
@@ -184,8 +200,8 @@ if rank_query:
 
                 st.success(f"ยืนยันข้อมูลตำแหน่งที่เลือกของรหัสนายทหารนักเรียน {student_info['StudentID']} สำเร็จแล้ว")
 
-                # Refresh the existing table with new data
-                display_student_info()
+                # Refresh the table to show only the confirmed position
+                display_student_info(show_confirmed_only=True)
 
             except Exception as e:
                 st.error(f"ไม่สามารถยืนยันข้อมูลได้: {e}")
