@@ -13,10 +13,19 @@ def fetch_student_by_rank(rank):
     try:
         ref = db.reference('/', app=app1)
         data = ref.get()
-        if data:
+
+        if isinstance(data, dict):
+            # If data is a dictionary, iterate over its items
             for key, value in data.items():
                 if 'Rank' in value and str(value['Rank']) == str(rank):
                     return key, value  # Return both the key and the student data
+        elif isinstance(data, list):
+            # If data is a list, iterate over its elements
+            for index, item in enumerate(data):
+                if isinstance(item, dict) and 'Rank' in item and str(item['Rank']) == str(rank):
+                    return index, item  # Return the index and the student data
+
+        # If no matching student is found, return None
         return None, None
     except Exception as e:
         st.error(f"Error fetching student data: {e}")
