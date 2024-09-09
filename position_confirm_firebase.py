@@ -192,7 +192,7 @@ if rank_query:
 
                 # Send Line Notify with the new token
                 next_rank = int(student_info['Rank']) + 1
-                line_token = "snH08HhuKeu11DAgQmyUyYeDcnqgHVlcfRP8Fdqz4db"
+                line_token = "IXXqxz9o2oBAzUKPm38tLqijrzs91zoT51M6D7zCINj"
                 message = f"ลำดับที่ {student_info['Rank']}, รหัสนักเรียน {student_info['StudentID']}, {st.session_state['rank_name']}, เลือกรับราชการในตำแหน่ง {matching_positions[selected_position_id]} ต่อไปเชิญลำดับที่ {next_rank} เลือกที่ลงต่อครับ"
                 send_line_notify(message, line_token)
 
